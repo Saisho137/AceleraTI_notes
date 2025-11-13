@@ -95,7 +95,7 @@ Criterios de aceptación:
 
 ### Proceso de Scrum
 
-![Proceso de Scrum](images/clase_nivelación/SCRUM%20PROCESS.png)
+![Proceso de Scrum](assets/clase_nivelación/SCRUM%20PROCESS.png)
 
 ## Otras metodologías ágiles
 

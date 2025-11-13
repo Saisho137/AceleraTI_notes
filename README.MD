@@ -40,7 +40,7 @@ Para resolver dudas, reforzar conceptos y brindar apoyo personalizado que potenc
 
 ### Quices
 
-![Calendario de Quices](images/image.png)
+![Calendario de Quices](assets/image.png)
 
 ### Panel de Expertos
 
@@ -110,6 +110,18 @@ Actualmente **Líder Técnico EVC en Bancolombia**, donde ha impulsado la adopci
 Ha diseñado e implementado soluciones en AWS, Big Data, Kubernetes, Java, Python y Node.js, integrando negocio y tecnología para mejorar la eficiencia y escalar productos digitales.
 
 Docente apasionado por el aprendizaje aplicado, promueve pensamiento crítico, innovación y liderazgo técnico en sus equipos.
+
+## Proyecto Final: Arka
+
+El proyecto **Arka** es el eje central de la formación. Se trata de desarrollar una plataforma de e-commerce para una empresa de tecnología que desea migrar sus operaciones físicas al mundo digital.
+
+### Recursos del Proyecto
+
+- [Backlog del proyecto Java Backend Arka](assets/PDFs/Backlog%20del%20proyecto%20Java%20Backend%20Arka.pdf) - Listado completo de historias de usuario y tareas del proyecto
+- [Proyecto Arka - Versión 1](assets/PDFs/Proyecto%20Arka%201.pdf) - Especificaciones iniciales del proyecto
+- [Proyecto Java Backend Reto - Versión 2](assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf) - Versión actualizada con requisitos detallados
+
+> **Nota:** Consulta también el archivo [clase_1.md](clase_1.md) para ver consejos detallados sobre el desarrollo del proyecto.
 
 ## Requisitos de Graduación
 

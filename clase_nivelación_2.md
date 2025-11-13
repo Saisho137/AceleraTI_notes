@@ -144,7 +144,7 @@ public class AutoboxingDemo {
 
 #### Ejemplo extra
 
-![Autoboxing vs Unboxing](images/clase_nivelación_2/UnboxingvsAutoboxing.png)
+![Autoboxing vs Unboxing](assets/clase_nivelación_2/UnboxingvsAutoboxing.png)
 
 **Puntos importantes:**
 
