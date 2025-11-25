@@ -1,4 +1,4 @@
-# Clase #3 - HTTP Rest
+# Clase 3 - HTTP Rest
 
 ## Índice
 
