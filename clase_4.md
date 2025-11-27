@@ -744,6 +744,17 @@ El **Modelo Entidad-Relación** es una técnica de modelado conceptual que permi
 - Independiente del DBMS (PostgreSQL, MySQL, Oracle, etc.)
 - Facilita la detección de errores en etapas tempranas
 - Sirve como documentación del sistema
+- Permite establecer un **lenguaje ubicuo** compartido por todo el equipo
+
+**Lenguaje Ubicuo (Ubiquitous Language):**
+
+Es un vocabulario común y preciso que comparten todos los miembros del proyecto (negocio y técnicos) para referirse a conceptos del dominio. El MER ayuda a definir este lenguaje mediante:
+
+- **Nombres de entidades** que reflejan conceptos del negocio (Cliente, Pedido, Producto)
+- **Términos consistentes** en código, documentación y conversaciones
+- **Reducción de ambigüedades** en requisitos y especificaciones
+
+**Ejemplo:** Si el negocio usa "Miembro" en lugar de "Usuario", el MER, la base de datos y el código deben usar consistentemente "Miembro" para evitar confusiones.
 
 ### Elementos clave
 
@@ -1056,128 +1067,61 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 **Regla:** Todos los atributos deben contener **valores atómicos** (indivisibles) y **no deben haber grupos repetitivos**.
 
-**Violaciones comunes:**
+**Violaciones:** Múltiples valores en una celda (ej: "555-1234, 555-5678"), columnas repetitivas (tel1, tel2, tel3).
 
-- Múltiples valores en una celda
-- Columnas repetitivas (tel1, tel2, tel3)
-- Atributos compuestos no descompuestos
-
-#### Ejemplo: ❌ No está en 1FN
-
-**Tabla Estudiantes:**
+**Ejemplo: ❌ No está en 1FN**
 
 | id | nombre | telefonos | cursos |
 |----|--------|-----------|--------|
-| 1 | Juan | 555-1234, 555-5678 | Math, Physics, Chemistry |
-| 2 | Ana | 555-9012 | Biology, Math |
+| 1 | Juan | 555-1234, 555-5678 | Math, Physics |
 
-**Problemas:**
+**Problema:** `telefonos` y `cursos` tienen múltiples valores.
 
-- `telefonos`: Múltiples valores en una celda
-- `cursos`: Múltiples valores en una celda
-- Difícil buscar, filtrar o actualizar
-
-#### Solución: ✅ En 1FN
-
-**Opción 1: Separar en filas:**
-
-**Tabla Estudiantes:**
-
-| id | nombre | telefono | curso |
-|----|--------|----------|--------|
-| 1 | Juan | 555-1234 | Math |
-| 1 | Juan | 555-1234 | Physics |
-| 1 | Juan | 555-1234 | Chemistry |
-| 1 | Juan | 555-5678 | Math |
-| 1 | Juan | 555-5678 | Physics |
-| 1 | Juan | 555-5678 | Chemistry |
-| 2 | Ana | 555-9012 | Biology |
-| 2 | Ana | 555-9012 | Math |
-
-**Problema:** Mucha redundancia de datos
-
-**Opción 2: Tablas separadas (mejor):**
+**Solución: ✅ En 1FN (tablas separadas)**
 
 ```sql
--- Tabla principal
 CREATE TABLE Estudiantes (
     id_estudiante INT PRIMARY KEY,
     nombre VARCHAR(100)
 );
 
--- Tabla para teléfonos
 CREATE TABLE Telefonos (
     id_telefono INT PRIMARY KEY,
     id_estudiante INT,
     telefono VARCHAR(20),
     FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante)
 );
-
--- Tabla para relación N:M con cursos
-CREATE TABLE Cursos (
-    id_curso INT PRIMARY KEY,
-    nombre VARCHAR(100)
-);
-
-CREATE TABLE Inscripciones (
-    id_estudiante INT,
-    id_curso INT,
-    PRIMARY KEY (id_estudiante, id_curso),
-    FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante),
-    FOREIGN KEY (id_curso) REFERENCES Cursos(id_curso)
-);
 ```
 
 ### Segunda Forma Normal (2FN)
 
-**Requisito previo:** Debe estar en 1FN
+**Requisito:** Estar en 1FN
 
-**Regla:** Todos los atributos **no clave** deben depender de **toda la clave primaria**, no solo de parte de ella (aplica a claves compuestas).
+**Regla:** Todos los atributos **no clave** deben depender de **toda la clave primaria**, no solo de parte de ella. Elimina **dependencias parciales** en claves compuestas.
 
-**Concepto clave:** Eliminar **dependencias parciales** en claves compuestas.
+**Ejemplo: ❌ No está en 2FN**
 
-#### Ejemplo: ❌ No está en 2FN (pero sí en 1FN)
+| id_estudiante | id_curso | nombre_estudiante | nombre_curso | calificacion |
+|---------------|----------|-------------------|--------------|--------------|
+| 1 | 101 | Juan | Matemáticas | 9.5 |
 
-**Tabla Inscripciones:**
+**PK:** (id_estudiante, id_curso)
 
-| id_estudiante | id_curso | nombre_estudiante | nombre_curso | creditos | calificacion |
-|---------------|----------|-------------------|--------------|----------|--------------|
-| 1 | 101 | Juan | Matemáticas | 4 | 9.5 |
-| 1 | 102 | Juan | Física | 3 | 8.0 |
-| 2 | 101 | Ana | Matemáticas | 4 | 9.0 |
+**Problema:** `nombre_estudiante` solo depende de `id_estudiante`, `nombre_curso` solo depende de `id_curso`.
 
-**Clave primaria:** (id_estudiante, id_curso)
-
-**Problemas:**
-
-- `nombre_estudiante` depende solo de `id_estudiante` (dependencia parcial)
-- `nombre_curso` depende solo de `id_curso` (dependencia parcial)
-- `creditos` depende solo de `id_curso` (dependencia parcial)
-- Solo `calificacion` depende de AMBOS (dependencia total) ✅
-
-**Anomalías:**
-
-- **Inserción:** No puedo agregar un curso sin inscribir a un estudiante
-- **Actualización:** Si cambio el nombre de "Juan", debo actualizarlo en múltiples filas
-- **Eliminación:** Si elimino la última inscripción de un curso, pierdo información del curso
-
-#### Solución: ✅ En 2FN
+**Solución: ✅ En 2FN**
 
 ```sql
--- Estudiantes (atributos que dependen de id_estudiante)
 CREATE TABLE Estudiantes (
     id_estudiante INT PRIMARY KEY,
     nombre_estudiante VARCHAR(100)
 );
 
--- Cursos (atributos que dependen de id_curso)
 CREATE TABLE Cursos (
     id_curso INT PRIMARY KEY,
-    nombre_curso VARCHAR(100),
-    creditos INT
+    nombre_curso VARCHAR(100)
 );
 
--- Inscripciones (solo atributos que dependen de AMBOS)
 CREATE TABLE Inscripciones (
     id_estudiante INT,
     id_curso INT,
@@ -1190,48 +1134,24 @@ CREATE TABLE Inscripciones (
 
 ### Tercera Forma Normal (3FN)
 
-**Requisito previo:** Debe estar en 2FN
+**Requisito:** Estar en 2FN
 
-**Regla:** Ningún atributo **no clave** debe depender de otro atributo **no clave** (eliminar dependencias transitivas).
+**Regla:** Ningún atributo **no clave** debe depender de otro atributo **no clave**. Elimina **dependencias transitivas** (A → B → C).
 
-**Concepto clave:** Eliminar **dependencias transitivas**: A → B → C
-
-#### Ejemplo: ❌ No está en 3FN (pero sí en 2FN)
-
-**Tabla Empleados:**
+**Ejemplo: ❌ No está en 3FN**
 
 | id_empleado | nombre | id_departamento | nombre_departamento | ubicacion_departamento |
 |-------------|--------|-----------------|---------------------|------------------------|
 | 1 | Juan | 10 | Ventas | Edificio A |
 | 2 | Ana | 20 | IT | Edificio B |
-| 3 | Carlos | 10 | Ventas | Edificio A |
 
-**Clave primaria:** id_empleado
+**PK:** id_empleado
 
-**Dependencias:**
+**Problema:** `id_empleado` → `id_departamento` → `nombre_departamento` (dependencia transitiva)
 
-- `id_empleado` → `nombre` ✅ (directa)
-- `id_empleado` → `id_departamento` ✅ (directa)
-- `id_empleado` → `nombre_departamento` ❌ (transitiva: a través de id_departamento)
-- `id_empleado` → `ubicacion_departamento` ❌ (transitiva: a través de id_departamento)
-
-**Dependencia transitiva:**
-
-```text
-id_empleado → id_departamento → nombre_departamento
-id_empleado → id_departamento → ubicacion_departamento
-```
-
-**Anomalías:**
-
-- **Inserción:** No puedo crear un departamento sin empleados
-- **Actualización:** Si cambio la ubicación de "Ventas", debo actualizar múltiples filas
-- **Eliminación:** Si elimino todos los empleados de un departamento, pierdo información del departamento
-
-#### Solución: ✅ En 3FN
+**Solución: ✅ En 3FN**
 
 ```sql
--- Tabla Empleados (sin dependencias transitivas)
 CREATE TABLE Empleados (
     id_empleado INT PRIMARY KEY,
     nombre VARCHAR(100),
@@ -1239,7 +1159,6 @@ CREATE TABLE Empleados (
     FOREIGN KEY (id_departamento) REFERENCES Departamentos(id_departamento)
 );
 
--- Tabla Departamentos (información que dependía transitivamente)
 CREATE TABLE Departamentos (
     id_departamento INT PRIMARY KEY,
     nombre_departamento VARCHAR(100),
@@ -1247,80 +1166,32 @@ CREATE TABLE Departamentos (
 );
 ```
 
-**Resultado:**
-
-**Empleados:**
-
-| id_empleado | nombre | id_departamento |
-|-------------|--------|-----------------|
-| 1 | Juan | 10 |
-| 2 | Ana | 20 |
-| 3 | Carlos | 10 |
-
-**Departamentos:**
-
-| id_departamento | nombre_departamento | ubicacion_departamento |
-|-----------------|---------------------|------------------------|
-| 10 | Ventas | Edificio A |
-| 20 | IT | Edificio B |
-
 ### Forma Normal de Boyce-Codd (FNBC)
 
-**Requisito previo:** Debe estar en 3FN
+**Requisito:** Estar en 3FN
 
-**Regla:** Para toda dependencia funcional `X → Y`, `X` debe ser una **superclave** (clave candidata).
+**Regla:** Para toda dependencia funcional `X → Y`, `X` debe ser **superclave**. Es una versión más estricta de 3FN.
 
-**Concepto:** Es una versión más estricta de 3FN que maneja casos especiales de dependencias.
-
-**Diferencia con 3FN:** 3FN permite que atributos clave dependan de no-clave en casos raros. FNBC no lo permite.
-
-#### Ejemplo: ❌ Está en 3FN pero NO en FNBC
-
-**Tabla Asignaciones:**
+**Ejemplo: ❌ Está en 3FN pero NO en FNBC**
 
 | id_estudiante | id_curso | instructor |
 |---------------|----------|------------|
 | 1 | Math101 | Dr. Smith |
 | 2 | Math101 | Dr. Smith |
-| 3 | Phys201 | Dr. Jones |
-| 4 | Math101 | Dr. Smith |
 
-**Reglas del negocio:**
+**Regla de negocio:** Un instructor solo enseña un curso específico.
 
-- Un estudiante solo puede tomar un curso una vez
-- **Un instructor solo puede enseñar un curso específico**
-- Un curso puede tener muchos estudiantes
+**Problema:** `instructor → id_curso` viola FNBC (instructor no es superclave).
 
-**Claves candidatas:**
-
-- (id_estudiante, id_curso)
-- (id_estudiante, instructor)
-
-**Dependencias funcionales:**
-
-- (id_estudiante, id_curso) → instructor ✅
-- (id_estudiante, instructor) → id_curso ✅
-- **instructor → id_curso** ❌ (problema: instructor no es superclave)
-
-**Problema:** `instructor → id_curso` viola FNBC porque `instructor` no es superclave.
-
-**Anomalías:**
-
-- **Inserción:** No puedo registrar que Dr. Smith enseña Math101 sin tener un estudiante
-- **Actualización:** Si Dr. Smith cambia de curso, debo actualizar múltiples filas
-- **Eliminación:** Si elimino todos los estudiantes de Math101, pierdo información de que Dr. Smith lo enseña
-
-#### Solución: ✅ En FNBC
+**Solución: ✅ En FNBC**
 
 ```sql
--- Tabla de qué instructor enseña qué curso
 CREATE TABLE Instructores_Cursos (
     instructor VARCHAR(100) PRIMARY KEY,
     id_curso VARCHAR(20),
     FOREIGN KEY (id_curso) REFERENCES Cursos(id_curso)
 );
 
--- Tabla de inscripciones de estudiantes
 CREATE TABLE Inscripciones (
     id_estudiante INT,
     instructor VARCHAR(100),
@@ -1329,22 +1200,6 @@ CREATE TABLE Inscripciones (
     FOREIGN KEY (instructor) REFERENCES Instructores_Cursos(instructor)
 );
 ```
-
-**Instructores_Cursos:**
-
-| instructor | id_curso |
-|------------|----------|
-| Dr. Smith | Math101 |
-| Dr. Jones | Phys201 |
-
-**Inscripciones:**
-
-| id_estudiante | instructor |
-|---------------|------------|
-| 1 | Dr. Smith |
-| 2 | Dr. Smith |
-| 3 | Dr. Jones |
-| 4 | Dr. Smith |
 
 ### Resumen de Formas Normales
 
@@ -1355,299 +1210,11 @@ CREATE TABLE Inscripciones (
 | **3FN** | En 2FN | Dependencias transitivas (no-clave → no-clave) |
 | **FNBC** | En 3FN | Dependencias de no-superclave |
 
-**¿Hasta qué forma normalizar?**
-
-- **1FN:** Mínimo obligatorio
-- **3FN:** Suficiente para la mayoría de aplicaciones
-- **FNBC:** Para sistemas críticos o complejos
-- **Más allá (4FN, 5FN):** Raramente necesario, puede afectar rendimiento
+**Guía:** 1FN es obligatorio, 3FN suficiente para la mayoría, FNBC para sistemas críticos.
 
 ---
 
-## Ejemplo práctico: Sistema de Biblioteca
 
-Aplicaremos todo lo aprendido en un caso de uso completo.
-
-### Requerimientos
-
-**Sistema de gestión de biblioteca universitaria:**
-
-- Registrar libros con título, ISBN, autor(es), editorial, año
-- Registrar miembros (estudiantes y profesores) con nombre, ID, email, teléfono
-- Registrar préstamos con fecha de préstamo, fecha de devolución, multas
-- Un libro puede tener múltiples autores
-- Un autor puede escribir múltiples libros
-- Un miembro puede tener múltiples préstamos
-- Control de inventario: número de copias disponibles por libro
-
-### Paso 1: Modelo Entidad-Relación
-
-**Entidades identificadas:**
-
-1. **Libro** (ISBN, titulo, editorial, año_publicacion, copias_totales, copias_disponibles)
-2. **Autor** (id_autor, nombre, nacionalidad)
-3. **Miembro** (id_miembro, nombre, email, telefono, tipo)
-4. **Prestamo** (id_prestamo, fecha_prestamo, fecha_devolucion, fecha_devolucion_real, multa)
-
-**Relaciones:**
-
-- Libro **N:M** Autor (un libro tiene varios autores, un autor escribe varios libros)
-- Miembro **1:N** Prestamo (un miembro tiene varios préstamos)
-- Libro **1:N** Prestamo (un libro puede prestarse varias veces)
-
-**Diagrama conceptual:**
-
-```text
-┌─────────┐      N:M       ┌─────────┐
-│  Libro  │────escrito────┤  Autor  │
-└─────────┘   por         └─────────┘
-     │
-     │ 1:N
-     │
-     ▼
-┌──────────┐      N:1      ┌──────────┐
-│ Prestamo │──────────────>│ Miembro  │
-└──────────┘   realizado   └──────────┘
-               por
-```
-
-### Paso 2: Diseño de tablas (normalizado a 3FN)
-
-```sql
--- Tabla Libros
-CREATE TABLE Libros (
-    isbn VARCHAR(13) PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    editorial VARCHAR(100),
-    año_publicacion INT CHECK (año_publicacion > 1000),
-    copias_totales INT DEFAULT 1 CHECK (copias_totales > 0),
-    copias_disponibles INT DEFAULT 1 CHECK (copias_disponibles >= 0),
-    CONSTRAINT chk_copias CHECK (copias_disponibles <= copias_totales)
-);
-
--- Tabla Autores
-CREATE TABLE Autores (
-    id_autor INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    nacionalidad VARCHAR(50)
-);
-
--- Tabla intermedia N:M (Libros ↔ Autores)
-CREATE TABLE Libros_Autores (
-    isbn VARCHAR(13),
-    id_autor INT,
-    orden_autor INT,  -- Para saber el orden (primer autor, segundo, etc.)
-    PRIMARY KEY (isbn, id_autor),
-    FOREIGN KEY (isbn) REFERENCES Libros(isbn) ON DELETE CASCADE,
-    FOREIGN KEY (id_autor) REFERENCES Autores(id_autor) ON DELETE RESTRICT
-);
-
--- Tabla Miembros
-CREATE TABLE Miembros (
-    id_miembro INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    telefono VARCHAR(20),
-    tipo ENUM('Estudiante', 'Profesor') NOT NULL,
-    fecha_registro DATE DEFAULT CURRENT_DATE
-);
-
--- Tabla Prestamos
-CREATE TABLE Prestamos (
-    id_prestamo INT PRIMARY KEY AUTO_INCREMENT,
-    isbn VARCHAR(13) NOT NULL,
-    id_miembro INT NOT NULL,
-    fecha_prestamo DATE NOT NULL DEFAULT CURRENT_DATE,
-    fecha_devolucion_esperada DATE NOT NULL,
-    fecha_devolucion_real DATE,
-    multa DECIMAL(10,2) DEFAULT 0 CHECK (multa >= 0),
-    estado ENUM('Activo', 'Devuelto', 'Atrasado') DEFAULT 'Activo',
-    FOREIGN KEY (isbn) REFERENCES Libros(isbn),
-    FOREIGN KEY (id_miembro) REFERENCES Miembros(id_miembro),
-    CONSTRAINT chk_fechas CHECK (fecha_devolucion_esperada >= fecha_prestamo)
-);
-
--- Índices para mejorar rendimiento
-CREATE INDEX idx_prestamos_miembro ON Prestamos(id_miembro);
-CREATE INDEX idx_prestamos_libro ON Prestamos(isbn);
-CREATE INDEX idx_prestamos_estado ON Prestamos(estado);
-```
-
-### Paso 3: Inserción de datos de ejemplo
-
-```sql
--- Insertar autores
-INSERT INTO Autores (nombre, nacionalidad) VALUES
-    ('Gabriel García Márquez', 'Colombiana'),
-    ('J.K. Rowling', 'Británica'),
-    ('George Orwell', 'Británica'),
-    ('Isabel Allende', 'Chilena');
-
--- Insertar libros
-INSERT INTO Libros (isbn, titulo, editorial, año_publicacion, copias_totales, copias_disponibles) VALUES
-    ('9780060883287', 'Cien años de soledad', 'Harper', 1967, 3, 3),
-    ('9780439708180', 'Harry Potter y la Piedra Filosofal', 'Scholastic', 1997, 5, 4),
-    ('9780451524935', '1984', 'Signet Classic', 1949, 2, 2),
-    ('9780307474728', 'La casa de los espíritus', 'Random House', 1982, 2, 1);
-
--- Relacionar libros con autores
-INSERT INTO Libros_Autores (isbn, id_autor, orden_autor) VALUES
-    ('9780060883287', 1, 1),  -- García Márquez - Cien años
-    ('9780439708180', 2, 1),  -- Rowling - Harry Potter
-    ('9780451524935', 3, 1),  -- Orwell - 1984
-    ('9780307474728', 4, 1);  -- Allende - La casa
-
--- Insertar miembros
-INSERT INTO Miembros (nombre, email, telefono, tipo) VALUES
-    ('Juan Pérez', 'juan.perez@universidad.edu', '555-1234', 'Estudiante'),
-    ('Ana García', 'ana.garcia@universidad.edu', '555-5678', 'Profesor'),
-    ('Carlos López', 'carlos.lopez@universidad.edu', '555-9012', 'Estudiante');
-
--- Realizar préstamos
-INSERT INTO Prestamos (isbn, id_miembro, fecha_prestamo, fecha_devolucion_esperada) VALUES
-    ('9780439708180', 1, '2024-11-01', '2024-11-15'),  -- Juan pide Harry Potter
-    ('9780307474728', 2, '2024-11-05', '2024-11-19'),  -- Ana pide La casa
-    ('9780060883287', 3, '2024-11-10', '2024-11-24');  -- Carlos pide Cien años
-```
-
-### Paso 4: Consultas SQL comunes
-
-```sql
--- 1. Listar todos los libros con sus autores
-SELECT 
-    l.titulo,
-    l.editorial,
-    l.año_publicacion,
-    GROUP_CONCAT(a.nombre ORDER BY la.orden_autor SEPARATOR ', ') AS autores
-FROM Libros l
-JOIN Libros_Autores la ON l.isbn = la.isbn
-JOIN Autores a ON la.id_autor = a.id_autor
-GROUP BY l.isbn, l.titulo, l.editorial, l.año_publicacion;
-
--- 2. Libros disponibles para préstamo
-SELECT 
-    isbn,
-    titulo,
-    editorial,
-    copias_disponibles
-FROM Libros
-WHERE copias_disponibles > 0
-ORDER BY titulo;
-
--- 3. Historial de préstamos de un miembro
-SELECT 
-    p.id_prestamo,
-    l.titulo,
-    p.fecha_prestamo,
-    p.fecha_devolucion_esperada,
-    p.fecha_devolucion_real,
-    p.estado,
-    p.multa
-FROM Prestamos p
-JOIN Libros l ON p.isbn = l.isbn
-WHERE p.id_miembro = 1
-ORDER BY p.fecha_prestamo DESC;
-
--- 4. Préstamos atrasados con multa calculada
-SELECT 
-    m.nombre AS miembro,
-    l.titulo AS libro,
-    p.fecha_devolucion_esperada,
-    DATEDIFF(CURRENT_DATE, p.fecha_devolucion_esperada) AS dias_retraso,
-    DATEDIFF(CURRENT_DATE, p.fecha_devolucion_esperada) * 1.00 AS multa_calculada
-FROM Prestamos p
-JOIN Miembros m ON p.id_miembro = m.id_miembro
-JOIN Libros l ON p.isbn = l.isbn
-WHERE p.estado = 'Activo' 
-  AND p.fecha_devolucion_esperada < CURRENT_DATE;
-
--- 5. Libros más prestados
-SELECT 
-    l.titulo,
-    l.editorial,
-    COUNT(p.id_prestamo) AS veces_prestado
-FROM Libros l
-LEFT JOIN Prestamos p ON l.isbn = p.isbn
-GROUP BY l.isbn, l.titulo, l.editorial
-ORDER BY veces_prestado DESC;
-
--- 6. Devolver un libro (actualizar estado y copias)
-START TRANSACTION;
-
-UPDATE Prestamos 
-SET fecha_devolucion_real = CURRENT_DATE,
-    estado = 'Devuelto'
-WHERE id_prestamo = 1;
-
-UPDATE Libros 
-SET copias_disponibles = copias_disponibles + 1
-WHERE isbn = (SELECT isbn FROM Prestamos WHERE id_prestamo = 1);
-
-COMMIT;
-
--- 7. Registrar nuevo préstamo (verificar disponibilidad)
-START TRANSACTION;
-
--- Verificar disponibilidad
-SELECT copias_disponibles INTO @copias
-FROM Libros WHERE isbn = '9780451524935';
-
-IF @copias > 0 THEN
-    -- Registrar préstamo
-    INSERT INTO Prestamos (isbn, id_miembro, fecha_devolucion_esperada)
-    VALUES ('9780451524935', 2, DATE_ADD(CURRENT_DATE, INTERVAL 14 DAY));
-    
-    -- Reducir copias disponibles
-    UPDATE Libros 
-    SET copias_disponibles = copias_disponibles - 1
-    WHERE isbn = '9780451524935';
-    
-    COMMIT;
-ELSE
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay copias disponibles';
-END IF;
-```
-
-### Paso 5: Validaciones con triggers
-
-```sql
--- Trigger: Actualizar copias disponibles al prestar
-DELIMITER //
-CREATE TRIGGER after_prestamo_insert
-AFTER INSERT ON Prestamos
-FOR EACH ROW
-BEGIN
-    UPDATE Libros 
-    SET copias_disponibles = copias_disponibles - 1
-    WHERE isbn = NEW.isbn;
-END//
-
--- Trigger: Actualizar copias disponibles al devolver
-CREATE TRIGGER after_prestamo_devolucion
-AFTER UPDATE ON Prestamos
-FOR EACH ROW
-BEGIN
-    IF NEW.estado = 'Devuelto' AND OLD.estado != 'Devuelto' THEN
-        UPDATE Libros 
-        SET copias_disponibles = copias_disponibles + 1
-        WHERE isbn = NEW.isbn;
-    END IF;
-END//
-
--- Trigger: Calcular multa automáticamente
-CREATE TRIGGER before_prestamo_update
-BEFORE UPDATE ON Prestamos
-FOR EACH ROW
-BEGIN
-    IF NEW.fecha_devolucion_real IS NOT NULL THEN
-        SET NEW.multa = GREATEST(0, 
-            DATEDIFF(NEW.fecha_devolucion_real, NEW.fecha_devolucion_esperada) * 1.00
-        );
-    END IF;
-END//
-DELIMITER ;
-```
 
 ---
 
@@ -1677,5 +1244,3 @@ DELIMITER ;
 - **FNBC:** Solo superclaves determinan atributos
 
 ---
-
-> **Tarea:** Traer instalado un motor y cliente de DB (ya los tengo [Postgres])
