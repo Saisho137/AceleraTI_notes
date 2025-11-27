@@ -551,39 +551,57 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 **Bases de datos relacionales:**
 
-- Modelo basado en **tablas** con filas y columnas
-- **Claves** (primarias, foráneas, candidatas, únicas) para identificar y relacionar
-- **Integridad referencial** para mantener consistencia entre tablas
-- **SQL** dividido en DDL, DML, DCL, TCL
-- **Propiedades ACID** (Atomicidad, Consistencia, Aislamiento, Durabilidad) para transacciones confiables
-- **Niveles de aislamiento:** READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE
+- **Modelo basado en tablas:** Filas (registros), columnas (atributos), celdas (valores)
+- **Claves:** Primarias (PK - identificación única), Foráneas (FK - relaciones entre tablas), Candidatas (alternativas a PK), Únicas (permiten NULL, múltiples por tabla)
+- **Integridad referencial:** FK debe corresponder a PK existente en tabla padre
+- **Acciones de integridad:** CASCADE (elimina/actualiza en cascada), SET NULL, NO ACTION
+- **SQL:** DDL (CREATE, ALTER, DROP), DML (SELECT, INSERT, UPDATE, DELETE), DCL (GRANT, REVOKE), TCL (BEGIN, COMMIT, ROLLBACK, SAVEPOINT)
+- **Propiedades ACID:**
+  - **Atomicidad:** Todo o nada en transacciones
+  - **Consistencia:** Estado válido a estado válido (constraints, triggers)
+  - **Aislamiento:** 4 niveles (READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE)
+  - **Durabilidad:** Cambios permanentes tras COMMIT (WAL, Checkpoints, Transaction Log)
 
-**Modelo Entidad-Relación:**
+**Modelo Entidad-Relación (MER):**
 
-- **Tres niveles de modelado:** Conceptual (independiente), Lógico (esquema relacional), Físico (implementación específica)
-- **Entidades:** Fuertes (independientes) y Débiles (dependientes de otra entidad)
-- **Atributos:** Simples, Compuestos, Mono-valuados, Multi-valuados, Almacenados, Derivados, Clave
-- **Relaciones:** 1:1, 1:N, N:M (requiere tabla intermedia/asociativa)
-- **Cardinalidad:** Especifica participación mínima y máxima - (0,1), (1,1), (0,N), (1,N)
-- **Producto Cartesiano:** Problema de performance al no usar tabla intermedia en relaciones N:M
-- **Notación gráfica:** "Pata de gallina" (crow's foot) para representar "muchos"
+- **Tres niveles de modelado:** Conceptual (abstracto, independiente de DBMS), Lógico (esquema relacional, normalización), Físico (DDL, índices, optimizaciones específicas del DBMS)
+- **Lenguaje ubicuo:** Vocabulario común entre negocio y técnicos
+- **Tres tipos de entidades:**
+  - **Fuerte:** Independiente, PK propia
+  - **Débil:** Dependiente de otra entidad, PK compuesta con FK
+  - **Asociativa:** Conecta entidades N:M, tiene atributos propios
+- **Cinco tipos de atributos:**
+  - **Simple:** Indivisible (edad, precio)
+  - **Compuesto:** Descomponible (nombre_completo, dirección)
+  - **Multi-valuado:** Múltiples valores (teléfonos, emails) - usar tablas de datos extendidos
+  - **Derivado:** Se calcula (edad, precio_con_iva)
+  - **Clave:** Identifica registro (id_cliente)
+- **Tipos de relaciones:**
+  - **1:1** - FK con UNIQUE constraint
+  - **1:N** - FK en tabla del lado "muchos"
+  - **N:M** - Tabla intermedia con PK compuesta
+- **Cardinalidad:** (mínimo, máximo) - (0,1), (1,1), (0,N), (1,N)
+- **Producto Cartesiano:** Problema de implementar N:M sin tabla intermedia (N × M filas innecesarias)
+- **Notación Crow's Foot:** Líneas con tres segmentos (├─) indican "muchos"
 
 **Normalización:**
 
-- **1FN:** Valores atómicos, sin grupos repetitivos. Usar tablas de datos extendidos para atributos multi-valuados
+- **Objetivo:** Reducir redundancia y anomalías de inserción/actualización/eliminación
+- **1FN:** Valores atómicos (indivisibles), sin grupos repetitivos
 - **2FN:** Eliminar dependencias parciales en claves compuestas
 - **3FN:** Eliminar dependencias transitivas (no-clave → no-clave)
 - **FNBC:** Solo superclaves determinan atributos (más estricta que 3FN)
+- **Guía:** 1FN obligatoria, 3FN suficiente para mayoría de casos, FNBC para sistemas críticos
 
 **Mejores prácticas:**
 
-- **Modelado:** Siempre empezar con modelo conceptual antes de implementar
-- **Relaciones N:M:** Usar tablas asociativas con PK compuesta y FKs
-- **Datos multi-valuados:** Crear tablas de datos extendidos en lugar de concatenar valores
-- **Entidades débiles:** Usar ON DELETE CASCADE para mantener integridad
-- **Restricciones complejas:** Implementar con triggers, stored procedures o lógica de aplicación
-- **Integridad referencial:** Configurar ON DELETE y ON UPDATE apropiadamente
+- **Diseño:** Siempre empezar con modelo conceptual → lógico → físico
+- **Relaciones N:M:** Usar tablas asociativas con PK compuesta de FKs
+- **Atributos multi-valuados:** Crear tablas de datos extendidos (nunca concatenar)
+- **Entidades débiles:** Configurar ON DELETE CASCADE para mantener integridad
+- **Restricciones complejas:** Implementar con triggers, stored procedures o lógica de aplicación (ej: validación de rangos de fechas)
+- **Integridad referencial:** Configurar apropiadamente ON DELETE y ON UPDATE
+- **Migraciones:** Migrar tablas padre antes que hijas
 - **Performance:** Crear índices en FKs y columnas de búsqueda frecuente
-- **Normalización:** Aplicar hasta 3FN en la mayoría de casos, FNBC para sistemas críticos
 
 ---
