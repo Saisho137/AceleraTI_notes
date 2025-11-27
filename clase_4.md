@@ -12,15 +12,21 @@
    - [Propiedades ACID](#propiedades-acid)
 2. [Modelo Entidad-Relación (MER)](#modelo-entidad-relación-mer)
    - [Representación conceptual](#representación-conceptual)
+   - [Tipos de Modelos MER](#tipos-de-modelos-mer)
    - [Elementos clave](#elementos-clave)
    - [Tipos de relaciones](#tipos-de-relaciones)
+   - [Producto Cartesiano y Tablas Asociativas](#producto-cartesiano-y-tablas-asociativas)
    - [Cardinalidad](#cardinalidad)
+   - [Independencia de implementación](#independencia-de-implementación)
+   - [Base para normalización](#base-para-normalización)
+   - [Ejercicio Práctico: Sistema de Arrendamiento](#ejercicio-práctico-sistema-de-arrendamiento-de-inmuebles)
 3. [Normalización](#normalización)
    - [Primera Forma Normal (1FN)](#primera-forma-normal-1fn)
    - [Segunda Forma Normal (2FN)](#segunda-forma-normal-2fn)
    - [Tercera Forma Normal (3FN)](#tercera-forma-normal-3fn)
    - [Forma Normal de Boyce-Codd (FNBC)](#forma-normal-de-boyce-codd-fnbc)
-4. [Ejemplo práctico: Sistema de Biblioteca](#ejemplo-práctico-sistema-de-biblioteca)
+   - [Resumen de Formas Normales](#resumen-de-formas-normales)
+4. [Resumen final](#resumen-final)
 
 ---
 
@@ -756,78 +762,59 @@ Es un vocabulario común y preciso que comparten todos los miembros del proyecto
 
 **Ejemplo:** Si el negocio usa "Miembro" en lugar de "Usuario", el MER, la base de datos y el código deben usar consistentemente "Miembro" para evitar confusiones.
 
+### Tipos de Modelos MER
+
+| Modelo | Descripción | Elementos | Dependencia DBMS | Audiencia |
+|--------|-------------|-----------|------------------|----------|
+| **Conceptual** | Representación abstracta del dominio de negocio | Entidades, relaciones, atributos genéricos | Independiente | Stakeholders, analistas |
+| **Lógico** | Estructura de datos relacional | Tablas, PK, FK, tipos de datos genéricos, normalización | Independiente | Arquitectos de datos |
+| **Físico** | Implementación específica del DBMS | DDL SQL, índices, constraints, triggers, optimizaciones | Dependiente (PostgreSQL, MySQL, etc.) | DBAs, desarrolladores |
+
 ### Elementos clave
 
 #### 1. Entidades
 
-**Definición:** Objetos o conceptos del mundo real que tienen existencia independiente y sobre los cuales se almacena información.
+**Definición:** Objetos o conceptos del mundo real sobre los cuales se almacena información.
 
 **Representación:** Rectángulos
 
 **Tipos:**
 
-- **Fuertes:** Existen por sí mismas (ej: `Cliente`, `Producto`)
-- **Débiles:** Dependen de otra entidad para existir (ej: `Dependiente` de `Empleado`)
+| Tipo | Características | Representación | Ejemplos |
+|------|----------------|----------------|----------|
+| **Fuerte** | Existe independientemente, PK propia | Rectángulo simple | Cliente, Producto, Empleado |
+| **Débil** | Depende de otra entidad, PK compuesta (incluye FK) | Rectángulo doble ║ ║ | Dependiente, Habitación, Línea de Pedido |
+| **Asociativa** | Conecta entidades en relaciones N:M, tiene atributos propios | Rombo dentro de rectángulo ◇▭ | Inscripción (Estudiante-Curso), Venta (Producto-Pedido) |
 
-**Ejemplos:**
+**Ejemplo de entidad débil:**
 
 ```text
-┌──────────┐     ┌──────────┐     ┌──────────┐
-│ Cliente  │     │ Producto │     │  Pedido  │
-└──────────┘     └──────────┘     └──────────┘
+Empleado (Fuerte) ═══ tiene ═══ Dependiente (Débil)
+                               PK: (id_empleado, numero)
 ```
 
 #### 2. Atributos
 
-**Definición:** Propiedades o características que describen una entidad.
+**Definición:** Propiedades que describen una entidad.
 
-**Representación:** Óvalos conectados a la entidad
+**Representación:** Óvalos
 
 **Tipos:**
 
-**a) Simples vs Compuestos:**
+| Tipo | Descripción | Ejemplo | Representación |
+|------|-------------|---------|----------------|
+| **Simple** | Indivisible | edad, precio | Óvalo simple |
+| **Compuesto** | Descomponible | nombre_completo, dirección | Óvalo con sub-óvalos |
+| **Multi-valuado** | Múltiples valores | teléfonos, emails | Óvalo doble {◯◯} |
+| **Derivado** | Se calcula | edad, precio_con_iva | Óvalo punteado ··◯·· |
+| **Clave** | Identifica registro | id_cliente | Óvalo subrayado |
 
-```text
-Simples:
-- edad: 25
-- precio: 100.50
+**Manejo de atributos multi-valuados:**
 
-Compuestos (se pueden descomponer):
-- nombre_completo: {nombre: "Juan", apellido: "Pérez"}
-- direccion: {calle: "Main St", numero: 123, ciudad: "NYC"}
-```
+- ❌ **Incorrecto:** Concatenar valores en una celda (ej: "tel1, tel2") - Viola 1FN
+- ✅ **Correcto:** Crear tabla de datos extendidos (ej: tabla `Telefonos_Cliente` con FK a `Clientes`)
 
-**b) Mono-valuados vs Multi-valuados:**
-
-```text
-Mono-valuados (un solo valor):
-- fecha_nacimiento: 1990-05-15
-- numero_documento: 123456
-
-Multi-valuados (múltiples valores):
-- telefonos: [555-1234, 555-5678, 555-9012]
-- emails: [personal@mail.com, trabajo@empresa.com]
-```
-
-**c) Almacenados vs Derivados:**
-
-```text
-Almacenados (se guardan):
-- fecha_nacimiento: 1990-05-15
-- precio_base: 100
-
-Derivados (se calculan):
-- edad: 34 (calculada desde fecha_nacimiento)
-- precio_con_iva: 119 (calculado desde precio_base)
-```
-
-**d) Clave (Key):**
-
-```text
-- id_cliente (PRIMARY KEY)
-- numero_documento (UNIQUE)
-- email (UNIQUE)
-```
+> Las tablas de datos extendidos permiten almacenar múltiples valores manteniendo normalización y eficiencia.
 
 #### 3. Relaciones
 
@@ -847,129 +834,28 @@ Derivados (se calculan):
 
 Las relaciones se clasifican según su **cardinalidad** (número de instancias que pueden asociarse).
 
-#### 1. Uno a Uno (1:1)
+| Tipo | Cardinalidad | Descripción | Ejemplo | Implementación |
+|------|--------------|-------------|---------|----------------|
+| **Uno a Uno (1:1)** | Una instancia A ↔ Una instancia B | Cada registro de A se relaciona con exactamente uno de B | Persona ↔ Pasaporte | FK con constraint UNIQUE |
+| **Uno a Muchos (1:N)** | Una instancia A ↔ Múltiples instancias B | Un registro de A se relaciona con varios de B | Cliente → Pedidos | FK en tabla del lado "muchos" |
+| **Muchos a Muchos (N:M)** | Múltiples instancias A ↔ Múltiples instancias B | Varios registros de A con varios de B | Estudiantes ↔ Cursos | Tabla intermedia con PK compuesta |
 
-**Definición:** Una instancia de la entidad A se relaciona con **exactamente una** instancia de la entidad B, y viceversa.
+#### Producto Cartesiano y Tablas Asociativas
 
-**Ejemplo:** Una persona tiene un solo pasaporte, y un pasaporte pertenece a una sola persona.
+**Producto Cartesiano:** Problema que ocurre al implementar relaciones N:M sin tabla intermedia, generando todas las combinaciones posibles (N × M filas) en lugar de solo las relaciones reales.
 
-```text
-┌──────────┐        1:1         ┌──────────┐
-│ Persona  │────────────────────│Pasaporte │
-└──────────┘                    └──────────┘
-```
+**Consecuencias:**
 
-**Implementación SQL:**
+- Explosión de filas innecesarias
+- Problemas graves de performance
+- Desperdicio de espacio en disco
+- Consultas lentas y complejas
 
-```sql
-CREATE TABLE Personas (
-    id_persona INT PRIMARY KEY,
-    nombre VARCHAR(100),
-    fecha_nacimiento DATE
-);
+**Solución: Tabla Asociativa (Tabla de Rompimiento):**
 
-CREATE TABLE Pasaportes (
-    numero_pasaporte VARCHAR(20) PRIMARY KEY,
-    id_persona INT UNIQUE,  -- UNIQUE garantiza 1:1
-    fecha_emision DATE,
-    fecha_vencimiento DATE,
-    FOREIGN KEY (id_persona) REFERENCES Personas(id_persona)
-);
-```
+> **Regla:** Para toda relación N:M, crear tabla intermedia con PK compuesta de las FKs de ambas tablas.
 
-**Casos de uso:**
-
-- Persona ↔ Pasaporte
-- Usuario ↔ Perfil de Usuario
-- Empleado ↔ Escritorio asignado
-- País ↔ Capital
-
-#### 2. Uno a Muchos (1:N)
-
-**Definición:** Una instancia de la entidad A se relaciona con **cero o más** instancias de la entidad B, pero una instancia de B solo se relaciona con **una** de A.
-
-**Ejemplo:** Un cliente puede hacer muchos pedidos, pero cada pedido pertenece a un solo cliente.
-
-```text
-┌──────────┐        1:N         ┌──────────┐
-│ Cliente  │────────────────────│  Pedido  │
-└──────────┘                    └──────────┘
-    1                              N
-```
-
-**Implementación SQL:**
-
-```sql
-CREATE TABLE Clientes (
-    id_cliente INT PRIMARY KEY,
-    nombre VARCHAR(100),
-    email VARCHAR(100)
-);
-
-CREATE TABLE Pedidos (
-    id_pedido INT PRIMARY KEY,
-    id_cliente INT,  -- FK en el lado "muchos"
-    fecha DATE,
-    total DECIMAL(10,2),
-    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
-);
-```
-
-**Casos de uso:**
-
-- Cliente → Pedidos
-- Departamento → Empleados
-- Categoría → Productos
-- Autor → Libros
-- Profesor → Cursos
-
-#### 3. Muchos a Muchos (N:M)
-
-**Definición:** Una instancia de A se relaciona con **cero o más** instancias de B, y una instancia de B se relaciona con **cero o más** instancias de A.
-
-**Ejemplo:** Un estudiante puede inscribirse en muchos cursos, y un curso puede tener muchos estudiantes.
-
-```text
-┌──────────┐        N:M         ┌──────────┐
-│Estudiante│────────────────────│  Curso   │
-└──────────┘                    └──────────┘
-    N                              M
-```
-
-**Implementación SQL (requiere tabla intermedia):**
-
-```sql
-CREATE TABLE Estudiantes (
-    id_estudiante INT PRIMARY KEY,
-    nombre VARCHAR(100),
-    carrera VARCHAR(50)
-);
-
-CREATE TABLE Cursos (
-    id_curso INT PRIMARY KEY,
-    nombre VARCHAR(100),
-    creditos INT
-);
-
--- Tabla intermedia (junction table)
-CREATE TABLE Inscripciones (
-    id_estudiante INT,
-    id_curso INT,
-    fecha_inscripcion DATE,
-    nota DECIMAL(3,2),
-    PRIMARY KEY (id_estudiante, id_curso),  -- PK compuesta
-    FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante),
-    FOREIGN KEY (id_curso) REFERENCES Cursos(id_curso)
-);
-```
-
-**Casos de uso:**
-
-- Estudiantes ↔ Cursos
-- Productos ↔ Pedidos
-- Actores ↔ Películas
-- Médicos ↔ Pacientes
-- Autores ↔ Libros (un libro puede tener varios autores)
+**Notación "Pata de Gallina" (Crow's Foot):** Las líneas que terminan en tres segmentos (├─) indican "muchos" en la relación.
 
 ### Cardinalidad
 
@@ -983,33 +869,7 @@ La **cardinalidad** especifica el número mínimo y máximo de instancias que pu
 - `1` - Uno
 - `N` o `*` - Muchos (sin límite)
 
-**Ejemplos:**
-
-#### Ejemplo 1: Cliente - Pedido
-
-```text
-        (1,1)                (0,N)
-Cliente ────────realiza───────── Pedido
-```
-
-**Interpretación:**
-
-- Un cliente puede hacer **0 o muchos** pedidos (0,N)
-- Un pedido debe pertenecer a **exactamente un** cliente (1,1)
-
-#### Ejemplo 2: Estudiante - Curso
-
-```text
-          (0,N)                  (1,N)
-Estudiante ────inscripción──── Curso
-```
-
-**Interpretación:**
-
-- Un estudiante puede inscribirse en **0 o más** cursos (0,N)
-- Un curso debe tener **al menos 1** estudiante inscrito (1,N)
-
-#### Ejemplo 3: Empleado - Departamento
+#### Ejemplo: Empleado - Departamento
 
 ```text
          (1,1)                 (0,N)
@@ -1050,6 +910,148 @@ El mismo MER puede implementarse en diferentes bases de datos sin cambios en el 
 
 El MER sirve como punto de partida para aplicar **formas normales** que eliminan redundancia y mejoran la integridad de datos.
 
+### Ejercicio Práctico: Sistema de Arrendamiento de Inmuebles
+
+![Ejercicio - Caso de Arrendamiento](assets/clase_4/Ejercicio-clase.png)
+
+#### Solución
+
+##### Modelo Conceptual
+
+![Modelo Conceptual - Arrendamiento](assets/clase_4/Diagrama-MER-Conceptual.png)
+
+##### Modelo Lógico
+
+![Modelo Lógico - Arrendamiento](assets/clase_4/Diagrama-MER-Lógico.png)
+
+##### Implementación SQL
+
+```sql
+-- Crear tablas
+CREATE TABLE Propietarios (
+    id_propietario INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(100) UNIQUE
+);
+
+CREATE TABLE Inmuebles (
+    id_inmueble INT PRIMARY KEY AUTO_INCREMENT,
+    id_propietario INT NOT NULL,
+    direccion VARCHAR(200) NOT NULL,
+    tipo VARCHAR(50) CHECK (tipo IN ('Casa', 'Apartamento', 'Local')),
+    area_m2 DECIMAL(10,2),
+    numero_habitaciones INT,
+    descripcion TEXT,
+    FOREIGN KEY (id_propietario) REFERENCES Propietarios(id_propietario),
+    INDEX idx_propietario (id_propietario)
+);
+
+CREATE TABLE Arrendatarios (
+    id_arrendatario INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(100) UNIQUE,
+    documento_identidad VARCHAR(20) UNIQUE NOT NULL
+);
+
+CREATE TABLE Contratos_Arrendamiento (
+    id_contrato INT PRIMARY KEY AUTO_INCREMENT,
+    id_inmueble INT NOT NULL,
+    id_arrendatario INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    monto_mensual DECIMAL(10,2) NOT NULL CHECK (monto_mensual > 0),
+    deposito DECIMAL(10,2),
+    estado VARCHAR(20) DEFAULT 'Activo' CHECK (estado IN ('Activo', 'Finalizado', 'Cancelado')),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_inmueble) REFERENCES Inmuebles(id_inmueble),
+    FOREIGN KEY (id_arrendatario) REFERENCES Arrendatarios(id_arrendatario),
+    CONSTRAINT chk_fechas CHECK (fecha_fin > fecha_inicio),
+    INDEX idx_inmueble (id_inmueble),
+    INDEX idx_arrendatario (id_arrendatario),
+    INDEX idx_fechas (fecha_inicio, fecha_fin)
+);
+```
+
+##### Problema de Repetición de Arrendamientos
+
+**Pregunta planteada en clase:**
+> ¿Cómo no repetir arrendamiento si sí se debe repetir cuando no coinciden rangos de fecha?
+
+**Respuesta:**
+> No se puede evitar en el Modelo Conceptual. La solución debe implementarse a nivel de **constraints** o **lógica de aplicación**:
+
+1. **A nivel de base de datos (Trigger):**
+
+   ```sql
+   DELIMITER $$
+   CREATE TRIGGER validar_sobreposicion_fechas
+   BEFORE INSERT ON Contratos_Arrendamiento
+   FOR EACH ROW
+   BEGIN
+       DECLARE conflictos INT;
+       
+       SELECT COUNT(*) INTO conflictos
+       FROM Contratos_Arrendamiento
+       WHERE id_inmueble = NEW.id_inmueble
+       AND estado = 'Activo'
+       AND (
+           (NEW.fecha_inicio BETWEEN fecha_inicio AND fecha_fin)
+           OR (NEW.fecha_fin BETWEEN fecha_inicio AND fecha_fin)
+           OR (fecha_inicio BETWEEN NEW.fecha_inicio AND NEW.fecha_fin)
+       );
+       
+       IF conflictos > 0 THEN
+           SIGNAL SQLSTATE '45000' 
+           SET MESSAGE_TEXT = 'El periodo de arrendamiento se solapa con un contrato existente';
+       END IF;
+   END$$
+   DELIMITER ;
+   ```
+
+2. **A nivel de aplicación (Backend):**
+
+   ```javascript
+   // Ejemplo en Node.js
+   async function crearContrato(datos) {
+       // Verificar sobreposición
+       const conflictos = await db.query(`
+           SELECT COUNT(*) as count
+           FROM Contratos_Arrendamiento
+           WHERE id_inmueble = ?
+           AND estado = 'Activo'
+           AND (
+               (? BETWEEN fecha_inicio AND fecha_fin)
+               OR (? BETWEEN fecha_inicio AND fecha_fin)
+               OR (fecha_inicio BETWEEN ? AND ?)
+           )
+       `, [datos.id_inmueble, datos.fecha_inicio, datos.fecha_fin, 
+           datos.fecha_inicio, datos.fecha_fin]);
+       
+       if (conflictos[0].count > 0) {
+           throw new Error('El periodo se solapa con un contrato existente');
+       }
+       
+       // Proceder con la inserción
+       await db.query('INSERT INTO Contratos_Arrendamiento ...', datos);
+   }
+   ```
+
+3. **Nota en el Modelo Conceptual:**
+
+   ```text
+   Nota de regla de negocio:
+   "Los periodos de arrendamiento de un mismo inmueble no pueden 
+   sobreponerse. Esta validación se implementa mediante trigger o 
+   lógica de aplicación."
+   ```
+
+**Principio clave:**
+> En Modelos Conceptuales no se pueden representar todas las restricciones de negocio. Algunas validaciones complejas (como rangos de fechas) deben implementarse en el Modelo Físico mediante triggers, stored procedures, o en la lógica de aplicación.
+
+---
+
 ## Normalización
 
 La **normalización** es el proceso de organizar datos en una base de datos para **reducir redundancia** y **mejorar integridad**, dividiendo tablas grandes en tablas más pequeñas y definiendo relaciones entre ellas.
@@ -1069,7 +1071,7 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 **Violaciones:** Múltiples valores en una celda (ej: "555-1234, 555-5678"), columnas repetitivas (tel1, tel2, tel3).
 
-**Ejemplo: ❌ No está en 1FN**
+**Ejemplo: ❌ No está en 1FN:**
 
 | id | nombre | telefonos | cursos |
 |----|--------|-----------|--------|
@@ -1077,7 +1079,7 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 **Problema:** `telefonos` y `cursos` tienen múltiples valores.
 
-**Solución: ✅ En 1FN (tablas separadas)**
+**Solución: ✅ En 1FN (tablas separadas):**
 
 ```sql
 CREATE TABLE Estudiantes (
@@ -1099,7 +1101,7 @@ CREATE TABLE Telefonos (
 
 **Regla:** Todos los atributos **no clave** deben depender de **toda la clave primaria**, no solo de parte de ella. Elimina **dependencias parciales** en claves compuestas.
 
-**Ejemplo: ❌ No está en 2FN**
+**Ejemplo: ❌ No está en 2FN:**
 
 | id_estudiante | id_curso | nombre_estudiante | nombre_curso | calificacion |
 |---------------|----------|-------------------|--------------|--------------|
@@ -1109,7 +1111,7 @@ CREATE TABLE Telefonos (
 
 **Problema:** `nombre_estudiante` solo depende de `id_estudiante`, `nombre_curso` solo depende de `id_curso`.
 
-**Solución: ✅ En 2FN**
+**Solución: ✅ En 2FN:**
 
 ```sql
 CREATE TABLE Estudiantes (
@@ -1138,7 +1140,7 @@ CREATE TABLE Inscripciones (
 
 **Regla:** Ningún atributo **no clave** debe depender de otro atributo **no clave**. Elimina **dependencias transitivas** (A → B → C).
 
-**Ejemplo: ❌ No está en 3FN**
+**Ejemplo: ❌ No está en 3FN:**
 
 | id_empleado | nombre | id_departamento | nombre_departamento | ubicacion_departamento |
 |-------------|--------|-----------------|---------------------|------------------------|
@@ -1149,7 +1151,7 @@ CREATE TABLE Inscripciones (
 
 **Problema:** `id_empleado` → `id_departamento` → `nombre_departamento` (dependencia transitiva)
 
-**Solución: ✅ En 3FN**
+**Solución: ✅ En 3FN:**
 
 ```sql
 CREATE TABLE Empleados (
@@ -1172,7 +1174,7 @@ CREATE TABLE Departamentos (
 
 **Regla:** Para toda dependencia funcional `X → Y`, `X` debe ser **superclave**. Es una versión más estricta de 3FN.
 
-**Ejemplo: ❌ Está en 3FN pero NO en FNBC**
+**Ejemplo: ❌ Está en 3FN pero NO en FNBC:**
 
 | id_estudiante | id_curso | instructor |
 |---------------|----------|------------|
@@ -1183,7 +1185,7 @@ CREATE TABLE Departamentos (
 
 **Problema:** `instructor → id_curso` viola FNBC (instructor no es superclave).
 
-**Solución: ✅ En FNBC**
+**Solución: ✅ En FNBC:**
 
 ```sql
 CREATE TABLE Instructores_Cursos (
@@ -1214,10 +1216,6 @@ CREATE TABLE Inscripciones (
 
 ---
 
-
-
----
-
 ## Resumen final
 
 ### Conceptos clave
@@ -1225,22 +1223,38 @@ CREATE TABLE Inscripciones (
 **Bases de datos relacionales:**
 
 - Modelo basado en **tablas** con filas y columnas
-- **Claves** (primarias, foráneas, candidatas) para identificar y relacionar
+- **Claves** (primarias, foráneas, candidatas, únicas) para identificar y relacionar
 - **Integridad referencial** para mantener consistencia entre tablas
 - **SQL** dividido en DDL, DML, DCL, TCL
-- **Propiedades ACID** para transacciones confiables
+- **Propiedades ACID** (Atomicidad, Consistencia, Aislamiento, Durabilidad) para transacciones confiables
+- **Niveles de aislamiento:** READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE
 
 **Modelo Entidad-Relación:**
 
-- **Entidades** (objetos), **atributos** (propiedades), **relaciones** (vínculos)
-- Tipos de relaciones: **1:1**, **1:N**, **N:M**
-- **Cardinalidad** especifica participación mínima y máxima
+- **Tres niveles de modelado:** Conceptual (independiente), Lógico (esquema relacional), Físico (implementación específica)
+- **Entidades:** Fuertes (independientes) y Débiles (dependientes de otra entidad)
+- **Atributos:** Simples, Compuestos, Mono-valuados, Multi-valuados, Almacenados, Derivados, Clave
+- **Relaciones:** 1:1, 1:N, N:M (requiere tabla intermedia/asociativa)
+- **Cardinalidad:** Especifica participación mínima y máxima - (0,1), (1,1), (0,N), (1,N)
+- **Producto Cartesiano:** Problema de performance al no usar tabla intermedia en relaciones N:M
+- **Notación gráfica:** "Pata de gallina" (crow's foot) para representar "muchos"
 
 **Normalización:**
 
-- **1FN:** Valores atómicos, sin grupos repetitivos
-- **2FN:** Eliminar dependencias parciales
-- **3FN:** Eliminar dependencias transitivas
-- **FNBC:** Solo superclaves determinan atributos
+- **1FN:** Valores atómicos, sin grupos repetitivos. Usar tablas de datos extendidos para atributos multi-valuados
+- **2FN:** Eliminar dependencias parciales en claves compuestas
+- **3FN:** Eliminar dependencias transitivas (no-clave → no-clave)
+- **FNBC:** Solo superclaves determinan atributos (más estricta que 3FN)
+
+**Mejores prácticas:**
+
+- **Modelado:** Siempre empezar con modelo conceptual antes de implementar
+- **Relaciones N:M:** Usar tablas asociativas con PK compuesta y FKs
+- **Datos multi-valuados:** Crear tablas de datos extendidos en lugar de concatenar valores
+- **Entidades débiles:** Usar ON DELETE CASCADE para mantener integridad
+- **Restricciones complejas:** Implementar con triggers, stored procedures o lógica de aplicación
+- **Integridad referencial:** Configurar ON DELETE y ON UPDATE apropiadamente
+- **Performance:** Crear índices en FKs y columnas de búsqueda frecuente
+- **Normalización:** Aplicar hasta 3FN en la mayoría de casos, FNBC para sistemas críticos
 
 ---
