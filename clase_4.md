@@ -9,6 +9,7 @@
    - [Claves y relaciones](#claves-y-relaciones)
    - [Integridad referencial](#integridad-referencial)
    - [Lenguaje SQL](#lenguaje-sql)
+   - [Tipos de datos](#tipos-de-datos)
    - [Propiedades ACID](#propiedades-acid)
 2. [Modelo Entidad-Relación (MER)](#modelo-entidad-relación-mer)
    - [Representación conceptual](#representación-conceptual)
@@ -195,6 +196,73 @@ Controla las **transacciones** para garantizar ACID.
 - `SAVEPOINT`: Crear punto de guardado dentro de una transacción
 
 **Ejemplo:** `BEGIN`, `COMMIT` (confirmar), `ROLLBACK` (deshacer), `SAVEPOINT` (punto de retorno)
+
+### Tipos de datos
+
+Los **tipos de datos** definen qué clase de información puede almacenarse en cada columna de una tabla y cómo se representa internamente.
+
+| Tipo de dato | Propósito | Ejemplo de uso |
+|--------------|-----------|----------------|
+| **INT** | Almacena números enteros | `edad INT → edad = 25` |
+| **DECIMAL(p,s)** | Almacena números decimales con precisión (p) y escala (s) | `precio DECIMAL(6,2) → precio = 1234.56` |
+| **BOOLEAN** | Almacena valores TRUE o FALSE | `es_activo BOOLEAN → TRUE` |
+| **VARCHAR(n)** | Cadena de texto variable, hasta n caracteres | `nombre VARCHAR(50) → 'Carlos'` |
+| **CHAR(n)** | Cadena de texto de longitud fija | `sexo CHAR(1) → 'M' o 'F'` |
+| **TEXT** | Texto largo sin límite fijo | `comentario TEXT → 'Este producto es excelente'` |
+| **DATE** | Almacena solo una fecha (YYYY-MM-DD) | `fecha_nacimiento DATE → '1990-10-15'` |
+| **TIME** | Almacena solo la hora (HH:MM:SS) | `hora_entrada TIME → '14:30:00'` |
+| **TIMESTAMP** | Almacena fecha y hora (YYYY-MM-DD HH:MM:SS) | `creado_en TIMESTAMP → '2024-06-25 18:23:59'` |
+| **UUID** | Identificador único universal | `id UUID → '550e8400-e29b-41d4-a716-446655440000'` |
+| **BLOB** | Almacena datos binarios (imágenes, archivos, etc.) | `foto BLOB →` imagen en bytes |
+
+#### Consideraciones importantes
+
+**VARCHAR y problemas con ASCII extendido:**
+
+> ⚠️ **Advertencia:** Tener cuidado con `VARCHAR` cuando se usa con ASCII extendido, ya que puede causar problemas con caracteres especiales como "~", acentos o símbolos. Se recomienda usar codificación UTF-8 para soporte completo de caracteres internacionales.
+
+**TIMESTAMP en el sector financiero:**
+
+> 💰 **Nota crítica:** En el sector financiero, todas las transacciones se deben registrar con **TIMESTAMP** para incluir milisegundos y garantizar trazabilidad precisa de operaciones. Esto es esencial para auditorías y cumplimiento regulatorio.
+
+#### Código ASCII (American Standard Code for Information Interchange)
+
+**Definición:** ASCII es un estándar de codificación de caracteres que asigna un número único (0-127) a cada letra, dígito, símbolo y comando de control del idioma inglés.
+
+**Propósito:** Permite que diferentes sistemas informáticos representen y compartan texto de manera consistente.
+
+**Estructura:**
+
+- **ASCII básico (0-127):** 128 caracteres que incluyen:
+  - Caracteres de control (0-31): saltos de línea, tabulaciones, etc.
+  - Caracteres imprimibles (32-126): letras (A-Z, a-z), dígitos (0-9), símbolos básicos (!, @, #, etc.)
+  - DEL (127): carácter de borrado
+
+- **ASCII extendido (128-255):** 128 caracteres adicionales que varían según la página de códigos, incluyendo:
+  - Caracteres acentuados (á, é, í, ñ, ü)
+  - Símbolos especiales (€, °, ±, ~)
+  - Caracteres de dibujo de cuadros
+
+**Problema:** El ASCII extendido **no es estándar** - diferentes sistemas operativos usan diferentes páginas de códigos (Windows-1252, ISO-8859-1), causando incompatibilidades.
+
+**Uso en bases de datos:**
+
+- `CHAR` y `VARCHAR` tradicionalmente usaban ASCII/Latin-1
+- Caracteres fuera del ASCII básico (ñ, á, ~) pueden causar problemas de visualización o comparación
+- **Solución moderna:** Usar codificación **UTF-8** (Unicode) que soporta todos los idiomas
+
+**Ejemplo de problema:**
+
+```sql
+-- Con ASCII extendido (puede fallar)
+INSERT INTO Usuarios (nombre) VALUES ('José');  -- "é" puede corromperse
+
+-- Con UTF-8 (correcto)
+SET NAMES utf8mb4;
+INSERT INTO Usuarios (nombre) VALUES ('José');  -- Funciona correctamente
+```
+
+**Recomendación:** Siempre configurar bases de datos con `utf8mb4` (MySQL) o `UTF8` (PostgreSQL) para soporte completo de caracteres internacionales.
 
 ### Propiedades ACID
 
