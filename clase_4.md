@@ -10,6 +10,7 @@
    - [Integridad referencial](#integridad-referencial)
    - [Lenguaje SQL](#lenguaje-sql)
    - [Tipos de datos](#tipos-de-datos)
+   - [Estrategias para Analítica](#estrategias-para-analítica)
    - [Propiedades ACID](#propiedades-acid)
 2. [Modelo Entidad-Relación (MER)](#modelo-entidad-relación-mer)
    - [Representación conceptual](#representación-conceptual)
@@ -173,6 +174,53 @@ Manipula los **datos** dentro de las tablas.
 
 **Constraint CHECK:** Valida condiciones antes de insertar/actualizar (ej: `CHECK (edad >= 18)`)
 
+#### JOINs - Combinación de tablas
+
+Los **JOINs** materializan la teoría de conjuntos en SQL, permitiendo combinar registros de dos o más tablas basándose en condiciones de relación.
+
+![Diagrama visual de JOINs](assets/clase_4/Joins-Diagrama.png)
+
+| Tipo de JOIN | ¿Qué hace? | Sintaxis | ¿Qué devuelve? |
+|--------------|------------|----------|----------------|
+| **INNER JOIN** | Une filas que coinciden en ambas tablas | `SELECT * FROM A INNER JOIN B ON A.id = B.a_id;` | Solo registros con coincidencia en ambas |
+| **LEFT JOIN** | Devuelve todas las filas de la tabla izquierda y las coincidentes de la derecha | `SELECT * FROM A LEFT JOIN B ON A.id = B.a_id;` | Si no hay coincidencia, columnas de B quedan NULL |
+| **RIGHT JOIN** | Igual que LEFT, pero prioriza la tabla derecha | `SELECT * FROM A RIGHT JOIN B ON A.id = B.a_id;` | Devuelve todo de B, y de A solo si hay match |
+| **FULL JOIN** | Une todos los registros de ambas tablas, coincidan o no | `SELECT * FROM A FULL JOIN B ON A.id = B.a_id;` | Coincidencias + filas sin match de ambos lados (con NULL) |
+
+**Buenas prácticas:**
+
+- ✅ Hacer JOINs sobre **llaves indexadas** (PK, FK) para mayor eficiencia
+- ✅ Colocar la **tabla más liviana a la izquierda** (el orden importa en rendimiento)
+- ✅ Usar **alias** para mejorar legibilidad (`FROM propietario p JOIN arrendatario a`)
+
+> ⚠️ **No es lo mismo A JOIN B que B JOIN A** - Si una tabla es más pesada, dejarla de segundo puede mejorar el rendimiento.
+
+**Consulta Asimétrica:**
+
+Ocurre cuando la relación entre dos tablas no es recíproca. La tabla con FK "sabe" la relación directamente; la otra debe buscarla.
+
+```sql
+-- Parqueadero → Propietario (DIRECTO): Parqueadero tiene el FK
+SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- Siempre 1 resultado
+
+-- Propietario → Parqueadero (INVERSO): Debe buscar quién lo referencia
+SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- 0, 1 o N resultados
+```
+
+**Diferencia Simétrica (Complemento):**
+
+Útil para encontrar registros sin relación. Se logra con LEFT JOIN + WHERE ... IS NULL:
+
+```sql
+-- Encontrar parqueaderos SIN propietario asignado
+SELECT p.* 
+FROM parqueadero p 
+LEFT JOIN propietario prop ON p.documento_propiet = prop.documento_persona
+WHERE prop.documento_persona IS NULL;
+```
+
+> 📊 **Plan de Ejecución:** Herramienta del motor SQL que muestra cómo se ejecuta una consulta (tiempos por paso, uso de índices, latencias de disco). Úsalo para optimizar consultas complejas con `EXPLAIN ANALYZE`.
+
 #### DCL (Data Control Language)
 
 Controla **permisos y accesos** a la base de datos.
@@ -269,6 +317,29 @@ INSERT INTO Usuarios (nombre) VALUES ('José');  -- Funciona correctamente
 ```
 
 **Recomendación:** Siempre configurar bases de datos con `utf8mb4` (MySQL) o `UTF8` (PostgreSQL) para soporte completo de caracteres internacionales.
+
+### Estrategias para Analítica
+
+Cuando las consultas analíticas afectan el rendimiento de la base de datos principal, existen estrategias para separar cargas de trabajo:
+
+| Estrategia | Descripción | Ventaja | Desventaja |
+|------------|-------------|---------|------------|
+| **Read Replica** | Instancia de solo lectura sincronizada con la principal | Datos casi en tiempo real | Costo de infraestructura |
+| **ETL** (Extract, Transform, Load) | Job que extrae, transforma y carga datos a otra DB | Transformaciones complejas | Datos con retraso (T-X) |
+| **Data Warehouse / Cubo** | Almacenamiento multidimensional con datos pre-calculados | Consultas analíticas muy rápidas | Complejidad de implementación |
+
+**ETL y el concepto T-X:**
+
+> Los procesos ETL tienen un retraso inherente. Se expresa como **"T-X"** donde X es el tiempo de atraso. Ej: "Esta DB está a T-5" = 5 minutos desactualizada.
+
+**Arquitectura de Data Warehouse:**
+
+```text
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  DB Origen  │────►│  Data Lake  │────►│   Staging   │────►│    Cubo     │────► PowerBI
+│ (Operativa) │ ETL │(Materia prima)│    │(Hechos/Dim) │OLAP │(Multidim.)  │     Tableau
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
 
 ### Propiedades ACID
 
@@ -630,6 +701,13 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 - **Integridad referencial:** FK debe corresponder a PK existente en tabla padre
 - **Acciones de integridad:** CASCADE (elimina/actualiza en cascada), SET NULL, NO ACTION
 - **SQL:** DDL (CREATE, ALTER, DROP), DML (SELECT, INSERT, UPDATE, DELETE), DCL (GRANT, REVOKE), TCL (BEGIN, COMMIT, ROLLBACK, SAVEPOINT)
+- **JOINs:** INNER (solo coincidencias), LEFT (todo de izq + coincidencias), RIGHT (todo de der + coincidencias), FULL (todos los registros)
+  - Usar llaves indexadas para mejor rendimiento
+  - Tabla más liviana a la izquierda
+  - **Consulta asimétrica:** La tabla con FK "sabe" la relación; la otra debe buscarla
+  - **Diferencia simétrica:** `LEFT JOIN ... WHERE B.key IS NULL` para encontrar registros sin relación
+- **Plan de ejecución:** `EXPLAIN ANALYZE` para optimizar consultas
+- **Estrategias analítica:** Read Replica (tiempo real), ETL (T-X de retraso), Data Warehouse/Cubos (pre-calculado)
 - **Propiedades ACID:**
   - **Atomicidad:** Todo o nada en transacciones
   - **Consistencia:** Estado válido a estado válido (constraints, triggers)
