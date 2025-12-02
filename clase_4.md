@@ -149,27 +149,27 @@ La **integridad referencial** es una regla de consistencia que garantiza que las
 
 Define y modifica la **estructura** de la base de datos (esquema).
 
-**Comandos principales:**
+| Comando | ¿Qué hace? | Ejemplo | Notas |
+|---------|------------|---------|-------|
+| **CREATE** | Crea objetos (tablas, vistas, índices, esquemas) | `CREATE TABLE clientes (...);` | Define estructura inicial |
+| **ALTER** | Modifica estructura de un objeto existente | `ALTER TABLE clientes ADD telefono VARCHAR(15);` | Agrega, elimina o cambia columnas |
+| **DROP** | Elimina un objeto permanentemente | `DROP TABLE clientes;` | ⚠️ Borra datos y estructura; irreversible |
+| **TRUNCATE** | Borra todos los datos sin eliminar estructura | `TRUNCATE TABLE clientes;` | ⚡ Rápido pero ⚠️ sin ROLLBACK |
 
-- `CREATE`: Crear objetos (tablas, vistas, índices)
-- `ALTER`: Modificar estructura existente
-- `DROP`: Eliminar objetos
-- `TRUNCATE`: Eliminar todos los datos de una tabla (sin logging)
-
-**Ejemplo:** `CREATE TABLE`, `ALTER TABLE ADD COLUMN`, `DROP TABLE`, `TRUNCATE TABLE`
+> ⚠️ **TRUNCATE:** No genera log de transacciones, **no se puede revertir**. Usar solo cuando se esté seguro.
 
 #### DML (Data Manipulation Language)
 
 Manipula los **datos** dentro de las tablas.
 
-**Comandos principales:**
+| Comando | ¿Qué hace? | Ejemplo | Notas |
+|---------|------------|---------|-------|
+| **SELECT** | Consulta y recupera datos | `SELECT * FROM clientes WHERE activo = TRUE;` | Solo lectura |
+| **INSERT** | Inserta nuevos registros | `INSERT INTO clientes (nombre) VALUES ('Juan');` | Validado por constraints |
+| **UPDATE** | Actualiza registros existentes | `UPDATE clientes SET email = 'x@mail.com' WHERE id = 1;` | ⚠️ Sin WHERE actualiza TODO |
+| **DELETE** | Elimina registros | `DELETE FROM clientes WHERE id = 1;` | ⚠️ Sin WHERE elimina TODO |
 
-- `SELECT`: Consultar datos
-- `INSERT`: Insertar nuevos registros
-- `UPDATE`: Actualizar registros existentes
-- `DELETE`: Eliminar registros
-
-**Ejemplo:** `INSERT INTO`, `SELECT * FROM WHERE`, `UPDATE SET`, `DELETE FROM WHERE`
+> ⚠️ **UPDATE/DELETE sin WHERE:** Siempre incluir cláusula WHERE para evitar modificar/eliminar todos los registros.
 
 **Constraint CHECK:** Valida condiciones antes de insertar/actualizar (ej: `CHECK (edad >= 18)`)
 
@@ -177,25 +177,31 @@ Manipula los **datos** dentro de las tablas.
 
 Controla **permisos y accesos** a la base de datos.
 
-**Comandos principales:**
+| Comando | ¿Qué hace? | Ejemplo |
+|---------|------------|---------|
+| **GRANT** | Otorga permisos a usuarios o roles | `GRANT SELECT, INSERT ON clientes TO usuario_app;` |
+| **REVOKE** | Revoca permisos previamente otorgados | `REVOKE INSERT ON clientes FROM usuario_app;` |
 
-- `GRANT`: Otorgar permisos
-- `REVOKE`: Revocar permisos
-
-**Ejemplo:** `GRANT SELECT ON tabla TO usuario`, `REVOKE INSERT FROM usuario`
+> 🔐 Aplicar principio de **mínimo privilegio** - solo permisos estrictamente necesarios.
 
 #### TCL (Transaction Control Language)
 
 Controla las **transacciones** para garantizar ACID.
 
-**Comandos principales:**
+| Comando | ¿Qué hace? | Ejemplo |
+|---------|------------|---------|
+| **BEGIN** | Inicia una transacción | `BEGIN;` o `START TRANSACTION;` |
+| **COMMIT** | Confirma cambios permanentemente | `COMMIT;` |
+| **ROLLBACK** | Deshace cambios desde BEGIN | `ROLLBACK;` |
+| **SAVEPOINT** | Crea punto de guardado para rollback parcial | `SAVEPOINT antes_de_borrar;` |
 
-- `BEGIN/START TRANSACTION`: Iniciar transacción
-- `COMMIT`: Confirmar cambios permanentemente
-- `ROLLBACK`: Deshacer cambios
-- `SAVEPOINT`: Crear punto de guardado dentro de una transacción
+#### Resumen de Riesgos
 
-**Ejemplo:** `BEGIN`, `COMMIT` (confirmar), `ROLLBACK` (deshacer), `SAVEPOINT` (punto de retorno)
+| Comando | Riesgo | ¿Reversible? |
+|---------|--------|--------------|
+| SELECT | 🟢 Bajo | N/A |
+| INSERT/UPDATE/DELETE | 🟠 Alto | ✅ Con ROLLBACK |
+| TRUNCATE/DROP | 🔴 Crítico | ❌ No |
 
 ### Tipos de datos
 
