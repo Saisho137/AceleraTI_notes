@@ -9,6 +9,7 @@
    - [Claves y relaciones](#claves-y-relaciones)
    - [Integridad referencial](#integridad-referencial)
    - [Lenguaje SQL](#lenguaje-sql)
+   - [Consultas con JOINs](#consultas-con-joins)
    - [Tipos de datos](#tipos-de-datos)
    - [Estrategias para Analítica](#estrategias-para-analítica)
    - [Propiedades ACID](#propiedades-acid)
@@ -174,53 +175,6 @@ Manipula los **datos** dentro de las tablas.
 
 **Constraint CHECK:** Valida condiciones antes de insertar/actualizar (ej: `CHECK (edad >= 18)`)
 
-#### JOINs - Combinación de tablas
-
-Los **JOINs** materializan la teoría de conjuntos en SQL, permitiendo combinar registros de dos o más tablas basándose en condiciones de relación.
-
-![Diagrama visual de JOINs](assets/clase_4/Joins-Diagrama.png)
-
-| Tipo de JOIN | ¿Qué hace? | Sintaxis | ¿Qué devuelve? |
-|--------------|------------|----------|----------------|
-| **INNER JOIN** | Une filas que coinciden en ambas tablas | `SELECT * FROM A INNER JOIN B ON A.id = B.a_id;` | Solo registros con coincidencia en ambas |
-| **LEFT JOIN** | Devuelve todas las filas de la tabla izquierda y las coincidentes de la derecha | `SELECT * FROM A LEFT JOIN B ON A.id = B.a_id;` | Si no hay coincidencia, columnas de B quedan NULL |
-| **RIGHT JOIN** | Igual que LEFT, pero prioriza la tabla derecha | `SELECT * FROM A RIGHT JOIN B ON A.id = B.a_id;` | Devuelve todo de B, y de A solo si hay match |
-| **FULL JOIN** | Une todos los registros de ambas tablas, coincidan o no | `SELECT * FROM A FULL JOIN B ON A.id = B.a_id;` | Coincidencias + filas sin match de ambos lados (con NULL) |
-
-**Buenas prácticas:**
-
-- ✅ Hacer JOINs sobre **llaves indexadas** (PK, FK) para mayor eficiencia
-- ✅ Colocar la **tabla más liviana a la izquierda** (el orden importa en rendimiento)
-- ✅ Usar **alias** para mejorar legibilidad (`FROM propietario p JOIN arrendatario a`)
-
-> ⚠️ **No es lo mismo A JOIN B que B JOIN A** - Si una tabla es más pesada, dejarla de segundo puede mejorar el rendimiento.
-
-**Consulta Asimétrica:**
-
-Ocurre cuando la relación entre dos tablas no es recíproca. La tabla con FK "sabe" la relación directamente; la otra debe buscarla.
-
-```sql
--- Parqueadero → Propietario (DIRECTO): Parqueadero tiene el FK
-SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- Siempre 1 resultado
-
--- Propietario → Parqueadero (INVERSO): Debe buscar quién lo referencia
-SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- 0, 1 o N resultados
-```
-
-**Diferencia Simétrica (Complemento):**
-
-Útil para encontrar registros sin relación. Se logra con LEFT JOIN + WHERE ... IS NULL:
-
-```sql
--- Encontrar parqueaderos SIN propietario asignado
-SELECT p.* 
-FROM parqueadero p 
-LEFT JOIN propietario prop ON p.documento_propiet = prop.documento_persona
-WHERE prop.documento_persona IS NULL;
-```
-
-> 📊 **Plan de Ejecución:** Herramienta del motor SQL que muestra cómo se ejecuta una consulta (tiempos por paso, uso de índices, latencias de disco). Úsalo para optimizar consultas complejas con `EXPLAIN ANALYZE`.
-
 #### DCL (Data Control Language)
 
 Controla **permisos y accesos** a la base de datos.
@@ -250,6 +204,55 @@ Controla las **transacciones** para garantizar ACID.
 | SELECT | 🟢 Bajo | N/A |
 | INSERT/UPDATE/DELETE | 🟠 Alto | ✅ Con ROLLBACK |
 | TRUNCATE/DROP | 🔴 Crítico | ❌ No |
+
+### Consultas con JOINs
+
+Los **JOINs** materializan la teoría de conjuntos en SQL, permitiendo combinar registros de dos o más tablas basándose en condiciones de relación.
+
+![Diagrama visual de JOINs](assets/clase_4/Joins-Diagrama.png)
+
+| Tipo de JOIN | ¿Qué hace? | Sintaxis | ¿Qué devuelve? |
+|--------------|------------|----------|----------------|
+| **INNER JOIN** | Une filas que coinciden en ambas tablas | `SELECT * FROM A INNER JOIN B ON A.id = B.a_id;` | Solo registros con coincidencia en ambas |
+| **LEFT JOIN** | Devuelve todas las filas de la tabla izquierda y las coincidentes de la derecha | `SELECT * FROM A LEFT JOIN B ON A.id = B.a_id;` | Si no hay coincidencia, columnas de B quedan NULL |
+| **RIGHT JOIN** | Igual que LEFT, pero prioriza la tabla derecha | `SELECT * FROM A RIGHT JOIN B ON A.id = B.a_id;` | Devuelve todo de B, y de A solo si hay match |
+| **FULL JOIN** | Une todos los registros de ambas tablas, coincidan o no | `SELECT * FROM A FULL JOIN B ON A.id = B.a_id;` | Coincidencias + filas sin match de ambos lados (con NULL) |
+
+**Buenas prácticas:**
+
+- ✅ Hacer JOINs sobre **llaves indexadas** (PK, FK) para mayor eficiencia
+- ✅ Colocar la **tabla más liviana a la izquierda** (el orden importa en rendimiento)
+- ✅ Usar **alias** para mejorar legibilidad (`FROM propietario p JOIN arrendatario a`)
+
+> ⚠️ **No es lo mismo A JOIN B que B JOIN A** - Si una tabla es más pesada, dejarla de segundo puede mejorar el rendimiento.
+
+#### Consulta Asimétrica
+
+Ocurre cuando la relación entre dos tablas no es recíproca. La tabla con FK "sabe" la relación directamente; la otra debe buscarla.
+
+```sql
+-- Parqueadero → Propietario (DIRECTO): Parqueadero tiene el FK
+SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- Siempre 1 resultado
+
+-- Propietario → Parqueadero (INVERSO): Debe buscar quién lo referencia
+SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- 0, 1 o N resultados
+```
+
+#### Diferencia Simétrica (Complemento)
+
+Útil para encontrar registros sin relación. Se logra con LEFT JOIN + WHERE ... IS NULL:
+
+```sql
+-- Encontrar parqueaderos SIN propietario asignado
+SELECT p.* 
+FROM parqueadero p 
+LEFT JOIN propietario prop ON p.documento_propiet = prop.documento_persona
+WHERE prop.documento_persona IS NULL;
+```
+
+#### Optimización de consultas
+
+> 📊 **Plan de Ejecución:** Herramienta del motor SQL que muestra cómo se ejecuta una consulta (tiempos por paso, uso de índices, latencias de disco). Úsalo para optimizar consultas complejas con `EXPLAIN ANALYZE`.
 
 ### Tipos de datos
 
