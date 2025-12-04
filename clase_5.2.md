@@ -19,8 +19,6 @@
 
 La arquitectura en capas es el patrón más tradicional, donde la aplicación se divide en capas horizontales, cada una con una responsabilidad específica.
 
-![Diagrama de Arquitectura en Capas con patrón MVC](assets/clase_5.2/arquitectura_capas_mvc.png)
-
 #### Capas típicas del patrón MVC
 
 | Capa | Responsabilidad | Componentes |
@@ -73,7 +71,11 @@ Usuario → Controlador → Servicio → Repositorio → Base de Datos
 
 ### ¿Qué es la Arquitectura Limpia?
 
-![Principios y estilos de Arquitectura Limpia](assets/clase_5.2/principios_arquitectura_limpia.png)
+Debe ser:
+
+- Modular
+- Mantenible
+- Desacoplado
 
 La **Arquitectura Limpia** (Clean Architecture) es un conjunto de principios y estilos arquitectónicos propuestos por **Robert C. Martin (Uncle Bob)** que buscan:
 
@@ -89,7 +91,7 @@ La **Arquitectura Limpia** (Clean Architecture) es un conjunto de principios y e
 
 ![Diagrama oficial de The Clean Architecture por Uncle Bob](assets/clase_5.2/diagrama_clean_architecture.png)
 
-El diagrama se lee de **afuera hacia adentro**:
+El diagrama se lee de **afuera hacia adentro**
 
 ---
 
