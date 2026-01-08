@@ -6,16 +6,28 @@
 2. [Tipos de Pruebas](#tipos-de-pruebas)
 3. [JUnit - Framework de Testing](#junit---framework-de-testing)
 4. [Anotaciones de JUnit](#anotaciones-de-junit)
-5. [Patrón AAA (Arrange-Act-Assert)](#patrón-aaa-arrange-act-assert)
-6. [Mockito - Objetos Simulados](#mockito---objetos-simulados)
-7. [Pruebas de Integración con Spring Boot](#pruebas-de-integración-con-spring-boot)
-8. [MockMvc - Simulación de Peticiones HTTP](#mockmvc---simulación-de-peticiones-http)
-9. [Test Driven Development (TDD)](#test-driven-development-tdd)
-10. [Ejercicio Práctico](#ejercicio-práctico)
+5. [Pruebas Parametrizadas](#pruebas-parametrizadas)
+6. [Patrón AAA (Arrange-Act-Assert)](#patrón-aaa-arrange-act-assert)
+7. [Mockito - Objetos Simulados](#mockito---objetos-simulados)
+8. [Pruebas de Integración con Spring Boot](#pruebas-de-integración-con-spring-boot)
+9. [MockMvc - Simulación de Peticiones HTTP](#mockmvc---simulación-de-peticiones-http)
+10. [Test Driven Development (TDD)](#test-driven-development-tdd)
+11. [Configuración de Gradle y Cobertura](#configuración-de-gradle-y-cobertura)
+12. [Ejercicio Práctico](#ejercicio-práctico)
+13. [Recursos Adicionales](#recursos-adicionales)
 
 ## Resumen
 
-Esta clase aborda las pruebas de software en Java con Spring Boot, enfocándose en pruebas unitarias con JUnit y Mockito, y pruebas de integración con `@SpringBootTest` y MockMvc. Se cubre el patrón AAA (Arrange-Act-Assert), anotaciones de JUnit, creación de mocks, y la metodología TDD (Test-Driven Development). El objetivo es validar el comportamiento de las clases, prevenir errores y facilitar el mantenimiento del código.
+Esta clase aborda las **pruebas de software en Java con Spring Boot**:
+
+- **Pruebas Unitarias:** JUnit 5 y Mockito para probar clases de forma aislada
+- **Pruebas de Integración:** `@SpringBootTest`, `@DataJpaTest` y `@WebMvcTest`
+- **MockMvc:** Simulación de peticiones HTTP a controllers
+- **Pruebas Parametrizadas:** `@ParameterizedTest` con múltiples fuentes de datos
+- **Patrones:** AAA (Arrange-Act-Assert) y TDD (Red-Green-Refactor)
+- **Configuración:** Gradle con JaCoCo para cobertura de código
+
+**Objetivo:** Validar el comportamiento de las clases, prevenir errores y facilitar el mantenimiento del código.
 
 ---
 
@@ -198,6 +210,30 @@ assertAll(
 );
 ```
 
+### Sintaxis JUnit vs AssertJ
+
+Se pueden escribir las pruebas con sintaxis más o menos verbosa:
+
+```java
+// JUnit (más conciso)
+assertEquals("Local", result);
+
+// AssertJ (más fluido y legible)
+assertThat(result).isEqualTo("Local");
+```
+
+**Comparación de Doubles:** Para comparar números decimales, usar `.isCloseTo()` en lugar de `.isEqualTo()` debido a la imprecisión de punto flotante:
+
+```java
+// ❌ Puede fallar por imprecisión
+assertThat(resultado).isEqualTo(0.3);
+
+// ✅ Correcto - permite un margen de error
+assertThat(resultado).isCloseTo(0.3, within(0.0001));
+```
+
+> 💡 **Tip:** Las pruebas se pueden debuguear mediante breakpoints, igual que el código de producción.
+
 ---
 
 ## Anotaciones de JUnit
@@ -208,11 +244,16 @@ JUnit proporciona varias anotaciones para controlar el ciclo de vida de los test
 
 | Anotación | Propósito |
 |-----------|-----------|
-| `@Test` | Define un método de prueba |
-| `@BeforeEach` | Ejecutado **antes de cada prueba** |
-| `@AfterEach` | Ejecutado **después de cada prueba** |
-| `@BeforeAll` | Ejecutado **una vez antes de todas las pruebas** |
-| `@AfterAll` | Ejecutado **una vez después de todas las pruebas** |
+| `@Test` | Define un método de prueba. Deberían ser métodos `void`. |
+| `@BeforeEach` | Ejecutado **antes de cada prueba** (preparar instancias, estado) |
+| `@AfterEach` | Ejecutado **después de cada prueba** (limpiar recursos) |
+| `@BeforeAll` | Ejecutado **una vez antes de todas las pruebas** (debe ser `static`) |
+| `@AfterAll` | Ejecutado **una vez después de todas las pruebas** (debe ser `static`) |
+| `@DisplayName` | Agrega una descripción legible a la prueba |
+| `@Tag` | Etiqueta para categorizar y filtrar pruebas |
+| `@Disabled` | Deshabilita temporalmente una prueba |
+
+> 📝 **Convención de nombrado:** Por convención, el nombre del método de test debe describir lo que se está probando (ej: `deberiaCalcularTotalConDescuento`).
 
 ### Ejemplo de uso
 
@@ -272,6 +313,65 @@ class UsuarioServiceTest {
 - Liberar recursos globales
 - Limpiar después de toda la suite
 - **Nota:** Debe ser `static`
+
+---
+
+## Pruebas Parametrizadas
+
+`@ParameterizedTest` permite ejecutar una misma prueba unitaria con múltiples conjuntos de datos, evitando duplicación de código.
+
+### Fuentes de Datos
+
+| Anotación | Uso |
+|-----------|-----|
+| `@ValueSource` | Valores simples de un solo tipo |
+| `@CsvSource` | Múltiples valores separados por coma |
+| `@MethodSource` | Valores generados por un método |
+| `@ArgumentsSource` | Valores generados mediante Streams (clase Provider) |
+
+### Ejemplo con @CsvSource
+
+```java
+@ParameterizedTest
+@CsvSource({
+    "1, 1, 2",      // a=1, b=1, expected=2
+    "2, 3, 5",      // a=2, b=3, expected=5
+    "10, -5, 5"     // a=10, b=-5, expected=5
+})
+void deberiaSumarCorrectamente(int a, int b, int expected) {
+    assertEquals(expected, calculadora.sumar(a, b));
+}
+```
+
+### Ejemplo con @ValueSource
+
+```java
+@ParameterizedTest
+@ValueSource(strings = {"admin", "user", "guest"})
+void deberiaValidarRolesPermitidos(String rol) {
+    assertTrue(servicio.esRolValido(rol));
+}
+```
+
+### Ejemplo con @MethodSource
+
+```java
+@ParameterizedTest
+@MethodSource("proveedorDeDatos")
+void deberiaCalcularDescuento(double precio, double descuento, double expected) {
+    assertEquals(expected, servicio.aplicarDescuento(precio, descuento), 0.01);
+}
+
+static Stream<Arguments> proveedorDeDatos() {
+    return Stream.of(
+        Arguments.of(100.0, 10.0, 90.0),
+        Arguments.of(200.0, 25.0, 150.0),
+        Arguments.of(50.0, 0.0, 50.0)
+    );
+}
+```
+
+> 📚 **Documentación completa:** [Baeldung - Parameterized Tests JUnit 5](https://www.baeldung.com/parameterized-tests-junit-5)
 
 ---
 
@@ -406,6 +506,14 @@ class UsuarioServiceTest {
 }
 ```
 
+> ✅ **`@Mock` vs `mock()`:** Ambas opciones son **funcionalmente equivalentes**. La anotación `@Mock` es preferida porque:
+>
+> - Código más corto y legible
+> - El nombre del campo aparece en mensajes de error
+> - Se combina fácilmente con `@InjectMocks`
+>
+> **Requisito:** Para que `@Mock` funcione, se necesita `@ExtendWith(MockitoExtension.class)` en JUnit 5, o llamar a `MockitoAnnotations.openMocks(this)` en `@BeforeEach`.
+
 ### Configurar comportamiento (Stubbing)
 
 **Definir qué retorna un método:**
@@ -482,6 +590,16 @@ class UsuarioServiceTest {
 ✅ **Control total:** Defines exactamente qué retornan las dependencias
 
 ✅ **Verificación:** Puedes confirmar que se llamaron los métodos correctos
+
+### Mocks y Principios SOLID
+
+Al seguir los principios **SOLID** (especialmente Inversión de Dependencias), se facilita enormemente el uso de mocks:
+
+- **Inyección de dependencias:** Permite reemplazar implementaciones reales por mocks fácilmente
+- **Interfaces:** Permiten crear mocks sin depender de clases concretas
+- **Datos Dummy:** Los mocks devuelven datos controlados que permiten testear escenarios específicos
+
+> 💡 **Código bien diseñado = código fácil de testear**
 
 ---
 
@@ -568,6 +686,7 @@ class PedidoServiceIntegrationTest {
 ### Configuración de Base de Datos para Tests
 
 **Base de datos en memoria (H2):**
+
 ```properties
 spring.datasource.url=jdbc:h2:mem:testdb
 spring.jpa.hibernate.ddl-auto=create-drop
@@ -823,8 +942,6 @@ public int sumar(int a, int b) {
 }
 ```
 
-
-
 ### Beneficios de TDD
 
 ✅ **Mejor diseño:** Pensar en la API antes de implementar resulta en mejor diseño
@@ -856,259 +973,55 @@ public int sumar(int a, int b) {
 
 ---
 
-## Ejercicio Práctico
+## Configuración de Gradle y Cobertura
 
-### Objetivo
+### Configuración de JUnit y JaCoCo en build.gradle
 
-**Realizar pruebas unitarias y de integración del ejercicio JPA**
-
-Este ejercicio te permite aplicar todo lo aprendido en esta clase:
-
-- Escribir pruebas unitarias con JUnit
-- Usar Mockito para aislar dependencias
-- Crear pruebas de integración con `@SpringBootTest`
-- Probar controllers con MockMvc
-- Aplicar el patrón AAA
-- Practicar TDD
-
-### Pasos sugeridos
-
-#### 1. Pruebas Unitarias del Service
-
-```java
-@ExtendWith(MockitoExtension.class)
-class UsuarioServiceTest {
+```groovy
+test {
+    useJUnitPlatform()  // Habilita JUnit 5
     
-    @Mock
-    private UsuarioRepository repository;
-    
-    @InjectMocks
-    private UsuarioService service;
-    
-    @Test
-    void deberiaCrearUsuario() {
-        // Arrange
-        Usuario usuario = new Usuario("Juan", "juan@test.com");
-        when(repository.save(any(Usuario.class))).thenReturn(usuario);
-        
-        // Act
-        Usuario creado = service.crearUsuario(usuario);
-        
-        // Assert
-        assertNotNull(creado);
-        assertEquals("Juan", creado.getNombre());
-        verify(repository).save(usuario);
+    testLogging {
+        events "passed", "skipped", "failed"
     }
     
-    @Test
-    void deberiaObtenerUsuarioPorId() {
-        // Arrange
-        Usuario usuario = new Usuario("Ana", "ana@test.com");
-        when(repository.findById(1L)).thenReturn(Optional.of(usuario));
-        
-        // Act
-        Optional<Usuario> encontrado = service.obtenerPorId(1L);
-        
-        // Assert
-        assertTrue(encontrado.isPresent());
-        assertEquals("Ana", encontrado.get().getNombre());
-    }
-    
-    @Test
-    void deberiaLanzarExcepcionCuandoUsuarioNoExiste() {
-        // Arrange
-        when(repository.findById(999L)).thenReturn(Optional.empty());
-        
-        // Act & Assert
-        assertThrows(NotFoundException.class, () -> {
-            service.obtenerPorIdOError(999L);
-        });
-    }
+    finalizedBy jacocoTestReport  // Genera reporte después de tests
 }
-```
 
-#### 2. Pruebas de Integración del Repository
-
-```java
-@DataJpaTest
-class UsuarioRepositoryTest {
+jacocoTestReport {
+    dependsOn test  // Requiere que los tests se ejecuten primero
     
-    @Autowired
-    private UsuarioRepository repository;
-    
-    @Test
-    void deberiaGuardarYRecuperarUsuario() {
-        // Arrange
-        Usuario usuario = new Usuario("Carlos", "carlos@test.com");
-        
-        // Act
-        Usuario guardado = repository.save(usuario);
-        Optional<Usuario> recuperado = repository.findById(guardado.getId());
-        
-        // Assert
-        assertTrue(recuperado.isPresent());
-        assertEquals("Carlos", recuperado.get().getNombre());
+    reports {
+        xml.required = true
+        html.required = true
     }
     
-    @Test
-    void deberiaEncontrarUsuarioPorEmail() {
-        // Arrange
-        Usuario usuario = new Usuario("Maria", "maria@test.com");
-        repository.save(usuario);
-        
-        // Act
-        Optional<Usuario> encontrado = repository.findByEmail("maria@test.com");
-        
-        // Assert
-        assertTrue(encontrado.isPresent());
-        assertEquals("Maria", encontrado.get().getNombre());
-    }
-    
-    @Test
-    void deberiaListarTodosLosUsuarios() {
-        // Arrange
-        repository.save(new Usuario("User1", "user1@test.com"));
-        repository.save(new Usuario("User2", "user2@test.com"));
-        
-        // Act
-        List<Usuario> usuarios = repository.findAll();
-        
-        // Assert
-        assertEquals(2, usuarios.size());
-    }
+    finalizedBy jacocoTestCoverageVerification  // Verifica cobertura mínima
 }
-```
 
-#### 3. Pruebas de Integración del Controller con MockMvc
-
-```java
-@SpringBootTest
-@AutoConfigureMockMvc
-class UsuarioControllerIntegrationTest {
-    
-    @Autowired
-    private MockMvc mockMvc;
-    
-    @Autowired
-    private UsuarioRepository repository;
-    
-    @BeforeEach
-    void limpiarBaseDeDatos() {
-        repository.deleteAll();
-    }
-    
-    @Test
-    void deberiaCrearUsuarioViaAPI() throws Exception {
-        String usuarioJson = """
-            {
-                "nombre": "Pedro",
-                "email": "pedro@test.com"
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80  // 80% de cobertura mínima
             }
-            """;
-        
-        mockMvc.perform(post("/api/usuarios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(usuarioJson))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Pedro"))
-                .andExpect(jsonPath("$.email").value("pedro@test.com"))
-                .andExpect(jsonPath("$.id").exists());
-    }
-    
-    @Test
-    void deberiaObtenerTodosLosUsuarios() throws Exception {
-        // Arrange
-        repository.save(new Usuario("User1", "user1@test.com"));
-        repository.save(new Usuario("User2", "user2@test.com"));
-        
-        // Act & Assert
-        mockMvc.perform(get("/api/usuarios"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].nombre").value("User1"))
-                .andExpect(jsonPath("$[1].nombre").value("User2"));
-    }
-    
-    @Test
-    void deberiaActualizarUsuario() throws Exception {
-        // Arrange
-        Usuario usuario = repository.save(new Usuario("Original", "original@test.com"));
-        
-        String usuarioActualizado = """
-            {
-                "nombre": "Actualizado",
-                "email": "actualizado@test.com"
-            }
-            """;
-        
-        // Act & Assert
-        mockMvc.perform(put("/api/usuarios/" + usuario.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(usuarioActualizado))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Actualizado"));
-    }
-    
-    @Test
-    void deberiaEliminarUsuario() throws Exception {
-        // Arrange
-        Usuario usuario = repository.save(new Usuario("ToDelete", "delete@test.com"));
-        
-        // Act
-        mockMvc.perform(delete("/api/usuarios/" + usuario.getId()))
-                .andExpect(status().isNoContent());
-        
-        // Assert
-        assertFalse(repository.findById(usuario.getId()).isPresent());
-    }
-    
-    @Test
-    void deberiaRetornar404CuandoUsuarioNoExiste() throws Exception {
-        mockMvc.perform(get("/api/usuarios/999"))
-                .andExpect(status().isNotFound());
+        }
     }
 }
 ```
 
-#### 4. Aplicar TDD para nueva funcionalidad
+### Ubicación de Reportes
 
-**Ejemplo: Agregar funcionalidad para contar usuarios por dominio de email**
+| Reporte | Ubicación |
+|---------|-----------|
+| **Coverage HTML** | `/build/reports/jacoco/test/html/index.html` |
+| **Test Results** | `/build/reports/tests/test/index.html` |
 
-```java
-// 🔴 RED - Primero el test
-@Test
-void deberiaContarUsuariosPorDominio() {
-    // Arrange
-    repository.save(new Usuario("User1", "user1@gmail.com"));
-    repository.save(new Usuario("User2", "user2@gmail.com"));
-    repository.save(new Usuario("User3", "user3@yahoo.com"));
-    
-    // Act
-    long countGmail = service.contarPorDominio("gmail.com");
-    long countYahoo = service.contarPorDominio("yahoo.com");
-    
-    // Assert
-    assertEquals(2, countGmail);
-    assertEquals(1, countYahoo);
-}
+### Principios Importantes
 
-// 🟢 GREEN - Implementación
-public long contarPorDominio(String dominio) {
-    return repository.findAll().stream()
-        .filter(u -> u.getEmail().endsWith("@" + dominio))
-        .count();
-}
-
-// 🔵 REFACTOR - Mejorar con query personalizada
-// En Repository:
-@Query("SELECT COUNT(u) FROM Usuario u WHERE u.email LIKE %:dominio")
-long countByEmailDomain(@Param("dominio") String dominio);
-
-// En Service:
-public long contarPorDominio(String dominio) {
-    return repository.countByEmailDomain("@" + dominio);
-}
-```
+- **Las pruebas unitarias NO deben depender de ninguna otra prueba** (independientes)
+- Cada test debe poder ejecutarse de forma aislada
+- El orden de ejecución no debe afectar los resultados
 
 ---
 
@@ -1133,3 +1046,21 @@ Las pruebas son fundamentales para:
 - **Patrón AAA:** Arrange-Act-Assert para estructura clara
 
 Recuerda: **Código sin tests es código legacy desde el día 1.**
+
+---
+
+## Recursos Adicionales
+
+### Documentación y Tutoriales
+
+| Recurso | Enlace |
+|---------|--------|
+| **Pruebas Parametrizadas JUnit 5** | [Baeldung](https://www.baeldung.com/parameterized-tests-junit-5) |
+| **Mockito Documentation** | [site.mockito.org](https://site.mockito.org/) |
+| **Spring Boot Testing** | [Spring Docs](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing) |
+
+### Repositorio de Ejemplos
+
+🔗 [Unit Test Practice - Enyoi](https://github.com/Saisho137/unit-test-practice-enyoi)
+
+Contiene ejemplos prácticos de pruebas unitarias en Java con JUnit y Mockito.
