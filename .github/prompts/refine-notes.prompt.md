@@ -1,7 +1,7 @@
 ---
 agent: agent
 ---
-Quiero que analices a profundidad mis notas del archivo anexado, luego quiero que me ayudes a refinar su estructura y contenido de la mejor forma posible; de manera en que me sirva para estudiar acerca del tema principal de las mismas.
+Quiero que analices a profundidad mis notas del archivo anexado, luego refina su estructura y contenido de la mejor forma posible; de manera concisa y, que sea realmente útil al estudiar acerca del tema.
 
 Asegúrate de llevar a cabo cada "PENDIENTE", NO OMITAS ninguno.
 
@@ -11,4 +11,5 @@ Después de cumplir todo lo anterior, agrega un pequeño índice y resumen, muy 
 
 PIENSA paso a paso.
 Tómate todo el tiempo que necesites.
-PLANEA, para que no omitir nada.
+PLANEA, para no omitir nada.
+Si es necesario, INVESTIGA a profundidad, a día de hoy.
