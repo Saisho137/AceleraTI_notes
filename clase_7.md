@@ -514,6 +514,35 @@ class UsuarioServiceTest {
 >
 > **Requisito:** Para que `@Mock` funcione, se necesita `@ExtendWith(MockitoExtension.class)` en JUnit 5, o llamar a `MockitoAnnotations.openMocks(this)` en `@BeforeEach`.
 
+### Configuración avanzada de Mocks
+
+**Mocks anidados con `RETURNS_DEEP_STUBS`:**
+
+Cuando trabajas con objetos que tienen múltiples niveles de profundidad (llamadas encadenadas), puedes usar `@Mock(answer = Answers.RETURNS_DEEP_STUBS)` para evitar crear múltiples capas de `when()`:
+
+```java
+// ❌ Sin RETURNS_DEEP_STUBS - necesitas mockear cada nivel
+@Mock
+private UsuarioService usuarioService;
+
+@Test
+void testSinDeepStubs() {
+    when(usuarioService.obtenerUsuario()).thenReturn(Mockito.mock());
+    when(usuarioService.obtenerUsuario().getDireccion()).thenReturn(Mockito.mock());
+    when(usuarioService.obtenerUsuario().getDireccion().getCiudad()).thenReturn("Bogotá");
+}
+
+// ✅ Con RETURNS_DEEP_STUBS - mockea toda la cadena
+@Mock(answer = Answers.RETURNS_DEEP_STUBS)
+private UsuarioService usuarioService;
+
+@Test
+void testConDeepStubs() {
+    when(usuarioService.obtenerUsuario().getDireccion().getCiudad())
+        .thenReturn("Bogotá");
+}
+```
+
 ### Configurar comportamiento (Stubbing)
 
 **Definir qué retorna un método:**
