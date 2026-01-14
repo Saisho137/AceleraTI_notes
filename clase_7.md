@@ -506,6 +506,8 @@ class UsuarioServiceTest {
 }
 ```
 
+> 💡 **`@ExtendWith(MockitoExtension.class)`:** Esta anotación es **esencial** para usar `@Mock` y `@InjectMocks` en JUnit 5. Evita tener que abrir y cerrar manualmente los mocks con `MockitoAnnotations.openMocks(this)` y `closeable.close()`. La extensión se encarga automáticamente del ciclo de vida de los mocks.
+
 > ✅ **`@Mock` vs `mock()`:** Ambas opciones son **funcionalmente equivalentes**. La anotación `@Mock` es preferida porque:
 >
 > - Código más corto y legible
