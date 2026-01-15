@@ -321,6 +321,39 @@ NotificationSender sender = map.get("EMAIL").get();
 
 ---
 
+### Streams y Programación Funcional
+
+Java 8+ permite escribir código declarativo usando Streams. Operaciones comunes:
+
+```java
+public BigDecimal getSubTotal() {
+    return items.stream()
+            .map(OrderItem::getTotal)                    // Transforma: extrae el total de cada item
+            .reduce(BigDecimal.ZERO, BigDecimal::add);   // Acumula: suma todos los totales
+}
+```
+
+**Equivalente imperativo (más verboso):**
+```java
+public BigDecimal getSubTotal() {
+    BigDecimal total = BigDecimal.ZERO;
+    for (OrderItem item : items) {
+        total = total.add(item.getTotal());
+    }
+    return total;
+}
+```
+
+**Operaciones clave:**
+| Operación | Propósito | Ejemplo |
+|-----------|-----------|---------|
+| `map()` | Transformar elementos | `item -> item.getTotal()` |
+| `filter()` | Filtrar elementos | `item -> item.getPrice() > 100` |
+| `reduce()` | Acumular a un solo valor | `(a, b) -> a.add(b)` |
+| `collect()` | Convertir a colección | `Collectors.toList()` |
+
+---
+
 ## Ejercicio práctico
 
 ### Analiza este código y encuentra qué principios SOLID viola
