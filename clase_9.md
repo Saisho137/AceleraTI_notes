@@ -354,6 +354,45 @@ public BigDecimal getSubTotal() {
 
 ---
 
+### Genéricos: `<T>` vs Wildcard `<?>`
+
+Ambos permiten trabajar con tipos genéricos, pero tienen usos distintos:
+
+| Característica | `<T>` (Tipo parametrizado) | `<?>` (Wildcard) |
+|----------------|---------------------------|------------------|
+| **Declaración** | En clases, interfaces y métodos | Solo en uso (parámetros, variables) |
+| **Referencia** | Puedes usar `T` en el código | No puedes referenciar el tipo |
+| **Propósito** | Definir un tipo reutilizable | Aceptar cualquier tipo sin nombrarlo |
+
+**Ejemplo con `<T>`:** Puedes usar el tipo en múltiples lugares
+
+```java
+public interface EventHandler<T extends Event> {
+    void handle(T event);        // T se usa aquí
+    boolean supports(Class<T>);  // y aquí también
+}
+```
+
+**Ejemplo con `<?>`:** Solo indica "cualquier tipo que extienda Event"
+
+```java
+// Acepta cualquier clase que extienda Event, pero no puedes referenciar el tipo
+boolean supports(Class<? extends Event> eventClass);
+```
+
+**Bounded Wildcards:**
+```java
+List<?>                    // Cualquier tipo
+List<? extends Number>     // Number o cualquier subclase (Integer, Double...)
+List<? super Integer>      // Integer o cualquier superclase (Number, Object)
+```
+
+**Cuándo usar cada uno:**
+- `<T>`: Cuando necesitas **referenciar el tipo** en múltiples lugares o retornarlo
+- `<?>`: Cuando solo necesitas **aceptar cualquier tipo** sin manipularlo específicamente
+
+---
+
 ## Ejercicio práctico
 
 ### Analiza este código y encuentra qué principios SOLID viola

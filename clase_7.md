@@ -588,6 +588,35 @@ verify(mockRepo, never()).delete(any());
 verify(mockRepo, atLeast(2)).findAll();
 ```
 
+### verify() vs assert(): Cuándo usar cada uno
+
+| Método | Propósito | Cuándo usar |
+|--------|-----------|-------------|
+| `assert*()` (JUnit) | Verificar **valores/estado** | Validar que un resultado tiene el valor esperado |
+| `verify()` (Mockito) | Verificar **interacciones** | Validar que un método fue llamado en un mock |
+
+```java
+@Test
+void deberiaGuardarYRetornarUsuario() {
+    Usuario usuario = new Usuario("Ana");
+    when(mockRepo.save(any())).thenReturn(usuario);
+    
+    Usuario resultado = service.crear(usuario);
+    
+    // assert: verifica el VALOR retornado
+    assertNotNull(resultado);
+    assertEquals("Ana", resultado.getNombre());
+    
+    // verify: verifica que el método fue LLAMADO
+    verify(mockRepo).save(usuario);
+    verify(mockRepo, never()).delete(any());
+}
+```
+
+**Regla general:**
+- Usa `assert*()` para validar **qué** retorna el código (estado)
+- Usa `verify()` para validar **cómo** interactúa con sus dependencias (comportamiento)
+
 ### Ejemplo
 
 ```java
