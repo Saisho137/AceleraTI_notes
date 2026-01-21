@@ -1,6 +1,7 @@
 # Clase 10 - IA & Machine Learning en Java
 
-> **Fuente:** [Diapositivas del curso](https://manulasker.github.io/enyoi_java_slides/clase_12_13_14_temas_faltantes_ia/#/qu%C3%A9-es-machine-learning)
+> **Fuente:** [Diapositivas del curso](https://manulasker.github.io/enyoi_java_slides/clase_12_13_14_temas_faltantes_ia/#/qu%C3%A9-es-machine-learning)  
+> **Repo de práctica:** [simple-chat-ia-solid-enyoi](https://github.com/Saisho137/simple-chat-ia-solid-enyoi)
 
 ---
 
@@ -14,6 +15,8 @@
 6. [Implementación con DJL](#implementación-con-djl)
 7. [Evaluación de Modelos](#evaluación-de-modelos)
 8. [Integración con APIs de IA Generativa](#integración-con-apis-de-ia-generativa)
+9. [Patrones de Arquitectura para IA](#patrones-de-arquitectura-para-ia)
+10. [Mejores Prácticas](#mejores-prácticas)
 
 ---
 
@@ -679,6 +682,577 @@ assistant.chat("¿Cuánto cuesta el producto ABC-123?");
 
 ---
 
+## Patrones de Arquitectura para IA
+
+### ¿Por qué usar Patrones?
+
+![Problemas sin Patrones](assets/clase_10/problemas-sin-patrones.png)
+
+Los patrones permiten:
+- Usar datos propios y actualizados
+- Reducir alucinaciones
+- Controlar el comportamiento
+- Escalar la solución
+
+---
+
+### Tokenizers
+
+Son la herramienta que permite convertir texto a valores numéricos. Las empresas intentan implementar el mismo Tokenizer en su LLM y Embedding, para que estos se puedan comunicar eficientemente.
+
+![Tokenizer Playground](assets/clase_10/tokenizer-playground.png)
+
+---
+
+### Embeddings
+
+Los embeddings son representaciones numéricas (vectores) de texto que capturan su significado semántico.
+
+![Embeddings Concepto](assets/clase_10/embeddings-concepto.png)
+
+**Propiedad clave:** Textos con significado similar tienen vectores cercanos.
+
+Hay múltiples modelos de Embedding, que también figuran como modelos de IA. Estos se entrenan con millones de datos (similar al Deep Learning) y empiezan a almacenar y clasificar las palabras en vectores de forma probabilística, logrando que queden relacionadas semánticamente.
+
+La **búsqueda semántica** consiste en funciones matemáticas como la del coseno: ángulos cercanos a 0 entre vectores indican que están fuertemente relacionados.
+
+#### Embeddings en Java
+
+```java
+@Service
+public class EmbeddingService {
+    
+    private final EmbeddingModel embeddingModel;
+    
+    public EmbeddingService(EmbeddingModel embeddingModel) {
+        this.embeddingModel = embeddingModel;
+    }
+    
+    // Generar embedding de un texto
+    public float[] embed(String text) {
+        EmbeddingResponse response = embeddingModel.call(
+            new EmbeddingRequest(List.of(text), EmbeddingOptions.EMPTY)
+        );
+        return response.getResult().getOutput();
+    }
+    
+    // Calcular similitud entre dos textos
+    public double similarity(String text1, String text2) {
+        float[] emb1 = embed(text1);
+        float[] emb2 = embed(text2);
+        return cosineSimilarity(emb1, emb2);
+    }
+    
+    private double cosineSimilarity(float[] a, float[] b) {
+        double dotProduct = 0, normA = 0, normB = 0;
+        for (int i = 0; i < a.length; i++) {
+            dotProduct += a[i] * b[i];
+            normA += a[i] * a[i];
+            normB += b[i] * b[i];
+        }
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+}
+```
+
+---
+
+### Vector Databases
+
+Las bases de datos vectoriales están optimizadas para almacenar y buscar embeddings.
+
+![Vector Databases Concepto](assets/clase_10/vector-databases-concepto.png)
+
+#### Opciones de Vector Databases
+
+| Base de Datos | Tipo | Características |
+|---------------|------|-----------------|
+| PGVector | SQL Extension | Integra con PostgreSQL existente |
+| Pinecone | Cloud Native | Serverless, escalable |
+| Weaviate | Open Source | GraphQL, multi-modal |
+| Milvus | Open Source | Alto rendimiento |
+| Chroma | Open Source | Simple, para desarrollo |
+| Redis | In-Memory | Ultra rápido |
+
+#### Vector Stores en Spring AI
+
+```java
+@Configuration
+public class VectorStoreConfig {
+    
+    // Usando PGVector (PostgreSQL)
+    @Bean
+    public VectorStore vectorStore(JdbcTemplate jdbcTemplate, 
+                                    EmbeddingModel embeddingModel) {
+        return new PgVectorStore(jdbcTemplate, embeddingModel);
+    }
+}
+
+@Service
+public class DocumentService {
+    
+    private final VectorStore vectorStore;
+    
+    // Indexar documentos
+    public void indexDocuments(List<Document> documents) {
+        vectorStore.add(documents);
+    }
+    
+    // Búsqueda semántica
+    public List<Document> search(String query, int topK) {
+        return vectorStore.similaritySearch(
+            SearchRequest.query(query).withTopK(topK)
+        );
+    }
+}
+```
+
+---
+
+### RAG - Retrieval Augmented Generation
+
+RAG combina búsqueda de información con generación de texto para respuestas precisas y actualizadas.
+
+![RAG Concepto](assets/clase_10/rag-concepto.png)
+
+#### Almacenamiento en IA
+
+En la IA se usa:
+- **Corto plazo:** Redis Cache, guardando los últimos ~20 mensajes del chat
+- **Largo plazo:** DBs como PostgreSQL con Embeddings (pgVector)
+
+#### IA Generativa Moderna: LLM + Embeddings
+
+El modelo LLM utiliza los Embeddings mediante **Tools**. El modelo tiene la decisión de llamar o no la Tool. Si no tiene un Embedding apropiado al cual llamar con una Tool, el modelo intenta responder con su propio entrenamiento (aumenta la probabilidad de alucinar enormemente).
+
+Los grandes modelos del mercado (GPT, Gemini, Claude) suelen utilizar distintos Embeddings especializados, en lugar de uno solo gigantesco. El modelo tiene las diferentes tools para acceder a cada Embedding según el Prompt del usuario.
+
+Cada empresa implementa sus propias arquitecturas: su propio modelo LLM, tokenizer y modelo de Embedding; para que su ecosistema funcione de forma óptima.
+
+![LLM + Embeddings + Tools](assets/clase_10/llm-embeddings-tools.png)
+
+> Este modelo también se puede interpretar como un RAG.
+
+#### Pipeline RAG
+
+En RAG, se pueden construir pipelines en las que se indica explícitamente cuándo utilizar X Tools. Por ejemplo: especificar que se haga una búsqueda vectorial al Embedding cuando se recibe el input del usuario, cuando se hace el retrieval (query) se pasan estos documentos como input junto al mensaje del usuario al modelo LLM.
+
+![RAG Pipeline Detallado](assets/clase_10/rag-pipeline-detallado.png)
+
+#### RAG - Paso 1: Chunking
+
+```java
+@Service
+public class DocumentChunker {
+    
+    // Dividir documentos en chunks manejables
+    public List<Document> chunkDocument(String content, String source) {
+        
+        // Estrategia: chunks de 1000 caracteres con 200 de overlap
+        TokenTextSplitter splitter = new TokenTextSplitter(
+            1000,   // chunk size
+            200,    // overlap
+            5,      // min chunk size
+            10000,  // max tokens
+            true    // keep separator
+        );
+        
+        List<String> chunks = splitter.split(content);
+        
+        return chunks.stream()
+            .map(chunk -> new Document(chunk, Map.of(
+                "source", source,
+                "timestamp", Instant.now().toString()
+            )))
+            .toList();
+    }
+}
+```
+
+> El overlap ayuda a mantener contexto entre chunks.
+
+#### RAG - Paso 2: Indexación
+
+```java
+@Service
+public class RAGIndexingService {
+    
+    private final VectorStore vectorStore;
+    private final DocumentChunker chunker;
+    
+    // Indexar un documento PDF
+    public void indexPdf(Path pdfPath) throws IOException {
+        // Extraer texto del PDF
+        PDDocument document = PDDocument.load(pdfPath.toFile());
+        PDFTextStripper stripper = new PDFTextStripper();
+        String content = stripper.getText(document);
+        document.close();
+        
+        // Dividir en chunks
+        List<Document> chunks = chunker.chunkDocument(
+            content, 
+            pdfPath.getFileName().toString()
+        );
+        
+        // Almacenar en vector store (embeddings generados automáticamente)
+        vectorStore.add(chunks);
+        
+        log.info("Indexados {} chunks del documento {}", 
+            chunks.size(), pdfPath.getFileName());
+    }
+}
+```
+
+#### RAG - Paso 3: Consulta
+
+```java
+@Service
+public class RAGQueryService {
+    
+    private final VectorStore vectorStore;
+    private final ChatClient chatClient;
+    
+    public String query(String question) {
+        // 1. Buscar documentos relevantes
+        List<Document> relevantDocs = vectorStore.similaritySearch(
+            SearchRequest.query(question)
+                .withTopK(5)
+                .withSimilarityThreshold(0.7)
+        );
+        
+        // 2. Construir contexto
+        String context = relevantDocs.stream()
+            .map(Document::getContent)
+            .collect(Collectors.joining("\n\n---\n\n"));
+        
+        // 3. Generar respuesta con contexto
+        return chatClient.prompt()
+            .system("""
+                Responde basándote ÚNICAMENTE en el contexto proporcionado.
+                Si la información no está en el contexto, di que no lo sabes.
+                Cita las fuentes cuando sea posible.
+                """)
+            .user(u -> u.text("""
+                Contexto:
+                {context}
+                
+                Pregunta: {question}
+                """)
+                .param("context", context)
+                .param("question", question))
+            .call()
+            .content();
+    }
+}
+```
+
+#### RAG con Spring AI Advisors
+
+```java
+// Spring AI simplifica RAG con Advisors
+@Service
+public class SimpleRAGService {
+    
+    private final ChatClient chatClient;
+    private final VectorStore vectorStore;
+    
+    public SimpleRAGService(ChatClient.Builder builder, VectorStore vectorStore) {
+        this.vectorStore = vectorStore;
+        
+        // Configurar RAG como advisor
+        this.chatClient = builder
+            .defaultAdvisors(
+                new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults())
+            )
+            .build();
+    }
+    
+    // El advisor maneja automáticamente la búsqueda y el contexto
+    public String ask(String question) {
+        return chatClient.prompt()
+            .user(question)
+            .call()
+            .content();
+    }
+}
+```
+
+> Los Advisors en Spring AI interceptan y enriquecen las peticiones automáticamente.
+
+#### RAG - Arquitectura Completa
+
+![RAG Arquitectura Completa](assets/clase_10/rag-arquitectura-completa.png)
+
+---
+
+### Chain/Pipeline Patterns
+
+Los pipelines permiten componer operaciones de IA en flujos complejos.
+
+![Pipeline Pattern](assets/clase_10/pipeline-pattern.png)
+
+#### Chain Pattern - Implementación
+
+```java
+// Interfaz base para pasos del pipeline
+public interface PipelineStep<I, O> {
+    O process(I input);
+    
+    default <R> PipelineStep<I, R> andThen(PipelineStep<O, R> next) {
+        return input -> next.process(this.process(input));
+    }
+}
+
+// Implementaciones de pasos
+public class ValidationStep implements PipelineStep<String, String> {
+    public String process(String input) {
+        if (input == null || input.isBlank()) {
+            throw new IllegalArgumentException("Input vacío");
+        }
+        return input.trim();
+    }
+}
+
+public class TranslationStep implements PipelineStep<String, String> {
+    private final ChatClient chatClient;
+    
+    public String process(String input) {
+        return chatClient.prompt()
+            .user("Traduce al inglés: " + input)
+            .call()
+            .content();
+    }
+}
+```
+
+#### Pipeline Completo
+
+```java
+@Service
+public class DocumentProcessingPipeline {
+    
+    private final PipelineStep<String, String> pipeline;
+    
+    public DocumentProcessingPipeline(ChatClient chatClient, VectorStore vs) {
+        this.pipeline = new ValidationStep()
+            .andThen(new CleaningStep())
+            .andThen(new SummarizationStep(chatClient))
+            .andThen(new EntityExtractionStep(chatClient))
+            .andThen(new IndexingStep(vs));
+    }
+    
+    public String process(String document) {
+        return pipeline.process(document);
+    }
+}
+
+// Uso
+String result = pipeline.process(rawDocument);
+```
+
+#### Router Pattern
+
+```java
+// Enrutar consultas a diferentes especialistas
+@Service
+public class QueryRouter {
+    
+    private final ChatClient classifier;
+    private final Map<String, ChatClient> specialists;
+    
+    public String route(String query) {
+        // 1. Clasificar la consulta
+        String category = classifier.prompt()
+            .user("""
+                Clasifica esta consulta en una categoría:
+                - TECHNICAL: Preguntas de código o arquitectura
+                - BUSINESS: Preguntas de negocio o procesos
+                - SUPPORT: Problemas o errores
+                
+                Consulta: %s
+                
+                Responde SOLO con la categoría.
+                """.formatted(query))
+            .call()
+            .content()
+            .trim();
+        
+        // 2. Enrutar al especialista
+        ChatClient specialist = specialists.getOrDefault(category, 
+            specialists.get("GENERAL"));
+        
+        return specialist.prompt()
+            .user(query)
+            .call()
+            .content();
+    }
+}
+```
+
+#### Parallel Pattern
+
+```java
+@Service
+public class ParallelAnalysisService {
+    
+    private final ChatClient chatClient;
+    
+    // Ejecutar múltiples análisis en paralelo
+    public AnalysisResult analyzeDocument(String document) {
+        
+        CompletableFuture<String> sentimentFuture = CompletableFuture.supplyAsync(
+            () -> analyzeSentiment(document)
+        );
+        
+        CompletableFuture<List<String>> entitiesFuture = CompletableFuture.supplyAsync(
+            () -> extractEntities(document)
+        );
+        
+        CompletableFuture<String> summaryFuture = CompletableFuture.supplyAsync(
+            () -> summarize(document)
+        );
+        
+        // Esperar todos los resultados
+        return CompletableFuture.allOf(sentimentFuture, entitiesFuture, summaryFuture)
+            .thenApply(v -> new AnalysisResult(
+                sentimentFuture.join(),
+                entitiesFuture.join(),
+                summaryFuture.join()
+            ))
+            .join();
+    }
+}
+```
+
+#### Retry y Fallback Pattern
+
+```java
+@Service
+public class ResilientAIService {
+    
+    private final List<ChatClient> providers; // GPT-4, Gemini, Claude
+    
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    public String chatWithRetry(String message) {
+        return primaryProvider.prompt()
+            .user(message)
+            .call()
+            .content();
+    }
+    
+    // Fallback entre proveedores
+    public String chatWithFallback(String message) {
+        for (ChatClient provider : providers) {
+            try {
+                return provider.prompt()
+                    .user(message)
+                    .call()
+                    .content();
+            } catch (Exception e) {
+                log.warn("Provider falló, intentando siguiente: {}", e.getMessage());
+            }
+        }
+        throw new AIServiceUnavailableException("Todos los proveedores fallaron");
+    }
+}
+```
+
+---
+
+### Arquitectura Completa de IA en Java
+
+![Arquitectura Completa IA Java](assets/clase_10/arquitectura-completa-ia-java.png)
+
+---
+
+## Mejores Prácticas
+
+### Seguridad
+
+#### Prompt Injection
+
+- Sanitizar inputs del usuario
+- Escapar caracteres especiales (`system:`, `assistant:`)
+- Limitar longitud de prompts
+- No concatenar inputs directamente
+- Usar templates con placeholders
+
+#### Protección de Datos
+
+- Nunca enviar datos sensibles al LLM
+- Validar respuestas antes de mostrar
+- Filtrar PII (datos personales)
+- No exponer API keys en frontend
+- Usar variables de entorno o vaults
+
+> Los LLMs pueden ser manipulados para revelar información. Siempre valida entradas y salidas.
+
+---
+
+### Observabilidad
+
+#### Métricas a Monitorear
+
+- Latencia por request/modelo
+- Tokens consumidos (input/output)
+- Tasa de errores por proveedor
+- Costos acumulados por día/mes
+- Cache hit rate si usas caché
+
+#### Herramientas Recomendadas
+
+- Micrometer + Prometheus
+- Spring Boot Actuator
+- Grafana para dashboards
+- LiteLLM Dashboard (built-in)
+- Langfuse para trazabilidad LLM
+
+> LiteLLM incluye dashboard de observabilidad con métricas de uso, latencia y costos por modelo.
+
+---
+
+### Control de Costos
+
+#### Estrategias de Optimización
+
+- Usar modelos más baratos para tareas simples
+- Implementar caché de respuestas
+- Limitar tokens máximos por request
+- Rate limiting por usuario/API
+- Comprimir contexto en RAG
+
+#### Presupuestos y Límites
+
+- **OpenAI:** Usage limits en dashboard
+- **Google Cloud:** Budget alerts
+- **LiteLLM:** Budgets por usuario/team
+- **Anthropic:** Spend limits por org
+- Alertas cuando se alcanza 80% del budget
+
+#### Control de Costos con LiteLLM
+
+LiteLLM ofrece control de presupuestos centralizado:
+
+| Característica | Descripción |
+|----------------|-------------|
+| Budgets por API key | Limitar gasto por aplicación |
+| Budgets por usuario | Control granular de costos |
+| Budgets por equipo | Para organizaciones grandes |
+| Rate limits | Requests por minuto/hora |
+| Alertas automáticas | Notificaciones al alcanzar límites |
+| Dashboard de costos | Visualización en tiempo real |
+
+```yaml
+# Ejemplo config LiteLLM con budgets
+litellm_settings:
+  max_budget: 100  # USD máximo
+  budget_duration: monthly
+```
+
+> Cada proveedor (OpenAI, Google, Anthropic) también permite configurar budgets y alertas directamente en su consola de administración.
+
+---
+
 ## Extra
 
 **Log Prob:** Opción que ofrecen los vendors para ver la probabilidad de cada token durante el procesamiento. Se activa mediante un header específico en la petición.
@@ -687,10 +1261,23 @@ assistant.chat("¿Cuánto cuesta el producto ABC-123?");
 
 ## Resumen
 
-Esta clase cubre la integración de IA/ML en aplicaciones Java empresariales. Los puntos clave son:
+Esta clase cubre la integración de IA/ML en aplicaciones Java empresariales:
 
-- **DJL** para ML tradicional (clasificación, detección de objetos)
-- **Spring AI** como framework oficial de Spring para IA generativa
-- **LangChain4j** como alternativa con AI Services, Memory y Tools
-- **LiteLLM** como gateway unificado para múltiples proveedores
-- Las métricas de evaluación (Accuracy, Precision, Recall, F1) son fundamentales para validar modelos
+| Área | Herramientas/Conceptos |
+|------|------------------------|
+| **ML Tradicional** | DJL para clasificación, detección de objetos |
+| **IA Generativa** | Spring AI (oficial), LangChain4j (avanzado) |
+| **Gateway Unificado** | LiteLLM para múltiples proveedores |
+| **Patrones** | RAG, Embeddings, Vector DBs, Pipelines |
+| **Evaluación** | Accuracy, Precision, Recall, F1-Score |
+
+### Recursos Adicionales
+
+| Recurso | URL |
+|---------|-----|
+| Spring AI Docs | [docs.spring.io/spring-ai](https://docs.spring.io/spring-ai) |
+| LangChain4j | [docs.langchain4j.dev](https://docs.langchain4j.dev) |
+| Deep Java Library | [djl.ai](https://djl.ai) |
+| LiteLLM | [docs.litellm.ai](https://docs.litellm.ai) |
+| OpenAI Docs | [platform.openai.com/docs](https://platform.openai.com/docs) |
+| Google AI | [ai.google.dev](https://ai.google.dev) |
