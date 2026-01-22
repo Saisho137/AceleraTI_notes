@@ -274,10 +274,51 @@ En arquitecturas complejas, es común usar **múltiples brokers** para diferente
 
 ### Spring WebFlux y Concurrencia
 
-- **WebFlux** es la librería reactiva de Spring que implementa un modelo de programación no bloqueante.
-- Genera un **Event Loop** similar al de Node.js para permitir concurrencia eficiente.
-- Utiliza **hilos virtuales** (green threads) que consumen menos recursos que los hilos tradicionales del sistema operativo.
-- Ideal para aplicaciones con alta concurrencia I/O-bound.
+**WebFlux** es la librería reactiva de Spring que implementa un modelo de programación no bloqueante.
+
+#### Características principales
+
+- Genera un **Event Loop** similar al de Node.js para permitir concurrencia eficiente
+- Utiliza **hilos virtuales** (green threads) que consumen menos recursos que los hilos tradicionales del sistema operativo
+- Ideal para aplicaciones con alta concurrencia I/O-bound
+- Implementa el paradigma de **programación reactiva**
+
+#### Programación Funcional vs Reactiva
+
+| Aspecto | Streams (Funcional) | WebFlux (Reactiva) |
+|---------|---------------------|-------------------|
+| **Paradigma** | Programación funcional | Programación funcional + reactiva |
+| **Ejecución** | Síncrona, bloqueante | Asíncrona, no bloqueante |
+| **Hilos** | Hilos tradicionales del OS | Green threads (hilos virtuales) |
+| **Performance** | Buena para operaciones en memoria | Mejor para I/O y alta concurrencia |
+| **Backpressure** | No maneja | Maneja presión de datos |
+| **Uso típico** | Transformaciones de colecciones | APIs reactivas, streaming de datos |
+
+**Diferencia clave:**
+
+La programación reactiva también usa programación funcional, pero implementa **green threads** por debajo, lo que resulta en mejor performance para operaciones I/O y alta concurrencia.
+
+**Ejemplo de Streams (Funcional):**
+
+```java
+List<String> nombres = usuarios.stream()
+    .filter(u -> u.isActive())
+    .map(Usuario::getNombre)
+    .collect(Collectors.toList());
+```
+
+**Ejemplo de WebFlux (Reactiva):**
+
+```java
+Flux<String> nombres = usuarioRepository.findAll()
+    .filter(Usuario::isActive)
+    .map(Usuario::getNombre);
+```
+
+**¿Cuándo usar cada uno?**
+
+- **Streams**: Operaciones en memoria, transformaciones de colecciones, procesamiento batch
+- **WebFlux**: APIs REST reactivas, streaming de datos en tiempo real, alta concurrencia I/O
 
 ### Spring Boot Actuator
 

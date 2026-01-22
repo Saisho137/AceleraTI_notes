@@ -396,6 +396,132 @@ miAnimal2.hacerSonido(); // Imprime: "El gato maúlla: Miau!"
 | **Anotación** | No tiene | @Override |
 | **Propósito** | Flexibilidad de uso | Especialización del comportamiento |
 
+## Utilidades de String
+
+### isEmpty() vs isBlank()
+
+Java proporciona dos métodos para verificar si un String está vacío, pero con diferencias importantes:
+
+| Método | Descripción | Ejemplo |
+|--------|-------------|---------|
+| `isEmpty()` | Verifica si `length() == 0` | `"".isEmpty()` → `true` |
+| `isBlank()` | Verifica si está vacío O solo contiene espacios en blanco | `"   ".isBlank()` → `true` |
+
+**Ejemplos:**
+
+```java
+String vacio = "";
+String espacios = "   ";
+String texto = "Hola";
+
+// isEmpty()
+vacio.isEmpty();     // true
+espacios.isEmpty();  // false (tiene caracteres, aunque sean espacios)
+texto.isEmpty();     // false
+
+// isBlank()
+vacio.isBlank();     // true
+espacios.isBlank();  // true (solo espacios)
+texto.isBlank();     // false
+```
+
+**¿Cuándo usar cada uno?**
+
+- **`isEmpty()`**: Cuando solo necesitas verificar si el String tiene longitud 0
+- **`isBlank()`**: Cuando quieres considerar Strings con solo espacios como "vacíos" (más común en validaciones)
+
+---
+
+## Pattern Matching en Java
+
+Java moderno (desde Java 14+) introduce **Pattern Matching**, que permite escribir código más expresivo y conciso, especialmente con `switch`.
+
+### Switch Expressions (Java 14+)
+
+La sintaxis moderna de `switch` permite usar expresiones con la flecha `->`:
+
+```java
+String option = "1";
+
+switch (option) {
+    case "1" -> simpleChat(simpleChatUseCase, scanner);
+    case "2" -> chatWithContext(simpleChatUseCase, scanner);
+    case "3" -> chatWithHistory(simpleChatUseCase, scanner);
+    case "4" -> {
+        System.out.println("\n Saliendo...");
+        scanner.close();
+        System.exit(0);
+    }
+    default -> System.out.println("Opción no válida");
+}
+```
+
+**Ventajas sobre el switch tradicional:**
+
+- No necesita `break` (no hay fall-through)
+- Más conciso y legible
+- Puede retornar valores directamente
+- Soporta bloques de código con `{}`
+
+### Pattern Matching con instanceof (Java 16+)
+
+Permite detectar tipos y asignar variables en una sola línea:
+
+```java
+// ❌ Forma antigua
+if (obj instanceof String) {
+    String s = (String) obj;
+    System.out.println(s.toUpperCase());
+}
+
+// ✅ Pattern Matching
+if (obj instanceof String s) {
+    System.out.println(s.toUpperCase());
+}
+```
+
+### Pattern Matching en Switch (Java 21+)
+
+Combina `switch` con detección de tipos y condiciones:
+
+```java
+// Detectar tipos con instanceof
+Object obj = ...;
+
+String resultado = switch (obj) {
+    case Integer i -> "Número entero: " + i.doubleValue();
+    case String s when s.length() > 0 -> "String no vacío: " + s;
+    case String s -> "String vacío";
+    case null -> "Valor nulo";
+    default -> "Tipo desconocido";
+};
+```
+
+### Ejemplo Práctico: Refactorización con Pattern Matching
+
+**Antes (código verboso):**
+
+![Código sin Pattern Matching](assets/clase_2/pattern-matching-before.png)
+
+**Después (con Pattern Matching):**
+
+![Código con Pattern Matching](assets/clase_2/pattern-matching-after.png)
+
+El código refactorizado:
+- Usa `switch` con pattern matching
+- Detecta el tipo de evento con `instanceof`
+- Llama a métodos privados especializados para cada tipo
+- Es más legible y mantenible
+
+**Beneficios:**
+
+✅ Menos código boilerplate  
+✅ Más expresivo y legible  
+✅ Type-safe (el compilador verifica los tipos)  
+✅ Facilita el mantenimiento
+
+---
+
 ## Excepciones
 
 ![alt text](assets/clase_2/Excepciones.png)
