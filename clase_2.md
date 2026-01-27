@@ -14,7 +14,11 @@
      - [Encapsulamiento](#encapsulamiento)
      - [Herencia](#herencia)
      - [Polimorfismo](#polimorfismo)
-3. [Excepciones](#excepciones)
+3. [Utilidades de String](#utilidades-de-string)
+   - [isEmpty() vs isBlank()](#isempty-vs-isblank)
+4. [Modificador Static](#modificador-static)
+5. [Pattern Matching en Java](#pattern-matching-en-java)
+6. [Excepciones](#excepciones)
 
 ---
 
@@ -429,6 +433,153 @@ texto.isBlank();     // false
 
 - **`isEmpty()`**: Cuando solo necesitas verificar si el String tiene longitud 0
 - **`isBlank()`**: Cuando quieres considerar Strings con solo espacios como "vacíos" (más común en validaciones)
+
+---
+
+## Modificador Static
+
+El modificador **`static`** en Java permite que variables y métodos pertenezcan a la clase en lugar de a instancias individuales.
+
+### Variables Static
+
+Las **variables estáticas** (también llamadas variables de clase) se comparten entre todas las instancias de una clase.
+
+**Características:**
+
+- Se almacenan en memoria una sola vez, independientemente del número de objetos creados
+- Todas las instancias comparten el mismo valor
+- Se pueden acceder directamente desde la clase sin crear un objeto
+- Se pueden modificar sin necesidad de setters, y el cambio afecta a todos los objetos
+
+**Ejemplo:**
+
+```java
+public class Contador {
+    // Variable static compartida por todas las instancias
+    public static int totalObjetos = 0;
+    
+    // Variable de instancia (única por objeto)
+    private int id;
+    
+    public Contador() {
+        totalObjetos++;  // Se incrementa para todos los objetos
+        this.id = totalObjetos;
+    }
+    
+    public void mostrarInfo() {
+        System.out.println("ID: " + id + ", Total objetos: " + totalObjetos);
+    }
+}
+
+// Uso
+Contador c1 = new Contador();
+Contador c2 = new Contador();
+Contador c3 = new Contador();
+
+c1.mostrarInfo();  // ID: 1, Total objetos: 3
+c2.mostrarInfo();  // ID: 2, Total objetos: 3
+c3.mostrarInfo();  // ID: 3, Total objetos: 3
+
+// Acceso directo sin crear objeto
+System.out.println(Contador.totalObjetos);  // 3
+
+// Modificación afecta a todos
+Contador.totalObjetos = 100;
+c1.mostrarInfo();  // ID: 1, Total objetos: 100
+```
+
+### Métodos Static
+
+Los **métodos estáticos** pertenecen a la clase y pueden ser llamados sin crear una instancia.
+
+**Características:**
+
+- No pueden acceder a variables de instancia (no-static)
+- Solo pueden acceder a otras variables y métodos static
+- Se usan para operaciones que no dependen del estado de un objeto
+
+**Ejemplo:**
+
+```java
+public class Utilidades {
+    
+    // Método static - no necesita instancia
+    public static int sumar(int a, int b) {
+        return a + b;
+    }
+    
+    public static double calcularIVA(double precio) {
+        return precio * 0.19;
+    }
+}
+
+// Uso sin crear objeto
+int resultado = Utilidades.sumar(5, 3);  // 8
+double iva = Utilidades.calcularIVA(100);  // 19.0
+```
+
+### Constantes Static Final
+
+La combinación `static final` se usa para definir constantes globales:
+
+```java
+public class Configuracion {
+    // Constante compartida e inmutable
+    public static final String NOMBRE_APP = "MiAplicacion";
+    public static final int MAX_USUARIOS = 100;
+    public static final double PI = 3.14159;
+}
+
+// Uso
+System.out.println(Configuracion.NOMBRE_APP);
+```
+
+### Bloques Static
+
+Los **bloques de inicialización estáticos** se ejecutan una sola vez cuando la clase se carga:
+
+```java
+public class BaseDatos {
+    private static Connection conexion;
+    
+    // Bloque static - se ejecuta al cargar la clase
+    static {
+        System.out.println("Inicializando conexión a BD...");
+        conexion = crearConexion();
+    }
+    
+    private static Connection crearConexion() {
+        // Lógica de conexión
+        return null;
+    }
+}
+```
+
+### Cuándo Usar Static
+
+| Usar Static | No Usar Static |
+|-------------|----------------|
+| Métodos utilitarios (Math.sqrt()) | Métodos que dependen del estado del objeto |
+| Constantes globales (Math.PI) | Atributos únicos por instancia |
+| Contadores compartidos | Cuando necesitas polimorfismo |
+| Factory methods | Cuando necesitas herencia de comportamiento |
+
+### Ventajas y Desventajas
+
+**✅ Ventajas:**
+
+- Ahorro de memoria (una sola copia compartida)
+- Acceso directo sin crear objetos
+- Útil para constantes y utilidades
+
+**❌ Desventajas:**
+
+- Dificulta el testing (estado global)
+- Rompe encapsulamiento si se abusa
+- No soporta polimorfismo
+- Puede causar problemas en aplicaciones multi-hilo
+
+> 💡 **Buena práctica:** Usa `static` para constantes y métodos utilitarios, pero evita el abuso de variables estáticas mutables ya que crean estado global difícil de mantener.
 
 ---
 

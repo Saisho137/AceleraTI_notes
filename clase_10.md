@@ -714,7 +714,25 @@ Los embeddings son representaciones numéricas (vectores) de texto que capturan 
 
 Hay múltiples modelos de Embedding, que también figuran como modelos de IA. Estos se entrenan con millones de datos (similar al Deep Learning) y empiezan a almacenar y clasificar las palabras en vectores de forma probabilística, logrando que queden relacionadas semánticamente.
 
-La **búsqueda semántica** consiste en funciones matemáticas como la del coseno: ángulos cercanos a 0 entre vectores indican que están fuertemente relacionados.
+#### Búsqueda Semántica con Similaridad del Coseno
+
+La **búsqueda semántica** utiliza funciones matemáticas para medir qué tan relacionados están dos vectores. El método más recomendado hoy en día es la **similaridad del coseno**.
+
+**¿Por qué similaridad del coseno?**
+
+- Mide el ángulo entre dos vectores, no su magnitud
+- Ángulos cercanos a 0° (coseno ≈ 1) indican vectores muy similares
+- Ángulos de 90° (coseno ≈ 0) indican vectores no relacionados
+- Es el método estándar usado por los principales LLMs del mercado (GPT, Gemini, Claude)
+- Los LLMs utilizan este método en sus **tools** para interactuar con los Embeddings
+
+**Ventajas sobre otras métricas:**
+
+| Métrica | Ventaja | Desventaja |
+|---------|---------|------------|
+| **Similaridad del Coseno** | Independiente de la magnitud del vector | - |
+| Distancia Euclidiana | Intuitiva | Sensible a la magnitud |
+| Producto punto | Rápida | Depende de la magnitud |
 
 #### Embeddings en Java
 
