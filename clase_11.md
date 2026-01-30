@@ -1,5 +1,8 @@
 # Clase 11 - Arquitectura Hexagonal
 
+> Diapositivas: https://manulasker.github.io/enyoi_java_slides/clase_15_16_17_arquitectura_hexagonal/#/title-slide
+> Repositorio: https://github.com/Saisho137/arka-hexagonal-simple-enyoi
+
 ## Índice
 
 1. [Introducción](#introducción)
