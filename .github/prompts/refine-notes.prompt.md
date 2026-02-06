@@ -1,7 +1,7 @@
 ---
 agent: agent
 ---
-Quiero que analices a profundidad mis notas del archivo anexado, luego refina su estructura y contenido de la mejor forma posible; de manera concisa y, que sea realmente útil al estudiar acerca del tema.
+Quiero que analices a profundidad mis notas del archivo anexado, luego refina su estructura y contenido de la mejor forma posible; de manera concisa y, que sea realmente útil al estudiar acerca del tema. NO AGREGUES MÁS EJEMPLOS, con los anexados basta.
 
 Asegúrate de llevar a cabo cada "PENDIENTE", NO OMITAS ninguno.
 
