@@ -7,9 +7,23 @@
 - [Laboratorio Docker & LocalStack](https://manulasker.github.io/enyoi_java_slides/lab_1_docker_localstack/)
 - [Módulo: Configuración Inicial](https://manulasker.github.io/enyoi_java_slides/lab_1_docker_localstack/modulos/configuracion-inicial)
 
+---
+
+## Índice
+
+1. [Resumen](#resumen)
+2. [CloudFormation - Introducción](#cloudformation---introducción)
+3. [Convenciones de Nomenclatura](#convenciones-de-nomenclatura)
+4. [AWS SQS - Límites de Mensajes](#aws-sqs---límites-de-mensajes)
+5. [Patrón Saga - Transacciones Distribuidas](#patrón-saga---transacciones-distribuidas)
+6. [AWS Secrets Manager](#aws-secrets-manager)
+7. [Recursos Adicionales](#recursos-adicionales)
+
+---
+
 ## Resumen
 
-CloudFormation es el servicio de Infraestructura como Código (IaC) de AWS que permite definir recursos mediante plantillas YAML o JSON. Las mejores prácticas incluyen usar prefijos en Logical IDs (r para Resources, p para Parameters, o para Outputs) para mejorar la legibilidad. AWS SQS tiene un límite de 1 MB por mensaje; para mensajes mayores se debe usar S3 Extended Client Library.
+CloudFormation es el servicio de Infraestructura como Código (IaC) de AWS que permite definir recursos mediante plantillas YAML o JSON. Las mejores prácticas incluyen usar prefijos en Logical IDs (r para Resources, p para Parameters, o para Outputs) para mejorar la legibilidad. AWS SQS tiene un límite de 1 MB por mensaje; para mensajes mayores se debe usar S3 Extended Client Library. El patrón Saga permite manejar transacciones distribuidas mediante eventos con compensación (rollback) en caso de fallo. AWS Secrets Manager automatiza la rotación de secretos mediante funciones Lambda.
 
 ---
 
@@ -277,7 +291,156 @@ Si los mensajes son consistentemente grandes, considera:
 
 ---
 
+## Patrón Saga - Transacciones Distribuidas
+
+### ¿Qué es el Patrón Saga?
+
+El **Patrón Saga** es una arquitectura de eventos que permite manejar **transacciones distribuidas** en sistemas de microservicios. Se basa en dividir una transacción larga en una secuencia de transacciones locales más pequeñas, cada una con su propia **acción compensatoria** (rollback) en caso de fallo.
+
+### Problema: Transacciones ACID en Microservicios
+
+En arquitecturas monolíticas, las transacciones ACID (Atomicidad, Consistencia, Aislamiento, Durabilidad) son manejadas por una única base de datos. En microservicios, cada servicio tiene su propia base de datos, lo que hace imposible usar transacciones ACID tradicionales.
+
+**Ejemplo del problema:**
+
+```
+Orden de Compra:
+1. Servicio de Órdenes: Crear orden
+2. Servicio de Inventario: Reservar productos
+3. Servicio de Pagos: Procesar pago
+4. Servicio de Envíos: Programar envío
+
+¿Qué pasa si el pago falla después de reservar inventario?
+```
+
+### Solución: Saga Pattern
+
+Una Saga divide la transacción en pasos locales, cada uno con una **transacción compensatoria** para deshacer cambios previos.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    SAGA EXITOSA                         │
+└─────────────────────────────────────────────────────────┘
+
+Orden → Inventario → Pago → Envío
+  ✓         ✓         ✓       ✓
+
+┌─────────────────────────────────────────────────────────┐
+│                    SAGA CON FALLO                       │
+└─────────────────────────────────────────────────────────┘
+
+Orden → Inventario → Pago → ❌ FALLO
+  ✓         ✓         ✓
+
+COMPENSACIÓN (Rollback):
+  ↓         ↓         ↓
+Cancelar  Liberar   Revertir
+Orden     Inventario Pago
+```
+
+### Consideraciones Importantes
+
+**Idempotencia:**
+
+- Las acciones compensatorias deben ser **idempotentes** (ejecutarse múltiples veces sin efectos secundarios)
+
+**Consistencia Eventual:**
+
+- Las Sagas garantizan **consistencia eventual**, no inmediata
+- Puede haber estados intermedios inconsistentes temporalmente
+
+**Orden de Compensación:**
+
+- Las compensaciones se ejecutan en **orden inverso** a las acciones originales
+
+---
+
+## AWS Secrets Manager
+
+### ¿Qué es AWS Secrets Manager?
+
+**AWS Secrets Manager** es un servicio gestionado que permite almacenar, recuperar y **rotar automáticamente** secretos como contraseñas, claves API, tokens y credenciales de bases de datos.
+
+### Rotación Automática de Secretos
+
+Una de las características más poderosas de Secrets Manager es la **rotación automática** mediante funciones Lambda.
+
+### ¿Por qué Rotar Secretos?
+
+- ✅ **Seguridad**: Reduce el riesgo de credenciales comprometidas
+- ✅ **Cumplimiento**: Muchas regulaciones requieren rotación periódica
+- ✅ **Mejores prácticas**: Limita la ventana de exposición en caso de fuga
+
+### Cómo Funciona la Rotación
+
+```
+┌──────────────────────────────────────────────────────────┐
+│              FLUJO DE ROTACIÓN AUTOMÁTICA                │
+└──────────────────────────────────────────────────────────┘
+
+1. Secrets Manager programa rotación (ej: cada 30 días)
+   │
+   ▼
+2. Invoca función Lambda de rotación
+   │
+   ▼
+3. Lambda ejecuta 4 pasos:
+   ├─ createSecret: Genera nueva credencial
+   ├─ setSecret: Actualiza en el sistema destino
+   ├─ testSecret: Verifica que funciona
+   └─ finishSecret: Marca como actual
+   │
+   ▼
+4. Aplicaciones usan automáticamente el nuevo secreto
+```
+
+### Ventajas de Secrets Manager
+
+| Característica          | Beneficio                                   |
+| ----------------------- | ------------------------------------------- |
+| **Rotación automática** | Reduce riesgo de credenciales comprometidas |
+| **Versionado**          | Rollback fácil a versiones anteriores       |
+| **Auditoría**           | CloudTrail registra todos los accesos       |
+| **Cifrado**             | KMS cifra secretos en reposo                |
+| **Integración**         | Funciona con RDS, Redshift, DocumentDB      |
+
+### Costos
+
+- **$0.40** por secreto por mes
+- **$0.05** por cada 10,000 llamadas a la API
+- Rotación automática: **sin costo adicional** (solo Lambda)
+
+### Alternativa: AWS Systems Manager Parameter Store
+
+Para casos más simples sin rotación automática:
+
+```yaml
+Resources:
+  rDatabasePassword:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /prod/database/password
+      Type: SecureString # Cifrado con KMS
+      Value: !Ref pInitialPassword
+```
+
+**Diferencias:**
+
+- Parameter Store: Más económico, sin rotación automática
+- Secrets Manager: Rotación automática, mejor para credenciales críticas
+
+---
+
 ## Recursos Adicionales
+
+### Tabla Resumen
+
+| Concepto                | Qué Aprendimos                              |
+| ----------------------- | ------------------------------------------- |
+| **CloudFormation**      | IaC con YAML/JSON, prefijos en Logical IDs  |
+| **SQS Extended Client** | Mensajes > 1 MB usando S3                   |
+| **Patrón Saga**         | Transacciones distribuidas con compensación |
+| **Secrets Manager**     | Rotación automática de secretos con Lambda  |
 
 ### Enlaces Útiles
 
@@ -285,4 +448,8 @@ Si los mensajes son consistentemente grandes, considera:
 - [CloudFormation Best Practices](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/best-practices.html)
 - [SQS Extended Client Library (Java)](https://github.com/awslabs/amazon-sqs-java-extended-client-lib)
 - [SQS Extended Client Library (Python)](https://pypi.org/project/amazon-sqs-extended-client/)
+- [AWS Secrets Manager Documentation](https://docs.aws.amazon.com/secretsmanager/)
+- [Secrets Manager Rotation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html)
+- [Saga Pattern - Microservices.io](https://microservices.io/patterns/data/saga.html)
+- [AWS Step Functions](https://docs.aws.amazon.com/step-functions/)
 - [LocalStack Documentation](https://docs.localstack.cloud/)
