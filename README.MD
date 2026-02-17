@@ -121,7 +121,7 @@ El proyecto **Arka** es el eje central de la formación. Se trata de desarrollar
 - [Proyecto Arka - Versión 1](assets/PDFs/Proyecto%20Arka%201.pdf) - Especificaciones iniciales del proyecto
 - [Proyecto Java Backend Reto - Versión 2](assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf) - Versión actualizada con requisitos detallados
 
-> **Nota:** Consulta también el archivo [clase_1.md](clase_1.md) para ver consejos detallados sobre el desarrollo del proyecto.
+> **Nota:** Consulta también el archivo [clase-01-introduccion-al-proyecto.md](clase-01-introduccion-al-proyecto.md) para ver consejos detallados sobre el desarrollo del proyecto.
 
 ## Requisitos de Graduación
 

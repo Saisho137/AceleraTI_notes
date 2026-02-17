@@ -57,13 +57,13 @@ Arka es una empresa colombiana de distribución de accesorios para PC que enfren
 
 #### Módulos del Sistema Arka
 
-![Módulos del Sistema Arka](assets/clase_12/modulos-sistema-arka.png)
+![Módulos del Sistema Arka](assets/clase-12-domain-driven-design-ddd/modulos-sistema-arka.png)
 
 ---
 
 ## Pilares de DDD
 
-![Pilares de DDD](assets/clase_12/pilares-ddd.png)
+![Pilares de DDD](assets/clase-12-domain-driven-design-ddd/pilares-ddd.png)
 
 ### Lenguaje Ubicuo
 
@@ -100,7 +100,7 @@ public class OrdenDeCompra {
 
 #### Importancia del Lenguaje Ubicuo
 
-![Importancia del Lenguaje Ubicuo](assets/clase_12/importancia-lenguaje-ubicuo.png)
+![Importancia del Lenguaje Ubicuo](assets/clase-12-domain-driven-design-ddd/importancia-lenguaje-ubicuo.png)
 
 ---
 
@@ -126,7 +126,7 @@ Un mismo término puede significar cosas diferentes en distintas áreas del nego
 
 ##### Bounded Contexts en Arka
 
-![Bounded Contexts en Arka](assets/clase_12/bounded-contexts-arka.png)
+![Bounded Contexts en Arka](assets/clase-12-domain-driven-design-ddd/bounded-contexts-arka.png)
 
 > Producto existe en los 3 contextos, pero con atributos diferentes en cada uno
 
@@ -162,13 +162,13 @@ Un Context Map (Mapa de Contextos) documenta las relaciones entre los diferentes
 
 ##### Context Map de Arka
 
-![Context Map de Arka](assets/clase_12/context-map-arka.png)
+![Context Map de Arka](assets/clase-12-domain-driven-design-ddd/context-map-arka.png)
 
 ###### Anti-Corruption Layer (ACL)
 
 Cuando integramos con sistemas externos o legacy, usamos una capa de traducción para proteger nuestro modelo.
 
-![Anti-Corruption Layer](assets/clase_12/anti-corruption-layer.png)
+![Anti-Corruption Layer](assets/clase-12-domain-driven-design-ddd/anti-corruption-layer.png)
 
 > El ACL evita que los conceptos del sistema externo "contaminen" nuestro modelo de dominio
 
@@ -182,7 +182,7 @@ Los Building Blocks son los bloques de construcción tácticos de DDD. Son los p
 
 ##### Vista General Building Blocks
 
-![Building Blocks de DDD](assets/clase_12/building-blocks-ddd.png)
+![Building Blocks de DDD](assets/clase-12-domain-driven-design-ddd/building-blocks-ddd.png)
 
 #### Servicios de Dominio
 
@@ -293,7 +293,7 @@ public class ReservaProductosService {
 
 ##### Características de Servicios de Dominio
 
-![Características de Servicios de Dominio](assets/clase_12/caracteristicas-servicios-dominio.png)
+![Características de Servicios de Dominio](assets/clase-12-domain-driven-design-ddd/caracteristicas-servicios-dominio.png)
 
 ##### Cuándo usar Servicios de Dominio
 
@@ -313,7 +313,7 @@ public class ReservaProductosService {
 
 ##### Servicio de Dominio vs Otros Servicios
 
-![Servicio de Dominio vs Otros Servicios](assets/clase_12/servicio-dominio-vs-otros.png)
+![Servicio de Dominio vs Otros Servicios](assets/clase-12-domain-driven-design-ddd/servicio-dominio-vs-otros.png)
 
 #### Eventos de Dominio
 
@@ -321,7 +321,7 @@ Un Evento de Dominio representa algo que ocurrió en el dominio que es relevante
 
 ##### Por qué Eventos de Dominio
 
-![Por qué Eventos de Dominio](assets/clase_12/por-que-eventos-dominio.png)
+![Por qué Eventos de Dominio](assets/clase-12-domain-driven-design-ddd/por-que-eventos-dominio.png)
 
 ##### Beneficios de Eventos de Dominio
 
@@ -351,7 +351,7 @@ Un Evento de Dominio representa algo que ocurrió en el dominio que es relevante
 
 Cuando usamos eventos, debemos entender cómo se sincronizan los datos en el sistema.
 
-![Modelos de Consistencia](assets/clase_12/modelos-consistencia.png)
+![Modelos de Consistencia](assets/clase-12-domain-driven-design-ddd/modelos-consistencia.png)
 
 > La elección depende del caso de uso y los requisitos del negocio.
 
@@ -359,7 +359,7 @@ Cuando usamos eventos, debemos entender cómo se sincronizan los datos en el sis
 
 Todo ocurre en una sola transacción. Si algo falla, todo se revierte.
 
-![Consistencia Fuerte - Diagrama](assets/clase_12/consistencia-fuerte-diagrama.png)
+![Consistencia Fuerte - Diagrama](assets/clase-12-domain-driven-design-ddd/consistencia-fuerte-diagrama.png)
 
 > Problema: Si el servidor de email está caído, ¡no puedo confirmar ninguna orden!
 
@@ -383,11 +383,11 @@ Todo ocurre en una sola transacción. Si algo falla, todo se revierte.
 
 La operación principal se completa inmediatamente. Los efectos secundarios ocurren después vía eventos.
 
-![Consistencia Eventual - Diagrama](assets/clase_12/consistencia-eventual-diagrama.png)
+![Consistencia Eventual - Diagrama](assets/clase-12-domain-driven-design-ddd/consistencia-eventual-diagrama.png)
 
 **Consistencia Eventual - Línea de Tiempo**
 
-![Línea de Tiempo - Consistencia Eventual](assets/clase_12/linea-tiempo-consistencia-eventual.png)
+![Línea de Tiempo - Consistencia Eventual](assets/clase-12-domain-driven-design-ddd/linea-tiempo-consistencia-eventual.png)
 
 Durante ese tiempo el sistema está "eventualmente" llegando a consistencia total.
 
@@ -425,13 +425,13 @@ Durante ese tiempo el sistema está "eventualmente" llegando a consistencia tota
 
 ##### Resumen Consistencia en DDD
 
-![Resumen Consistencia en DDD](assets/clase_12/resumen-consistencia-ddd.png)
+![Resumen Consistencia en DDD](assets/clase-12-domain-driven-design-ddd/resumen-consistencia-ddd.png)
 
 > Regla práctica: Consistencia fuerte dentro del agregado, consistencia eventual entre agregados.
 
 ##### Eventos en Arka
 
-![Eventos en Arka](assets/clase_12/eventos-arka.png)
+![Eventos en Arka](assets/clase-12-domain-driven-design-ddd/eventos-arka.png)
 
 ###### Evento: OrdenConfirmadaEvent
 
@@ -549,7 +549,7 @@ Para que los eventos sean útiles, necesitamos un mecanismo para publicarlos y q
 
 ##### Patrón: Publicador de Eventos
 
-![Patrón Publicador de Eventos](assets/clase_12/patron-publicador-eventos.png)
+![Patrón Publicador de Eventos](assets/clase-12-domain-driven-design-ddd/patron-publicador-eventos.png)
 
 ##### Entidad que Genera Eventos
 
@@ -1006,7 +1006,7 @@ public final class Dinero {
 
 #### Entidad vs Value Object
 
-![Entidad vs Value Object](assets/clase_12/entidad-vs-value-object.png)
+![Entidad vs Value Object](assets/clase-12-domain-driven-design-ddd/entidad-vs-value-object.png)
 
 ---
 
@@ -1031,7 +1031,7 @@ Un Agregado es un cluster de Entidades y Value Objects que se tratan como una un
 
 #### Diagrama de Agregados en Arka
 
-![Diagrama de Agregados en Arka](assets/clase_12/diagrama-agregados-arka.png)
+![Diagrama de Agregados en Arka](assets/clase-12-domain-driven-design-ddd/diagrama-agregados-arka.png)
 
 #### OrdenDeCompra como Agregado
 
@@ -1101,7 +1101,7 @@ public class LineaOrden {
 
 #### Reglas de Agregados
 
-![Reglas de Agregados](assets/clase_12/reglas-agregados.png)
+![Reglas de Agregados](assets/clase-12-domain-driven-design-ddd/reglas-agregados.png)
 
 > Nunca accedas directamente a las entidades internas de un agregado. Siempre usa la raíz.
 >
@@ -1115,7 +1115,7 @@ Un Use Case (Caso de Uso) es un servicio de aplicación que orquesta la ejecuci�
 
 ### UseCase: Confirmar Orden
 
-![UseCase: Confirmar Orden](assets/clase_12/usecase-confirmar-orden.png)
+![UseCase: Confirmar Orden](assets/clase-12-domain-driven-design-ddd/usecase-confirmar-orden.png)
 
 #### ConfirmarOrdenUseCase
 
@@ -1340,7 +1340,7 @@ com.arka/
 
 ### Dependencias entre Capas
 
-![Dependencias entre Capas](assets/clase_12/dependencias-capas.png)
+![Dependencias entre Capas](assets/clase-12-domain-driven-design-ddd/dependencias-capas.png)
 
 > El dominio no depende de nada externo. Todo depende del dominio.
 
@@ -1352,11 +1352,11 @@ Veamos cómo fluyen los datos desde que un cliente confirma una orden hasta que 
 
 ### Diagrama de Flujo Completo
 
-![Flujo Completo del Sistema](assets/clase_12/flujo-completo-sistema.png)
+![Flujo Completo del Sistema](assets/clase-12-domain-driven-design-ddd/flujo-completo-sistema.png)
 
 ### Estados de una Orden en Arka
 
-![Estados de una Orden en Arka](assets/clase_12/estados-orden-arka.png)
+![Estados de una Orden en Arka](assets/clase-12-domain-driven-design-ddd/estados-orden-arka.png)
 
 ---
 
@@ -1390,7 +1390,7 @@ Veamos cómo fluyen los datos desde que un cliente confirma una orden hasta que 
 
 ### Por qué usar DDD
 
-![Por qué usar DDD](assets/clase_12/por-que-usar-ddd.png)
+![Por qué usar DDD](assets/clase-12-domain-driven-design-ddd/por-que-usar-ddd.png)
 
 ### Recursos Adicionales
 
@@ -1417,7 +1417,7 @@ Las lambdas tienen una cuota estándar de 1000 instancias de Lambdas concurrente
 
 Una operación es idempotente si ejecutarla múltiples veces produce el mismo resultado que ejecutarla una vez.
 
-![Idempotencia - Concepto](assets/clase_12/idempotencia-concepto.png)
+![Idempotencia - Concepto](assets/clase-12-domain-driven-design-ddd/idempotencia-concepto.png)
 
 #### Idempotencia en Eventos
 

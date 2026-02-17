@@ -46,9 +46,9 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 ### Violación vs Aplicación
 
-![Violando SRP](assets/clase_9/srp_violacion.png)
+![Violando SRP](assets/clase-09-solid-patrones-diseno/srp_violacion.png)
 
-![Aplicando SRP](assets/clase_9/srp_aplicacion.png)
+![Aplicando SRP](assets/clase-09-solid-patrones-diseno/srp_aplicacion.png)
 
 **Beneficios:** Clases pequeñas, enfocadas, fáciles de entender, testar y reutilizar.
 
@@ -60,13 +60,13 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 ### Violación vs Aplicación
 
-![Violando OCP](assets/clase_9/ocp_violacion.png)
+![Violando OCP](assets/clase-09-solid-patrones-diseno/ocp_violacion.png)
 
-![Aplicando OCP](assets/clase_9/ocp_aplicacion.png)
+![Aplicando OCP](assets/clase-09-solid-patrones-diseno/ocp_aplicacion.png)
 
 ### Patrón Strategy
 
-![Patrón Strategy](assets/clase_9/patron_strategy.png)
+![Patrón Strategy](assets/clase-09-solid-patrones-diseno/patron_strategy.png)
 
 **Tip:** En casi cualquier caso, es factible reemplazar un `switch-case` por un patrón Strategy para cumplir OCP.
 
@@ -80,13 +80,13 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 ### Violación y Problema
 
-![Violando LSP](assets/clase_9/lsp_violacion.png)
+![Violando LSP](assets/clase-09-solid-patrones-diseno/lsp_violacion.png)
 
-![El problema](assets/clase_9/lsp_problema.png)
+![El problema](assets/clase-09-solid-patrones-diseno/lsp_problema.png)
 
 ### Aplicación Correcta
 
-![Aplicando LSP](assets/clase_9/lsp_aplicacion.png)
+![Aplicando LSP](assets/clase-09-solid-patrones-diseno/lsp_aplicacion.png)
 
 **Beneficios:** Herencia predecible, polimorfismo funcional, tests válidos para toda la jerarquía.
 
@@ -98,11 +98,11 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 ### Violación vs Aplicación
 
-![Violando ISP](assets/clase_9/isp_violacion.png)
+![Violando ISP](assets/clase-09-solid-patrones-diseno/isp_violacion.png)
 
-![Aplicando ISP](assets/clase_9/isp_aplicacion.png)
+![Aplicando ISP](assets/clase-09-solid-patrones-diseno/isp_aplicacion.png)
 
-![Implementaciones limpias](assets/clase_9/isp_implementaciones_limpias.png)
+![Implementaciones limpias](assets/clase-09-solid-patrones-diseno/isp_implementaciones_limpias.png)
 
 **Beneficios:** Interfaces cohesivas, menor acoplamiento, más fácil de mockear en tests.
 
@@ -114,15 +114,15 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 ### Violación vs Aplicación
 
-![Violando DIP](assets/clase_9/dip_violacion.png)
+![Violando DIP](assets/clase-09-solid-patrones-diseno/dip_violacion.png)
 
-![Aplicando DIP](assets/clase_9/dip_aplicacion.png)
+![Aplicando DIP](assets/clase-09-solid-patrones-diseno/dip_aplicacion.png)
 
-![Alto nivel depende de abstracción](assets/clase_9/dip_alto_nivel_abstraccion.png)
+![Alto nivel depende de abstracción](assets/clase-09-solid-patrones-diseno/dip_alto_nivel_abstraccion.png)
 
 ### DIP con Spring Framework
 
-![DIP con Spring Framework](assets/clase_9/dip_spring_framework.png)
+![DIP con Spring Framework](assets/clase-09-solid-patrones-diseno/dip_spring_framework.png)
 
 ### DIP sin Framework (Inyección Manual)
 
@@ -131,13 +131,13 @@ Cuando no hay framework de inyección de dependencias (como era el caso de Pytho
 - Las instancia manualmente
 - Las pasa a los casos de uso
 
-![Container Manual](assets/clase_9/di_container_manual.png)
+![Container Manual](assets/clase-09-solid-patrones-diseno/di_container_manual.png)
 
 **Ejemplo real de configuración:**
 
-![Ejemplo Config](assets/clase_9/di_ejemplo_real_config.png)
+![Ejemplo Config](assets/clase-09-solid-patrones-diseno/di_ejemplo_real_config.png)
 
-![Ejemplo Uso](assets/clase_9/di_ejemplo_real_uso.png)
+![Ejemplo Uso](assets/clase-09-solid-patrones-diseno/di_ejemplo_real_uso.png)
 
 **Beneficios:** Desacoplamiento total, fácil cambiar implementaciones, testing trivial con mocks.
 
@@ -147,11 +147,11 @@ Cuando no hay framework de inyección de dependencias (como era el caso de Pytho
 
 ### Ejemplo: Sistema de Notificaciones
 
-![Sistema de Notificaciones](assets/clase_9/solid_ejemplo_notificaciones.png)
+![Sistema de Notificaciones](assets/clase-09-solid-patrones-diseno/solid_ejemplo_notificaciones.png)
 
-![Servicio con DIP y SRP](assets/clase_9/solid_servicio_dip_srp.png)
+![Servicio con DIP y SRP](assets/clase-09-solid-patrones-diseno/solid_servicio_dip_srp.png)
 
-![Uso flexible](assets/clase_9/solid_uso_flexible.png)
+![Uso flexible](assets/clase-09-solid-patrones-diseno/solid_uso_flexible.png)
 
 ---
 
@@ -397,7 +397,7 @@ List<? super Integer>      // Integer o cualquier superclase (Number, Object)
 
 ### Analiza este código y encuentra qué principios SOLID viola
 
-![Ejercicio](assets/clase_9/ejercicio_analizar_violaciones.png)
+![Ejercicio](assets/clase-09-solid-patrones-diseno/ejercicio_analizar_violaciones.png)
 
 **Repo de práctica:** [refactoring-solid-practice-enyoi](https://github.com/Saisho137/refactoring-solid-practice-enyoi)
 

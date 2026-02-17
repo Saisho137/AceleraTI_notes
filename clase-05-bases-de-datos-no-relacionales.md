@@ -107,7 +107,7 @@ Mientras que las bases de datos SQL siguen el modelo **ACID**, las NoSQL siguen 
 
 ### Diagrama de Propiedad BASE
 
-![Diagrama de la propiedad BASE en bases de datos NoSQL](assets/clase_5/base_property_diagram.png)
+![Diagrama de la propiedad BASE en bases de datos NoSQL](assets/clase-05-bases-de-datos-no-relacionales/base_property_diagram.png)
 
 ### ACID vs BASE
 
@@ -170,7 +170,7 @@ Mientras que las bases de datos SQL siguen el modelo **ACID**, las NoSQL siguen 
 
 ### Consultas en MongoDB
 
-![Sintaxis de consultas de actualización en MongoDB](assets/clase_5/mongo_update_query.png)
+![Sintaxis de consultas de actualización en MongoDB](assets/clase-05-bases-de-datos-no-relacionales/mongo_update_query.png)
 
 #### Ejemplos de consultas básicas
 
@@ -197,7 +197,7 @@ db.usuarios.deleteOne({ nombre: "Juan" })
 
 ### Operadores de MongoDB
 
-![Operadores de consulta y actualización en MongoDB](assets/clase_5/mongo_operators.png)
+![Operadores de consulta y actualización en MongoDB](assets/clase-05-bases-de-datos-no-relacionales/mongo_operators.png)
 
 #### Operadores más comunes
 
@@ -216,7 +216,7 @@ db.usuarios.deleteOne({ nombre: "Juan" })
 
 ### Anotaciones de Spring Data MongoDB
 
-![Anotaciones de Spring para trabajar con MongoDB](assets/clase_5/spring_mongo_annotations.png)
+![Anotaciones de Spring para trabajar con MongoDB](assets/clase-05-bases-de-datos-no-relacionales/spring_mongo_annotations.png)
 
 #### Anotaciones principales
 
@@ -247,7 +247,7 @@ public class Usuario {
 
 ### Enunciado
 
-![Ejercicio: Diseño de base de datos para biblioteca](assets/clase_5/ejercicio_biblioteca.png)
+![Ejercicio: Diseño de base de datos para biblioteca](assets/clase-05-bases-de-datos-no-relacionales/ejercicio_biblioteca.png)
 
 ### Solución en MongoDB
 

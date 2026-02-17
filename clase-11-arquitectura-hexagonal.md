@@ -44,9 +44,9 @@ Imagina una tienda física:
 
 ### Diagrama General
 
-![Arquitectura Hexagonal - Mundo Exterior](assets/clase_11/hexagonal-mundo-exterior.png)
+![Arquitectura Hexagonal - Mundo Exterior](assets/clase-11-arquitectura-hexagonal/hexagonal-mundo-exterior.png)
 
-![Diagrama General Hexagonal](assets/clase_11/hexagonal-diagrama-general.png)
+![Diagrama General Hexagonal](assets/clase-11-arquitectura-hexagonal/hexagonal-diagrama-general.png)
 
 ### Los Tres Componentes Principales
 
@@ -256,7 +256,7 @@ Los adaptadores son **implementaciones concretas** de los puertos.
 
 ### Diagrama de Flujo
 
-![Flujo de Adaptadores](assets/clase_11/flujo-adaptadores.png)
+![Flujo de Adaptadores](assets/clase-11-arquitectura-hexagonal/flujo-adaptadores.png)
 
 ### Adaptador Primario: REST Controller
 
@@ -414,13 +414,13 @@ public class Aplicacion {
 
 ### Estructura de Carpetas
 
-![Estructura de Carpetas del Proyecto](assets/clase_11/estructura-carpetas-proyecto.png)
+![Estructura de Carpetas del Proyecto](assets/clase-11-arquitectura-hexagonal/estructura-carpetas-proyecto.png)
 
 ---
 
 ## Regla de Dependencia
 
-![Regla de Dependencia](assets/clase_11/regla-dependencia.png)
+![Regla de Dependencia](assets/clase-11-arquitectura-hexagonal/regla-dependencia.png)
 
 > **Las dependencias siempre apuntan hacia adentro.** El dominio no conoce nada del exterior.
 
@@ -461,7 +461,7 @@ public class TestGestionCuentas {
 
 ## Ejemplo: Sistema de Pedidos
 
-![Sistema de Pedidos](assets/clase_11/sistema-pedidos-ejemplo.png)
+![Sistema de Pedidos](assets/clase-11-arquitectura-hexagonal/sistema-pedidos-ejemplo.png)
 
 ### Puerto de Inventario
 
@@ -568,4 +568,4 @@ La Arquitectura Hexagonal organiza el código para que:
 
 ### Diseño Alto Nivel Arka - Profesor
 
-![Diseño Alto Nivel Arka](assets/clase_11/diseno-alto-nivel-arka.svg)
+![Diseño Alto Nivel Arka](assets/clase-11-arquitectura-hexagonal/diseno-alto-nivel-arka.svg)

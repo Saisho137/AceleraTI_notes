@@ -39,7 +39,7 @@ Usuario → Controlador → Servicio → Repositorio → Base de Datos
 
 #### Ejemplo de Arquitectura en Capas
 
-![Ejemplo práctico de arquitectura en capas](assets/clase_5.2/ejemplo_arquitectura_capas.png)
+![Ejemplo práctico de arquitectura en capas](assets/clase-05-5-arquitectura-limpia-clean-architecture/ejemplo_arquitectura_capas.png)
 
 ```text
 📁 src/
@@ -55,7 +55,7 @@ Usuario → Controlador → Servicio → Repositorio → Base de Datos
 
 ### Retos Comunes de la Arquitectura en Capas
 
-![Retos comunes a afrontar en arquitectura tradicional](assets/clase_5.2/retos_arquitectura_capas.png)
+![Retos comunes a afrontar en arquitectura tradicional](assets/clase-05-5-arquitectura-limpia-clean-architecture/retos_arquitectura_capas.png)
 
 | Reto                          | Descripción                                                   | Consecuencia                                     |
 | ----------------------------- | ------------------------------------------------------------- | ------------------------------------------------ |
@@ -89,7 +89,7 @@ La **Arquitectura Limpia** (Clean Architecture) es un conjunto de principios y e
 
 ### Diagrama Estándar de Clean Architecture
 
-![Diagrama oficial de The Clean Architecture por Uncle Bob](assets/clase_5.2/diagrama_clean_architecture.png)
+![Diagrama oficial de The Clean Architecture por Uncle Bob](assets/clase-05-5-arquitectura-limpia-clean-architecture/diagrama_clean_architecture.png)
 
 El diagrama se lee de **afuera hacia adentro**
 
