@@ -1,4 +1,4 @@
-# Clase 5.2 - Arquitectura Limpia (Clean Architecture)
+# Clase 5.5 - Arquitectura Limpia (Clean Architecture)
 
 ---
 
