@@ -495,23 +495,237 @@ Un microservicio dedicado (o componente dentro del Order Service) que actúa com
 
 ![Implementación de Saga en Arka](assets/clase-14-patrones-arquitectura-microservicios/saga-arka.png)
 
-_continuará..._
+#### Estados de la Orden en la Saga
 
--
+```java
+public enum OrderStatus {
+    PENDING,           // Orden creada, esperando reserva de stock
+    STOCK_RESERVED,    // Stock reservado, esperando pago
+    CONFIRMED,         // Pago exitoso → Saga completa ✅
+    STOCK_RELEASED,    // Compensación: stock liberado
+    CANCELLED          // Orden cancelada → Saga compensada ❌
+}
+```
 
-## Extra
+![Estados de la orden en la Saga](assets/clase-14-patrones-arquitectura-microservicios/saga-orden-estados.png)
 
-Bancolombia dejó de usar Cloudwatch porque no se integraba tan bien a Kafka ni a micros en EKS, por lo que se optó por usar Grafana como exporter.
-Dynatrex se utiliza para reunir logs.
+#### Implementación Reactiva de la Saga
 
-Si hay timeouts por ejemplo de apigateway (no del micro), hay estrategias para buscar consistencia: sincronizar timeout del micro con la infra o estar atento a errores de Timeout ej del apigw y ejecutar rollbacks en el proceso.
+```java
+// Inventory Service - Consumer
+@KafkaListener(topics = "order-created")
+public Mono<Void> onOrderCreated(OrderCreatedEvent event) {
+    return inventoryRepository.findBySku(event.sku())
+        .flatMap(product -> {
+            if (product.getStock() >= event.quantity()) {
+                product.setStock(product.getStock() - event.quantity());
+                return inventoryRepository.save(product)
+                    .then(kafkaProducer.send("stock-reserved",
+                        new StockReservedEvent(event.orderId(), event.sku())));
+            } else {
+                return kafkaProducer.send("stock-reserve-failed",
+                    new StockReserveFailedEvent(event.orderId(), "Stock insuficiente"));
+            }
+        });
+}
+```
 
--
+> Idempotencia: El consumer debe manejar eventos duplicados. Usar eventId para detectar si ya se procesó.
 
-## Dudas
+## Outbox Pattern
 
-Consistencia eventual: NO es factible para transacciones.
+Garantizar consistencia entre escritura en BD y publicación de eventos.
 
-Resiliencia: Si por ejemplo, una orden depende de que el micro de Inventario responda.
+### El Problema: Dual Write
 
-DB relacionales: Cómo se manejan las relaciones en DDBB SQL si están divididas en microservicios, cómo se manejan las relaciones entre entidades de distintos micros.
+![Problema de Dual Write](assets/clase-14-patrones-arquitectura-microservicios/outbox-dual-write-problema.png)
+
+> Dual Write: Escribir en BD y en Kafka no es atómico. Si uno falla sin el otro, quedamos inconsistentes.
+
+### Solución: Transactional Outbox
+
+El patrón Transactional Outbox garantiza consistencia usando una tabla intermedia (`outbox_events`) dentro de la misma transacción de negocio. Ambas escrituras (datos + evento) ocurren de forma atómica.
+
+![Solución Transactional Outbox](assets/clase-14-patrones-arquitectura-microservicios/outbox-transactional-solucion.png)
+
+**Flujo:**
+
+1. Servicio guarda datos en su tabla principal
+2. En la misma transacción, guarda el evento en la tabla `outbox_events`
+3. Un relay lee los eventos pendientes y los publica a Kafka
+4. Marca los eventos como publicados
+
+### Qué es el Outbox Relay
+
+No es un microservicio separado.
+Es un componente dentro del mismo servicio — un job en background que corre periódicamente:
+
+- Lee eventos pendientes de la tabla `outbox_events`
+- Los publica en Kafka
+- Los marca como `PUBLISHED`
+
+**Puede implementarse de dos formas:**
+
+| Enfoque    | Cómo funciona                  | Cuándo usarlo                  |
+| ---------- | ------------------------------ | ------------------------------ |
+| @Scheduled | Polling periódico a la BD      | Simple, sin dependencias extra |
+| Debezium   | Lee el WAL de PostgreSQL (CDC) | Alta frecuencia, sin polling   |
+
+> Debezium (Change Data Capture) es más eficiente: reacciona a los cambios en la BD en tiempo real sin hacer queries repetitivas.
+
+### Outbox Relay: Implementación
+
+```java
+@Component
+public class OutboxRelay {
+
+    private final OutboxRepository outboxRepo;
+    private final KafkaProducer kafkaProducer;
+
+    @Scheduled(fixedDelay = 5000) // Corre cada 5 segundos
+    public void relay() {
+        outboxRepo.findByStatus(PENDING)   // Flux<OutboxEvent>
+            .flatMap(event ->
+                kafkaProducer.send(
+                    event.getTopic(),      // ej: "stock-reserved"
+                    event.getPayload()     // JSON del evento
+                )
+                .then(outboxRepo.markAsPublished(event.getId()))
+            )
+            .subscribe();
+    }
+}
+```
+
+> findByStatus(PENDING) devuelve un Flux — procesa todos los eventos pendientes en paralelo con flatMap.
+
+### Tabla Outbox
+
+```sql
+CREATE TABLE outbox_events (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type  VARCHAR(100) NOT NULL,     -- 'ProductCreated'
+    payload     JSONB NOT NULL,            -- El evento serializado
+    topic       VARCHAR(100) NOT NULL,     -- 'product-created'
+    created_at  TIMESTAMP DEFAULT NOW(),
+    published   BOOLEAN DEFAULT FALSE,
+    published_at TIMESTAMP
+);
+```
+
+```java
+// Dentro de la misma transacción
+@Transactional
+public Mono<Product> createProduct(Product product) {
+    return productRepository.save(product)
+        .flatMap(saved -> {
+            OutboxEvent event = new OutboxEvent(
+                "ProductCreated",
+                toJson(new ProductCreatedEvent(saved)),
+                "product-created"
+            );
+            return outboxRepository.save(event)
+                .thenReturn(saved);
+        });
+}
+```
+
+## Resumen Final
+
+### Mapa de Patrones
+
+![Mapa de patrones de microservicios](assets/clase-14-patrones-arquitectura-microservicios/outbox-mapa-patrones.png)
+
+### Resumen de Patrones
+
+| Patrón               | Problema que Resuelve         | Aplicación en Arka                |
+| -------------------- | ----------------------------- | --------------------------------- |
+| API Gateway          | Punto de entrada único        | Gateway para clientes web/mobile  |
+| Service Discovery    | Encontrar servicios dinámicos | Docker Compose DNS                |
+| Circuit Breaker      | Cascading failures            | Proteger llamadas a inventario    |
+| Database per Service | Acoplamiento de datos         | Cada servicio con su PostgreSQL   |
+| EDA                  | Comunicación acoplada         | Kafka como event backbone         |
+| CQRS                 | Lecturas vs escrituras        | Consultas de catálogo optimizadas |
+| Saga                 | Transacciones distribuidas    | Flujo Orden → Stock → Pago        |
+| Outbox               | Dual-write inconsistency      | Garantizar publicación de eventos |
+
+### Próximo paso: Lab práctico
+
+En el laboratorio implementaremos:
+
+1. Inventory Service con Spring WebFlux + R2DBC
+2. Order Service con máquina de estados de la Saga
+3. Kafka como message broker para eventos
+4. Docker Compose para la infraestructura completa
+5. Patrón Saga Coreografiada para el flujo de órdenes
+6. Outbox Pattern para garantizar consistencia
+
+> Todo el stack: Java 17+ / Spring WebFlux / R2DBC / PostgreSQL / Kafka / Docker
+
+### Recursos
+
+1. [Microservices Patterns - Chris Richardson](https://microservices.io/patterns/)
+2. [Event-Driven Microservices - O'Reilly](https://www.oreilly.com/library/view/building-event-driven-microservices/9781492057888/)
+3. [Saga Pattern - Microsoft](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga)
+4. [CQRS Journey - Microsoft](<https://learn.microsoft.com/en-us/previous-versions/msp-n-p/jj554200(v=pandp.10)>)
+5. [Clean Architecture Plugin - Bancolombia](https://github.com/bancolombia/scaffold-clean-architecture)
+6. [Resilience4j Documentation](https://resilience4j.readme.io/)
+7. [Apache Kafka Documentation](https://kafka.apache.org/42/getting-started/introduction/)
+
+---
+
+## Notas Adicionales
+
+### Observabilidad en Arquitecturas de Microservicios
+
+**Caso Bancolombia:**
+
+- Migración de CloudWatch a Grafana debido a mejor integración con Kafka y microservicios en EKS
+- Dynatrace se utiliza para agregación y análisis de logs distribuidos
+
+### Manejo de Timeouts en API Gateway
+
+Cuando ocurren timeouts a nivel de infraestructura (ej: API Gateway) y no del microservicio:
+
+**Estrategias:**
+
+1. **Sincronización de timeouts:** Alinear timeouts del microservicio con la infraestructura
+2. **Compensación reactiva:** Detectar errores de timeout del API Gateway y ejecutar rollbacks
+3. **Circuit breaker:** Implementar lógica de circuit breaking a nivel de gateway
+
+---
+
+## Preguntas de Reflexión
+
+### Consistencia Eventual vs Transacciones
+
+**❌ Mito:** La consistencia eventual puede reemplazar transacciones ACID en todos los casos
+
+**✅ Realidad:** Hay escenarios donde se requiere consistencia fuerte (ej: transferencias bancarias, facturación). En estos casos:
+
+- Considerar mantener el proceso en un solo servicio
+- Usar Saga con cuidado y validaciones estrictas
+- Evaluar si realmente se necesita microservicios para ese dominio
+
+### Resiliencia y Dependencias
+
+**Problema:** ¿Qué hacer cuando una orden depende de que el servicio de Inventario responda?
+
+**Soluciones:**
+
+- **Circuit Breaker:** Evitar cascading failures
+- **Retry con backoff:** Reintentos exponenciales
+- **Fallback:** Respuesta por defecto (ej: "stock no disponible temporalmente")
+- **Async processing:** Cola de órdenes pendientes que se procesan cuando el servicio vuelve
+
+### Relaciones entre Bases de Datos
+
+**Desafío:** Cómo manejar relaciones entre entidades de diferentes microservicios en bases de datos SQL separadas
+
+**Estrategias:**
+
+1. **API Composition:** El servicio agregador hace múltiples llamadas
+2. **Data Duplication:** Cada servicio mantiene copia de datos que necesita (consistencia eventual)
+3. **CQRS + Event Sourcing:** Vista de lectura desnormalizada alimentada por eventos
+4. **Saga Pattern:** Para transacciones que abarcan múltiples servicios
+5. **Reconsiderar boundaries:** Si dos entidades siempre se consultan juntas, quizá pertenecen al mismo servicio
