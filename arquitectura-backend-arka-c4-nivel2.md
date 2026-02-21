@@ -55,123 +55,111 @@ El **cuello de botella crítico** en Retail es la **concurrencia en ventas** que
 ### Diagrama Visual (Mermaid.js)
 
 ```mermaid
-C4Context
-    title Diagrama C4 Nivel 2 - Arquitectura Backend Arka v2.0 (Contenedores)
+graph TB
+    subgraph Clients["👥 Clientes"]
+        web["🌐 Cliente Web<br/>(Almacenes B2B)"]
+        mobile["📱 Cliente Mobile"]
+        admin_user["🔧 Administrador Arka"]
+    end
 
-    Person(cliente_web, "Cliente Web (Almacenes)", "Comprador B2B navegando marketplace")
-    Person(cliente_mobile, "Cliente Mobile", "Comprador B2B en app móvil")
-    Person(admin, "Administrador Arka", "Gestiona inventario, proveedores y pedidos")
+    subgraph Gateway["🚪 API Gateway + ALB"]
+        apigw["AWS API Gateway<br/>Auth JWT · Rate Limiting · SSL"]
+    end
 
-    System_Boundary(aws_cloud, "AWS Cloud (Multi-Región LATAM)") {
-        Container(api_gateway, "API Gateway", "AWS API Gateway + ALB", "Punto de entrada único, autenticación JWT, rate limiting, SSL termination")
+    subgraph BFF["🔀 Capa BFF"]
+        bff_web["BFF Web<br/>Respuestas completas"]
+        bff_mobile["BFF Mobile<br/>Respuestas ligeras"]
+    end
 
-        Container_Boundary(bff_layer, "Capa BFF (Backend for Frontend)") {
-            Container(bff_web, "BFF Web", "Spring Boot + WebFlux", "Gateway optimizado para clientes web (respuestas completas)")
-            Container(bff_mobile, "BFF Mobile", "Spring Boot + WebFlux", "Gateway optimizado para móvil (respuestas ligeras, paginadas)")
-        }
+    subgraph Services["⚙️ Microservicios (Spring Boot + WebFlux)"]
+        auth["🔐 Auth Service"]
+        catalog["📦 Catalog Service"]
+        inventory["📊 Inventory Service"]
+        cart["🛒 Cart Service"]
+        order["📝 Order Service"]
+        payment["💳 Payment Service"]
+        shipping["🚚 Shipping Service<br/>(Strangler Fig)"]
+        supplier["🏭 Supplier Service"]
+        reporting["📈 Reporting Service<br/>(CQRS Read Model)"]
+        notification["📧 Notification Service"]
+        recommendation["🎯 Recommendation Service"]
+    end
 
-        Container_Boundary(microservices, "Capa de Microservicios") {
-            Container(auth_service, "Auth Service", "Spring Boot + Spring Security", "Autenticación, autorización, gestión de tokens JWT, RBAC")
-            Container(catalog_service, "Catalog Service", "Spring Boot + WebFlux", "Gestiona productos, categorías, precios, búsqueda con filtros dinámicos")
-            Container(inventory_service, "Inventory Service", "Spring Boot + WebFlux", "Control de stock, reservas temporales, umbrales de reorden, mermas")
-            Container(cart_service, "Cart Service", "Spring Boot + WebFlux", "Gestión de carrito de compras, detección de carritos abandonados")
-            Container(order_service, "Order Service", "Spring Boot + WebFlux", "Procesamiento de pedidos, máquina de estados, Saga choreography")
-            Container(payment_service, "Payment Service", "Spring Boot + WebFlux", "Integración con pasarelas de pago, transacciones, refunds")
-            Container(shipping_service, "Shipping Service", "Spring Boot + WebFlux", "Verificación de entrega, seguimiento de despachos (Strangler Fig)")
-            Container(supplier_service, "Supplier Service", "Spring Boot + WebFlux", "Gestión de proveedores, almacenes, órdenes de compra automáticas")
-            Container(reporting_service, "Reporting Service", "Spring Boot + WebFlux", "Analítica, reportes semanales (CSV/PDF), CQRS read model")
-            Container(notification_service, "Notification Service", "Spring Boot + WebFlux", "Emails transaccionales, SMS, push notifications, plantillas S3")
-            Container(recommendation_service, "Recommendation Service", "Spring Boot + WebFlux", "Recomendaciones de productos basadas en historial de compras")
-        }
+    subgraph Messaging["📨 Mensajería"]
+        kafka["Apache Kafka<br/>Event Streaming"]
+        sqs["AWS SQS/SNS<br/>Colas + Pub/Sub"]
+        eventbridge["AWS EventBridge<br/>Cron Scheduling"]
+    end
 
-        Container_Boundary(messaging, "Capa de Mensajería") {
-            Container(kafka_broker, "Apache Kafka", "Event Streaming Platform", "Message broker principal para eventos de dominio")
-            Container(sqs_sns, "AWS SQS/SNS", "Message Queue + Pub/Sub", "Orquestación de Saga, notificaciones, colas de procesamiento")
-            Container(event_bridge, "AWS EventBridge", "Event Bus", "Cron scheduling, reglas de eventos para notificaciones y reportes")
-        }
+    subgraph Serverless["⚡ Serverless"]
+        lambda_saga["Lambda Saga Handlers"]
+        lambda_reports["Lambda Report Generator"]
+    end
 
-        Container_Boundary(serverless, "Capa Serverless") {
-            Container(lambda_saga, "Lambda Saga Handlers", "AWS Lambda (Java)", "Funciones para pasos de la Saga (validación, compensación)")
-            Container(lambda_reports, "Lambda Report Generator", "AWS Lambda (Java)", "Generación periódica de reportes CSV/PDF")
-        }
+    subgraph Databases["🗄️ Bases de Datos (Database per Service)"]
+        subgraph PostgreSQL["PostgreSQL (RDS) - ACID"]
+            catalog_db[("catalog_db")]
+            inventory_db[("inventory_db")]
+            order_db[("order_db")]
+            cart_db[("cart_db")]
+            payment_db[("payment_db")]
+            shipping_db[("shipping_db")]
+            supplier_db[("supplier_db")]
+        end
+        dynamo[("DynamoDB<br/>Analytics")]
+        docdb[("DocumentDB<br/>Recommendations")]
+        redis[("Redis/ElastiCache<br/>Cache")]
+        s3[("S3<br/>Templates + Reportes")]
+    end
 
-        ContainerDb(catalog_db, "Catalog DB", "PostgreSQL (RDS)", "Productos, categorías, precios, atributos (datos maestros)")
-        ContainerDb(inventory_db, "Inventory DB", "PostgreSQL (RDS)", "Stock, reservas, movimientos, mermas (ACID)")
-        ContainerDb(order_db, "Order DB", "PostgreSQL (RDS)", "Pedidos, items, estados, historial (ACID)")
-        ContainerDb(cart_db, "Cart DB", "PostgreSQL (RDS)", "Carritos activos, abandonados, items (ACID)")
-        ContainerDb(payment_db, "Payment DB", "PostgreSQL (RDS)", "Transacciones de pago, refunds, intentos (ACID)")
-        ContainerDb(shipping_db, "Shipping DB", "PostgreSQL (RDS)", "Envíos, tracking, estados de despacho (ACID)")
-        ContainerDb(supplier_db, "Supplier DB", "PostgreSQL (RDS)", "Proveedores, almacenes, órdenes de compra (ACID)")
+    subgraph External["🌍 Sistemas Externos"]
+        pay_gw["MercadoPago / PayU"]
+        ses["AWS SES / SendGrid"]
+        sms["Twilio / AWS SNS"]
+        legacy["Legacy Shipping<br/>(Monolito)"]
+    end
 
-        ContainerDb(analytics_db, "Analytics DB", "DynamoDB", "Vistas desnormalizadas, reportes, eventos agregados")
-        ContainerDb(recommendation_db, "Recommendation DB", "DocumentDB", "Historial de compras, grafos de productos relacionados")
-        ContainerDb(cache_layer, "Cache Layer", "Redis/ElastiCache", "Catálogo, sesiones, carritos temporales, rate limiting")
-        ContainerDb(s3_templates, "S3 Templates", "AWS S3", "Plantillas de email, reportes generados (CSV/PDF)")
-    }
+    web & mobile & admin_user -->|HTTPS| apigw
+    apigw -->|Valida JWT| auth
+    apigw --> bff_web & bff_mobile
 
-    System_Ext(payment_gateway, "Payment Gateway", "MercadoPago/PayU")
-    System_Ext(email_provider, "Email Provider", "AWS SES / SendGrid")
-    System_Ext(sms_provider, "SMS Provider", "Twilio / AWS SNS")
-    System_Ext(legacy_shipping, "Legacy Shipping System", "Sistema monolítico de envíos (en migración)")
+    bff_web --> catalog & cart & order & reporting & recommendation
+    bff_mobile --> catalog & cart & order
 
-    Rel(cliente_web, api_gateway, "HTTPS/REST")
-    Rel(cliente_mobile, api_gateway, "HTTPS/REST")
-    Rel(admin, api_gateway, "HTTPS/REST")
+    catalog --> catalog_db
+    inventory --> inventory_db
+    order --> order_db
+    cart --> cart_db
+    payment --> payment_db
+    shipping --> shipping_db
+    supplier --> supplier_db
+    reporting --> dynamo
+    recommendation --> docdb
 
-    Rel(api_gateway, auth_service, "REST", "Valida tokens JWT")
-    Rel(api_gateway, bff_web, "REST", "Enruta clientes web")
-    Rel(api_gateway, bff_mobile, "REST", "Enruta clientes mobile")
+    catalog & inventory & order & cart & payment & shipping & supplier --> kafka
+    notification & reporting & recommendation -.->|Consume| kafka
 
-    Rel(bff_web, catalog_service, "REST/gRPC")
-    Rel(bff_web, cart_service, "REST/gRPC")
-    Rel(bff_web, order_service, "REST/gRPC")
-    Rel(bff_web, reporting_service, "REST")
-    Rel(bff_web, recommendation_service, "REST")
+    catalog & cart --> redis
+    payment -->|Circuit Breaker| pay_gw
+    notification --> ses & sms & s3
+    shipping -->|Strangler Fig| legacy
+    lambda_reports --> dynamo & s3
+    eventbridge --> lambda_reports & notification
+    sqs --> lambda_saga
 
-    Rel(bff_mobile, catalog_service, "REST/gRPC")
-    Rel(bff_mobile, cart_service, "REST/gRPC")
-    Rel(bff_mobile, order_service, "REST/gRPC")
+    classDef client fill:#08427B,color:#fff,stroke:#08427B
+    classDef gateway fill:#1168BD,color:#fff,stroke:#1168BD
+    classDef service fill:#438DD5,color:#fff,stroke:#438DD5
+    classDef db fill:#2E7D32,color:#fff,stroke:#2E7D32
+    classDef ext fill:#999,color:#fff,stroke:#999
+    classDef msg fill:#E65100,color:#fff,stroke:#E65100
 
-    Rel(catalog_service, catalog_db, "R2DBC")
-    Rel(inventory_service, inventory_db, "R2DBC")
-    Rel(order_service, order_db, "R2DBC")
-    Rel(cart_service, cart_db, "R2DBC")
-    Rel(payment_service, payment_db, "R2DBC")
-    Rel(shipping_service, shipping_db, "R2DBC")
-    Rel(supplier_service, supplier_db, "R2DBC")
-    Rel(reporting_service, analytics_db, "AWS SDK")
-    Rel(recommendation_service, recommendation_db, "MongoDB Driver")
-
-    Rel(catalog_service, kafka_broker, "Publica: ProductCreated, ProductUpdated, ProductDeleted")
-    Rel(inventory_service, kafka_broker, "Publica: StockReserved, StockReleased, StockUpdated, LowStockAlert")
-    Rel(order_service, kafka_broker, "Publica: OrderCreated, OrderConfirmed, OrderCancelled, OrderDelivered")
-    Rel(cart_service, kafka_broker, "Publica: CartAbandoned, CartCheckedOut")
-    Rel(payment_service, kafka_broker, "Publica: PaymentProcessed, PaymentFailed, PaymentRefunded")
-    Rel(shipping_service, kafka_broker, "Publica: ShipmentCreated, ShipmentDispatched, ShipmentDelivered")
-    Rel(supplier_service, kafka_broker, "Publica: PurchaseOrderCreated, SupplierUpdated")
-
-    Rel(inventory_service, kafka_broker, "Consume: OrderCreated, PaymentFailed")
-    Rel(payment_service, kafka_broker, "Consume: StockReserved, OrderCancelled")
-    Rel(order_service, kafka_broker, "Consume: PaymentProcessed, PaymentFailed, StockReserveFailed, StockReserved")
-    Rel(shipping_service, kafka_broker, "Consume: OrderConfirmed")
-    Rel(supplier_service, kafka_broker, "Consume: LowStockAlert")
-    Rel(notification_service, kafka_broker, "Consume: OrderConfirmed, OrderCancelled, OrderDelivered, CartAbandoned, LowStockAlert, ShipmentDispatched")
-    Rel(reporting_service, kafka_broker, "Consume: Todos los eventos de dominio")
-    Rel(recommendation_service, kafka_broker, "Consume: OrderConfirmed, ProductCreated")
-
-    Rel(catalog_service, cache_layer, "Lee/Escribe catálogo cacheado")
-    Rel(cart_service, cache_layer, "Carritos temporales en sesión")
-    Rel(payment_service, payment_gateway, "HTTPS (Circuit Breaker)")
-    Rel(notification_service, email_provider, "HTTPS")
-    Rel(notification_service, sms_provider, "HTTPS")
-    Rel(notification_service, s3_templates, "Lee plantillas de email")
-    Rel(lambda_reports, s3_templates, "Escribe reportes CSV/PDF")
-    Rel(lambda_reports, analytics_db, "Lee datos para reportes")
-    Rel(shipping_service, legacy_shipping, "REST (Strangler Fig)")
-    Rel(event_bridge, lambda_reports, "Cron trigger semanal")
-    Rel(event_bridge, notification_service, "Scheduled notifications")
-
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+    class web,mobile,admin_user client
+    class apigw,bff_web,bff_mobile gateway
+    class auth,catalog,inventory,cart,order,payment,shipping,supplier,reporting,notification,recommendation service
+    class catalog_db,inventory_db,order_db,cart_db,payment_db,shipping_db,supplier_db,dynamo,docdb,redis,s3 db
+    class pay_gw,ses,sms,legacy ext
+    class kafka,sqs,eventbridge,lambda_saga,lambda_reports msg
 ```
 
 ---
