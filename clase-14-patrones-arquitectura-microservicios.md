@@ -14,6 +14,10 @@ Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_24_25_patron
 6. [Database per Service](#database-per-service)
 7. [Event Driven Architecture (EDA)](#event-driven-architecture-eda)
 8. [Patrón Saga](#patrón-saga)
+9. [Patrón Outbox](#outbox-pattern)
+10. [Resumen Final](#resumen-final)
+
+Outbox Pattern
 
 ## Resumen
 
