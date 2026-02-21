@@ -2,29 +2,51 @@
 
 **Autor:** Senior Software Architect  
 **Fecha:** 21 de Febrero, 2026  
-**Proyecto:** Arka - Sistema de Retail Digital  
-**Stack Técnico:** Java + Spring Boot, Kafka, PostgreSQL, AWS
+**Proyecto:** Arka - Plataforma B2B de Distribución de Accesorios para PC  
+**Stack Técnico:** Java + Spring Boot, Kafka, PostgreSQL, DynamoDB, AWS (SQS/SNS, Lambda, EventBridge, SES, S3, DocumentDB)  
+**Versión:** 2.0 (Refinada con contexto completo del proyecto)
 
 ---
 
 ## 1. Contexto del Dominio Arka
 
-**Arka** es una empresa colombiana de venta de equipos tecnológicos que está migrando sus operaciones del mundo físico al mundo digital. El sistema debe soportar:
+**Arka** es una empresa colombiana **distribuidora de accesorios para PC** cuyos clientes son **almacenes de las principales ciudades de Colombia** (modelo B2B). Arka ha iniciado su **plan de expansión por Latinoamérica** (Ecuador, Perú y Chile), lo que exige un sistema capaz de manejar volúmenes crecientes de pedidos en múltiples regiones y monedas.
 
-- **Gestión de Inventario:** Control de stock, categorías, umbrales de reorden, reservas temporales
-- **Gestión de Pedidos:** Flujo completo desde creación hasta entrega
-- **Catálogo Digital:** Productos, precios, categorías
-- **Procesamiento de Pagos:** Integración con pasarelas de pago
-- **Reportes y Analítica:** Ventas, rentabilidad, carritos abandonados
+La compañía busca la **autogestión de sus clientes** al momento de comprar y modificar pedidos, para disminuir los costos operativos de personal. El sistema debe soportar:
 
-### Desafío Principal Identificado
+- **Gestión de Inventario y Abastecimiento:** Control de stock en tiempo real, umbrales de reorden configurables, reportes automáticos de productos por abastecer, reservas temporales para prevenir sobreventa, y registro de mermas
+- **Gestión de Pedidos (Órdenes de Compra):** Flujo completo desde creación hasta entrega, con posibilidad de **modificar pedidos antes de su confirmación** (HU5)
+- **Catálogo Digital:** Productos con atributos detallados (marca, categoría, especificaciones), **búsqueda con filtros dinámicos**, precios con soporte multi-moneda (COP, USD, PEN, CLP)
+- **Carrito de Compras:** Gestión independiente del carrito, detección de **carritos abandonados** y envío de recordatorios
+- **Procesamiento de Pagos:** Integración con pasarelas de pago (MercadoPago, PayU)
+- **Gestión de Envíos (Shipping):** Verificación de disponibilidad de entrega, seguimiento de despachos, **migración desde monolito usando Strangler Fig Pattern**
+- **Gestión de Proveedores:** Administración de proveedores, almacenes, generación automática de órdenes de compra para abastecimiento
+- **Reportes y Analítica:** Reportes semanales de ventas (CSV/PDF), análisis de rentabilidad con costo promedio ponderado, carritos abandonados, productos más vendidos, clientes más frecuentes
+- **Notificaciones:** Cambios de estado de pedido, recordatorios de carrito abandonado, alertas de stock bajo
+
+### Desafíos Principales Identificados
+
+#### Desafío 1: Concurrencia y Sobreventa (Crítico)
 
 El **cuello de botella crítico** en Retail es la **concurrencia en ventas** que genera condiciones de carrera (race conditions), resultando en:
+
 - **Stock negativo** (sobreventa de productos)
 - **Inconsistencias** entre pedidos y disponibilidad real
 - **Mala experiencia del cliente** por cancelaciones posteriores
 
-**Solución propuesta:** Arquitectura de microservicios con comunicación asíncrona mediante eventos y patrón Saga para garantizar consistencia eventual.
+#### Desafío 2: Gestión Manual Ineficiente
+
+- Administración manual del inventario insostenible con el volumen actual de productos y clientes
+- Ausencia de reportes automatizados de compras a proveedores y ventas a clientes
+- Tiempos de entrega impredecibles que generan **clientes insatisfechos** y obstaculizan la expansión
+
+#### Desafío 3: Escalabilidad Regional
+
+- Expansión a 4 países (Colombia, Ecuador, Perú, Chile) requiere soporte multi-región
+- Diferentes monedas, impuestos y regulaciones por país
+- Necesidad de baja latencia para clientes en cada región
+
+**Solución propuesta:** Arquitectura de microservicios con comunicación asíncrona mediante eventos (Kafka + SQS/SNS), patrón Saga para garantizar consistencia eventual, BFF para adaptación a diferentes clientes (web/mobile), y Strangler Fig Pattern para migración gradual del módulo de envíos.
 
 ---
 
@@ -34,69 +56,121 @@ El **cuello de botella crítico** en Retail es la **concurrencia en ventas** que
 
 ```mermaid
 C4Context
-    title Diagrama C4 Nivel 2 - Arquitectura Backend Arka (Contenedores)
-    
-    Person(cliente_web, "Cliente Web", "Usuario navegando marketplace")
-    Person(cliente_mobile, "Cliente Mobile", "Usuario en app móvil")
-    Person(admin, "Administrador", "Gestiona inventario y pedidos")
-    
-    System_Boundary(aws_cloud, "AWS Cloud") {
-        Container(api_gateway, "API Gateway", "AWS API Gateway + Load Balancer", "Punto de entrada único, autenticación JWT, rate limiting, enrutamiento")
-        
-        Container_Boundary(microservices, "Capa de Microservicios") {
-            Container(catalog_service, "Catalog Service", "Spring Boot + WebFlux", "Gestiona productos, categorías y precios")
-            Container(inventory_service, "Inventory Service", "Spring Boot + WebFlux", "Control de stock, reservas temporales, umbrales de reorden")
-            Container(order_service, "Order Service", "Spring Boot + WebFlux", "Procesamiento de pedidos, máquina de estados, Saga orchestrator")
-            Container(payment_service, "Payment Service", "Spring Boot + WebFlux", "Integración con pasarelas de pago, transacciones")
-            Container(reporting_service, "Reporting Service", "Spring Boot + WebFlux", "Analítica, reportes de ventas, CQRS read model")
-            Container(notification_service, "Notification Service", "Spring Boot + WebFlux", "Envío de emails, SMS, notificaciones push")
+    title Diagrama C4 Nivel 2 - Arquitectura Backend Arka v2.0 (Contenedores)
+
+    Person(cliente_web, "Cliente Web (Almacenes)", "Comprador B2B navegando marketplace")
+    Person(cliente_mobile, "Cliente Mobile", "Comprador B2B en app móvil")
+    Person(admin, "Administrador Arka", "Gestiona inventario, proveedores y pedidos")
+
+    System_Boundary(aws_cloud, "AWS Cloud (Multi-Región LATAM)") {
+        Container(api_gateway, "API Gateway", "AWS API Gateway + ALB", "Punto de entrada único, autenticación JWT, rate limiting, SSL termination")
+
+        Container_Boundary(bff_layer, "Capa BFF (Backend for Frontend)") {
+            Container(bff_web, "BFF Web", "Spring Boot + WebFlux", "Gateway optimizado para clientes web (respuestas completas)")
+            Container(bff_mobile, "BFF Mobile", "Spring Boot + WebFlux", "Gateway optimizado para móvil (respuestas ligeras, paginadas)")
         }
-        
-        Container(kafka_broker, "Apache Kafka", "Event Streaming Platform", "Message broker para comunicación asíncrona y eventos de dominio")
-        
-        ContainerDb(catalog_db, "Catalog DB", "PostgreSQL", "Productos, categorías, precios (datos maestros)")
-        ContainerDb(inventory_db, "Inventory DB", "PostgreSQL", "Stock, reservas, movimientos de inventario (ACID)")
-        ContainerDb(order_db, "Order DB", "PostgreSQL", "Pedidos, items, estados, historial (ACID)")
-        ContainerDb(payment_db, "Payment DB", "PostgreSQL", "Transacciones de pago, refunds (ACID)")
-        
+
+        Container_Boundary(microservices, "Capa de Microservicios") {
+            Container(auth_service, "Auth Service", "Spring Boot + Spring Security", "Autenticación, autorización, gestión de tokens JWT, RBAC")
+            Container(catalog_service, "Catalog Service", "Spring Boot + WebFlux", "Gestiona productos, categorías, precios, búsqueda con filtros dinámicos")
+            Container(inventory_service, "Inventory Service", "Spring Boot + WebFlux", "Control de stock, reservas temporales, umbrales de reorden, mermas")
+            Container(cart_service, "Cart Service", "Spring Boot + WebFlux", "Gestión de carrito de compras, detección de carritos abandonados")
+            Container(order_service, "Order Service", "Spring Boot + WebFlux", "Procesamiento de pedidos, máquina de estados, Saga choreography")
+            Container(payment_service, "Payment Service", "Spring Boot + WebFlux", "Integración con pasarelas de pago, transacciones, refunds")
+            Container(shipping_service, "Shipping Service", "Spring Boot + WebFlux", "Verificación de entrega, seguimiento de despachos (Strangler Fig)")
+            Container(supplier_service, "Supplier Service", "Spring Boot + WebFlux", "Gestión de proveedores, almacenes, órdenes de compra automáticas")
+            Container(reporting_service, "Reporting Service", "Spring Boot + WebFlux", "Analítica, reportes semanales (CSV/PDF), CQRS read model")
+            Container(notification_service, "Notification Service", "Spring Boot + WebFlux", "Emails transaccionales, SMS, push notifications, plantillas S3")
+            Container(recommendation_service, "Recommendation Service", "Spring Boot + WebFlux", "Recomendaciones de productos basadas en historial de compras")
+        }
+
+        Container_Boundary(messaging, "Capa de Mensajería") {
+            Container(kafka_broker, "Apache Kafka", "Event Streaming Platform", "Message broker principal para eventos de dominio")
+            Container(sqs_sns, "AWS SQS/SNS", "Message Queue + Pub/Sub", "Orquestación de Saga, notificaciones, colas de procesamiento")
+            Container(event_bridge, "AWS EventBridge", "Event Bus", "Cron scheduling, reglas de eventos para notificaciones y reportes")
+        }
+
+        Container_Boundary(serverless, "Capa Serverless") {
+            Container(lambda_saga, "Lambda Saga Handlers", "AWS Lambda (Java)", "Funciones para pasos de la Saga (validación, compensación)")
+            Container(lambda_reports, "Lambda Report Generator", "AWS Lambda (Java)", "Generación periódica de reportes CSV/PDF")
+        }
+
+        ContainerDb(catalog_db, "Catalog DB", "PostgreSQL (RDS)", "Productos, categorías, precios, atributos (datos maestros)")
+        ContainerDb(inventory_db, "Inventory DB", "PostgreSQL (RDS)", "Stock, reservas, movimientos, mermas (ACID)")
+        ContainerDb(order_db, "Order DB", "PostgreSQL (RDS)", "Pedidos, items, estados, historial (ACID)")
+        ContainerDb(cart_db, "Cart DB", "PostgreSQL (RDS)", "Carritos activos, abandonados, items (ACID)")
+        ContainerDb(payment_db, "Payment DB", "PostgreSQL (RDS)", "Transacciones de pago, refunds, intentos (ACID)")
+        ContainerDb(shipping_db, "Shipping DB", "PostgreSQL (RDS)", "Envíos, tracking, estados de despacho (ACID)")
+        ContainerDb(supplier_db, "Supplier DB", "PostgreSQL (RDS)", "Proveedores, almacenes, órdenes de compra (ACID)")
+
         ContainerDb(analytics_db, "Analytics DB", "DynamoDB", "Vistas desnormalizadas, reportes, eventos agregados")
-        ContainerDb(cache_layer, "Cache Layer", "Redis/ElastiCache", "Catálogo de productos, sesiones, carritos")
+        ContainerDb(recommendation_db, "Recommendation DB", "DocumentDB", "Historial de compras, grafos de productos relacionados")
+        ContainerDb(cache_layer, "Cache Layer", "Redis/ElastiCache", "Catálogo, sesiones, carritos temporales, rate limiting")
+        ContainerDb(s3_templates, "S3 Templates", "AWS S3", "Plantillas de email, reportes generados (CSV/PDF)")
     }
-    
-    System_Ext(payment_gateway, "Payment Gateway", "Stripe/MercadoPago/PayU")
-    System_Ext(email_service, "Email Service", "SendGrid/SES")
-    
+
+    System_Ext(payment_gateway, "Payment Gateway", "MercadoPago/PayU")
+    System_Ext(email_provider, "Email Provider", "AWS SES / SendGrid")
+    System_Ext(sms_provider, "SMS Provider", "Twilio / AWS SNS")
+    System_Ext(legacy_shipping, "Legacy Shipping System", "Sistema monolítico de envíos (en migración)")
+
     Rel(cliente_web, api_gateway, "HTTPS/REST")
     Rel(cliente_mobile, api_gateway, "HTTPS/REST")
     Rel(admin, api_gateway, "HTTPS/REST")
-    
-    Rel(api_gateway, catalog_service, "REST/gRPC", "Consulta productos")
-    Rel(api_gateway, inventory_service, "REST/gRPC", "Verifica disponibilidad")
-    Rel(api_gateway, order_service, "REST/gRPC", "Crea pedidos")
-    Rel(api_gateway, payment_service, "REST/gRPC", "Procesa pagos")
-    Rel(api_gateway, reporting_service, "REST", "Consulta reportes")
-    
+
+    Rel(api_gateway, auth_service, "REST", "Valida tokens JWT")
+    Rel(api_gateway, bff_web, "REST", "Enruta clientes web")
+    Rel(api_gateway, bff_mobile, "REST", "Enruta clientes mobile")
+
+    Rel(bff_web, catalog_service, "REST/gRPC")
+    Rel(bff_web, cart_service, "REST/gRPC")
+    Rel(bff_web, order_service, "REST/gRPC")
+    Rel(bff_web, reporting_service, "REST")
+    Rel(bff_web, recommendation_service, "REST")
+
+    Rel(bff_mobile, catalog_service, "REST/gRPC")
+    Rel(bff_mobile, cart_service, "REST/gRPC")
+    Rel(bff_mobile, order_service, "REST/gRPC")
+
     Rel(catalog_service, catalog_db, "R2DBC")
     Rel(inventory_service, inventory_db, "R2DBC")
     Rel(order_service, order_db, "R2DBC")
+    Rel(cart_service, cart_db, "R2DBC")
     Rel(payment_service, payment_db, "R2DBC")
-    Rel(reporting_service, analytics_db, "SDK")
-    
-    Rel(catalog_service, kafka_broker, "Publica: ProductCreated, ProductUpdated")
-    Rel(inventory_service, kafka_broker, "Publica: StockReserved, StockReleased, StockUpdated")
-    Rel(order_service, kafka_broker, "Publica: OrderCreated, OrderConfirmed, OrderCancelled")
-    Rel(payment_service, kafka_broker, "Publica: PaymentProcessed, PaymentFailed")
-    
-    Rel(inventory_service, kafka_broker, "Consume: OrderCreated")
-    Rel(payment_service, kafka_broker, "Consume: StockReserved")
-    Rel(order_service, kafka_broker, "Consume: PaymentProcessed, PaymentFailed, StockReserveFailed")
-    Rel(notification_service, kafka_broker, "Consume: OrderConfirmed, OrderCancelled")
+    Rel(shipping_service, shipping_db, "R2DBC")
+    Rel(supplier_service, supplier_db, "R2DBC")
+    Rel(reporting_service, analytics_db, "AWS SDK")
+    Rel(recommendation_service, recommendation_db, "MongoDB Driver")
+
+    Rel(catalog_service, kafka_broker, "Publica: ProductCreated, ProductUpdated, ProductDeleted")
+    Rel(inventory_service, kafka_broker, "Publica: StockReserved, StockReleased, StockUpdated, LowStockAlert")
+    Rel(order_service, kafka_broker, "Publica: OrderCreated, OrderConfirmed, OrderCancelled, OrderDelivered")
+    Rel(cart_service, kafka_broker, "Publica: CartAbandoned, CartCheckedOut")
+    Rel(payment_service, kafka_broker, "Publica: PaymentProcessed, PaymentFailed, PaymentRefunded")
+    Rel(shipping_service, kafka_broker, "Publica: ShipmentCreated, ShipmentDispatched, ShipmentDelivered")
+    Rel(supplier_service, kafka_broker, "Publica: PurchaseOrderCreated, SupplierUpdated")
+
+    Rel(inventory_service, kafka_broker, "Consume: OrderCreated, PaymentFailed")
+    Rel(payment_service, kafka_broker, "Consume: StockReserved, OrderCancelled")
+    Rel(order_service, kafka_broker, "Consume: PaymentProcessed, PaymentFailed, StockReserveFailed, StockReserved")
+    Rel(shipping_service, kafka_broker, "Consume: OrderConfirmed")
+    Rel(supplier_service, kafka_broker, "Consume: LowStockAlert")
+    Rel(notification_service, kafka_broker, "Consume: OrderConfirmed, OrderCancelled, OrderDelivered, CartAbandoned, LowStockAlert, ShipmentDispatched")
     Rel(reporting_service, kafka_broker, "Consume: Todos los eventos de dominio")
-    
-    Rel(catalog_service, cache_layer, "Lee/Escribe catálogo")
-    Rel(payment_service, payment_gateway, "HTTPS")
-    Rel(notification_service, email_service, "HTTPS")
-    
+    Rel(recommendation_service, kafka_broker, "Consume: OrderConfirmed, ProductCreated")
+
+    Rel(catalog_service, cache_layer, "Lee/Escribe catálogo cacheado")
+    Rel(cart_service, cache_layer, "Carritos temporales en sesión")
+    Rel(payment_service, payment_gateway, "HTTPS (Circuit Breaker)")
+    Rel(notification_service, email_provider, "HTTPS")
+    Rel(notification_service, sms_provider, "HTTPS")
+    Rel(notification_service, s3_templates, "Lee plantillas de email")
+    Rel(lambda_reports, s3_templates, "Escribe reportes CSV/PDF")
+    Rel(lambda_reports, analytics_db, "Lee datos para reportes")
+    Rel(shipping_service, legacy_shipping, "REST (Strangler Fig)")
+    Rel(event_bridge, lambda_reports, "Cron trigger semanal")
+    Rel(event_bridge, notification_service, "Scheduled notifications")
+
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
 
@@ -108,37 +182,102 @@ C4Context
 
 **Tipo:** Infraestructura como Servicio  
 **Responsabilidades:**
+
 - ✅ **Punto de entrada único** para todos los clientes (web, mobile, admin)
-- ✅ **Autenticación y Autorización** mediante JWT tokens
-- ✅ **Rate Limiting** para prevenir abuso y DDoS
-- ✅ **Enrutamiento inteligente** a microservicios basado en path/método
-- ✅ **Balanceo de carga** entre instancias de servicios
+- ✅ **Autenticación y Autorización** mediante JWT tokens (delega validación al Auth Service)
+- ✅ **Rate Limiting** para prevenir abuso y DDoS (100 req/s por IP)
+- ✅ **Enrutamiento inteligente** a BFFs y microservicios basado en path/método
+- ✅ **Balanceo de carga** entre instancias de servicios (Round Robin)
 - ✅ **Terminación SSL/TLS** para comunicación segura
 - ✅ **Circuit Breaker** a nivel de infraestructura
 - ✅ **Logging y monitoreo centralizado** (CloudWatch)
+- ✅ **Transformación de request/response** según el cliente
 
 **Justificación Stack:**
-- **AWS API Gateway:** Maneja cross-cutting concerns sin código
+
+- **AWS API Gateway:** Maneja cross-cutting concerns (SSL, Auth, Rate Limiting) sin código
 - **ALB:** Distribuye tráfico con health checks automáticos
+- Rutas hacia BFFs permiten optimización por tipo de cliente
 - Reduce complejidad en los microservicios
+
+> El API Gateway no enruta directamente a los microservicios internos, sino a la **capa BFF** que adapta las respuestas para cada plataforma (web/mobile). Los BFFs a su vez se comunican con los microservicios.
 
 ---
 
-### 3.2 Catalog Service (Servicio de Catálogo)
+### 3.2 BFF Layer (Backend for Frontend)
+
+**Tipo:** Capa de adaptación por tipo de cliente  
+**Justificación:** Según la clase de patrones de microservicios y la Actividad 5 del proyecto, se requiere un BFF separado para web y mobile.
+
+#### BFF Web
+
+**Responsabilidades:**
+
+- 🌐 **Respuestas completas** con toda la información del catálogo, filtros avanzados, paginación
+- 📊 **Agregación de datos** de múltiples microservicios (API Composition)
+- 🔍 **Búsqueda avanzada** con filtros dinámicos según atributos de producto
+- 📈 **Acceso a reportes y dashboards** para administradores
+
+#### BFF Mobile
+
+**Responsabilidades:**
+
+- 📱 **Respuestas ligeras** optimizadas para ancho de banda limitado
+- 📦 **Payload reducido** con campos esenciales y paginación agresiva
+- 🔔 **Endpoints específicos** para push notifications y estado de pedido
+- 🏎️ **Caching más agresivo** para reducir llamadas a backend
+
+| Característica | BFF Web                       | BFF Mobile                   |
+| -------------- | ----------------------------- | ---------------------------- |
+| Payload        | Completo (catálogo + filtros) | Reducido (campos esenciales) |
+| Paginación     | 50 items por página           | 20 items por página          |
+| Caché          | 5 min TTL                     | 15 min TTL                   |
+| Reportes       | ✅ Acceso completo            | ❌ Solo estado de pedidos    |
+| Filtros        | Avanzados (múltiples facetas) | Simplificados                |
+
+> El BFF no reemplaza al API Gateway; coexisten. El API Gateway maneja cross-cutting concerns (SSL, Auth, Rate Limiting) y enruta a los BFFs. Los BFFs manejan la **adaptación de datos** por plataforma.
+
+---
+
+### 3.3 Auth Service (Servicio de Autenticación)
+
+**Tipo:** Microservicio Spring Boot + Spring Security  
+**Responsabilidades:**
+
+- 🔐 **Autenticación de usuarios** (login/registro para clientes B2B y administradores)
+- 🎫 **Gestión de tokens JWT** firmados con RS256 (asymmetric key)
+- 🔄 **Refresh tokens** con rotación automática
+- 👥 **Role-Based Access Control (RBAC):**
+  - `CUSTOMER`: Consultar catálogo, crear/modificar pedidos, gestionar carrito
+  - `ADMIN`: Gestionar inventario, proveedores, ver reportes, gestionar productos
+  - `SUPPORT`: Consultar pedidos, cancelar pedidos, ver estado de envíos
+- 🌍 **Multi-tenant:** Soporte para clientes de diferentes países (CO, EC, PE, CL)
+
+**Base de Datos:** Puede usar el módulo de autenticación de AWS Cognito o PostgreSQL propio
+
+**Patrón:** Stateless JWT — No mantiene sesiones en servidor
+
+---
+
+### 3.4 Catalog Service (Servicio de Catálogo)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 📦 **Gestión de productos:** CRUD de productos con atributos (SKU, nombre, descripción, precio)
-- 📂 **Gestión de categorías:** Jerarquía de categorías maestras
-- 💰 **Gestión de precios:** Precio de venta, costo, moneda, impuestos
-- ✅ **Validaciones de negocio:** Precio > Costo, campos obligatorios
+
+- 📦 **Gestión de productos:** CRUD de productos con atributos detallados (SKU, nombre, descripción, precio, marca, especificaciones técnicas)
+- 📂 **Gestión de categorías:** Jerarquía de categorías maestras (Arka se distingue por la especificación detallada de cada producto)
+- 💰 **Gestión de precios:** Precio de venta, costo, moneda (COP, USD, PEN, CLP), impuestos por país
+- 🔍 **Búsqueda con filtros dinámicos:** Filtrado por categoría, marca, rango de precio, atributos específicos — los filtros están pendientes por definir según los PDFs, pero la arquitectura debe soportarlos de forma extensible
+- ✅ **Validaciones de negocio:** Precio > Costo, campos obligatorios, unicidad de SKU
 - 📊 **Publicación de eventos:** `ProductCreated`, `ProductUpdated`, `ProductDeleted`
 
 **Base de Datos:** PostgreSQL (catalog_db)
+
 - Relaciones entre productos y categorías (normalizado)
 - Queries transaccionales ACID para consistencia
 
 **Caché:** Redis (cache_layer)
+
 - Catálogo completo cacheado para lecturas rápidas
 - Invalidación de caché mediante eventos Kafka
 
@@ -146,191 +285,474 @@ C4Context
 
 ---
 
-### 3.3 Inventory Service (Servicio de Inventario)
+### 3.5 Inventory Service (Servicio de Inventario)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 📊 **Control de stock en tiempo real** por SKU
-- 🔒 **Reserva temporal de stock** con timeout (previene race conditions)
-- ⚠️ **Alertas de umbral de reorden** (Cron Jobs)
+
+- 📊 **Control de stock en tiempo real** por SKU (constraint de stock >= 0 a nivel de BD)
+- 🔒 **Reserva temporal de stock** con timeout de 15 min (previene race conditions mediante `SELECT ... FOR UPDATE`)
+- ⚠️ **Alertas de umbral de reorden** (Cron Jobs) — Publica `LowStockAlert` cuando stock < umbral configurable
 - 📉 **Registro de mermas** (daños, robos, pérdidas)
-- 📈 **Actualización de stock** por compras y devoluciones
+- 📈 **Actualización de stock** por compras a proveedores y devoluciones
+- 📝 **Historial de cambios en stock** (trazabilidad completa por HU2)
 - 🔔 **Publicación de eventos:** `StockReserved`, `StockReleased`, `StockUpdated`, `LowStockAlert`
 
 **Base de Datos:** PostgreSQL (inventory_db)
+
 - Transacciones ACID para operaciones de stock
 - Constraint de stock >= 0 a nivel de BD
 - Tabla de reservas con timestamp de expiración
 
 **Consumer de Eventos:**
+
 - `OrderCreated` → Reserva stock temporalmente
-- `PaymentFailed` → Libera reserva de stock
+- `PaymentFailed` → Libera reserva de stock (compensación Saga)
 - `OrderCancelled` → Libera reserva de stock
+- `PurchaseOrderDelivered` → Incrementa stock por abastecimiento del proveedor
 
 **Patrón Crítico:** Saga Pattern (Choreography)
+
 - Este servicio es el **segundo paso** en la Saga de creación de pedidos
+- Usa **lock pesimista** (`SELECT ... FOR UPDATE`) para prevenir race conditions de concurrencia
 
 ---
 
-### 3.4 Order Service (Servicio de Pedidos)
+### 3.6 Cart Service (Servicio de Carrito de Compras)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 📝 **Creación de pedidos** con validación de disponibilidad
+
+- 🛒 **Gestión del carrito de compras:** Agregar, editar, eliminar productos del carrito (Actividad 4 del proyecto)
+- ⏰ **Detección de carritos abandonados:** Timeout configurable para considerar un carrito como abandonado
+- 📧 **Trigger de notificaciones:** Publica `CartAbandoned` para que Notification Service envíe recordatorios con descuento
+- 💳 **Checkout:** Convierte carrito en orden (publica `CartCheckedOut` → Order Service crea la orden)
+- 📊 **Publicación de eventos:** `CartAbandoned`, `CartCheckedOut`, `CartUpdated`
+
+**Base de Datos:** PostgreSQL (cart_db)
+
+- Tabla `shopping_carts` con estado actual (ACTIVE, ABANDONED, CHECKED_OUT)
+- Tabla `cart_items` con productos y cantidades
+- Índice en `abandoned_at` para queries eficientes de carritos abandonados
+
+**Caché:** Redis (cache_layer)
+
+- Carritos activos en sesión cacheados para rápido acceso
+- TTL de 24h para carritos temporales de usuarios anónimos
+
+**Patrón:** Event-driven — El carrito no conoce al Order Service; solo emite eventos
+
+> **Justificación de separación del Order Service:** Los PDFs del proyecto tratan el carrito como un módulo independiente con su propia lógica de negocio (detección de abandono, remarketing). Separarlo permite escalar independientemente y asignar ownership a un equipo diferente.
+
+---
+
+### 3.7 Order Service (Servicio de Pedidos)
+
+**Tipo:** Microservicio Spring Boot + WebFlux  
+**Responsabilidades:**
+
+- 📝 **Creación de pedidos** con validación de disponibilidad (recibe `CartCheckedOut` o creación directa vía API)
+- ✏️ **Modificación de pedidos** antes de confirmación — Solo pedidos en estado `PENDING` pueden modificarse (HU5: actualizar stock si se eliminan productos)
 - 🎯 **Máquina de estados de pedidos:**
   - `PENDING` → Pedido creado, esperando reserva de stock
   - `STOCK_RESERVED` → Stock reservado, esperando confirmación de pago
   - `CONFIRMED` → Pago exitoso, pedido confirmado
-  - `IN_TRANSIT` → En proceso de entrega
+  - `IN_DISPATCH` → En proceso de despacho (Shipping Service)
+  - `IN_TRANSIT` → En tránsito al destino
   - `DELIVERED` → Entregado al cliente
   - `CANCELLED` → Cancelado por fallo en Saga o solicitud del usuario
-- 🔄 **Orquestación de Saga:** Coordina el flujo Order → Inventory → Payment
-- 🛒 **Gestión de carritos de compra:**
-  - Persistencia de carritos abandonados
-  - Timeout configurable para considerar carrito abandonado
-  - Eventos para marketing: `CartAbandoned`
-- 📊 **Publicación de eventos:** `OrderCreated`, `OrderConfirmed`, `OrderCancelled`, `OrderDelivered`
+- 🔄 **Participación en Saga Choreography:** Reacciona a eventos de Inventory y Payment; publica eventos que los demás consumen
+- 📊 **Publicación de eventos:** `OrderCreated`, `OrderModified`, `OrderConfirmed`, `OrderCancelled`, `OrderDelivered`
 
 **Base de Datos:** PostgreSQL (order_db)
-- Tabla `orders` con estado actual
-- Tabla `order_items` con productos y cantidades
-- Tabla `order_state_history` para auditoría completa
-- Tabla `shopping_carts` para carritos activos/abandonados
+
+- Tabla `orders` con estado actual y datos del cliente
+- Tabla `order_items` con productos, cantidades y precios al momento de la compra
+- Tabla `order_state_history` para auditoría completa (Event Sourcing)
+- Índice en `customer_id` y `status` para consultas frecuentes
 
 **Consumer de Eventos:**
+
+- `CartCheckedOut` → Crea nueva orden con items del carrito
 - `StockReserved` → Transición a STOCK_RESERVED
 - `StockReserveFailed` → Transición a CANCELLED (compensación)
 - `PaymentProcessed` → Transición a CONFIRMED
 - `PaymentFailed` → Publica `StockReleaseRequested` (compensación)
+- `ShipmentDispatched` → Transición a IN_DISPATCH
+- `ShipmentDelivered` → Transición a DELIVERED
 
 **Patrón:** Saga Choreography + Event Sourcing
-- El servicio mantiene el estado de la Saga distribuida
-- Event Sourcing en `order_state_history` para auditoría completa
+
+- El servicio reacciona a eventos de otros servicios (no orquesta directamente)
+- Event Sourcing en `order_state_history` para auditoría completa y capacidad de reconstruir estado
 
 ---
 
-### 3.5 Payment Service (Servicio de Pagos)
+### 3.8 Payment Service (Servicio de Pagos)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 💳 **Procesamiento de pagos** mediante integración con pasarelas externas (Stripe, MercadoPago, PayU)
+
+- 💳 **Procesamiento de pagos** mediante integración con pasarelas externas (MercadoPago, PayU) — Adecuadas para el mercado B2B LATAM
 - 🔐 **Tokenización de tarjetas** (no almacenar información sensible)
 - ♻️ **Manejo de refunds y reversiones** en caso de cancelación
 - 📊 **Publicación de eventos:** `PaymentProcessed`, `PaymentFailed`, `PaymentRefunded`
 - 🛡️ **Idempotencia:** Detectar pagos duplicados usando `orderId + correlationId`
 
 **Base de Datos:** PostgreSQL (payment_db)
+
 - Tabla `payments` con transacciones ACID
 - Tabla `payment_attempts` para reintentos y auditoría
 - Compliance PCI DSS (no guardar CVV ni números completos)
 
 **Consumer de Eventos:**
+
 - `StockReserved` → Inicia proceso de pago
 - `OrderCancelled` → Ejecuta refund si el pago ya se procesó
 
 **Integración Externa:**
+
 - Llamadas síncronas (REST/HTTPS) a Payment Gateway externo
 - Circuit Breaker + Retry Pattern con Resilience4j
 - Timeout de 30s máximo
 
 **Patrón:** Saga Pattern (Choreography)
+
 - Este servicio es el **tercer y último paso** en la Saga de creación de pedidos
 
 ---
 
-### 3.6 Reporting Service (Servicio de Reportes y Analítica)
+### 3.9 Shipping Service (Servicio de Envíos)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 📊 **Reportes de ventas:** Total de ventas en dinero y unidades
-- 💰 **Análisis de rentabilidad:** Basado en costo promedio del período
-- 🛒 **Detección de carritos abandonados:** Para remarketing
-- 📈 **Dashboard de métricas:** Stock bajo, productos más vendidos, tendencias
+
+- 🚚 **Verificación de disponibilidad de entrega** para la dirección del cliente (Actividad 1 del proyecto)
+- 📦 **Creación de órdenes de envío** al confirmar un pedido
+- 📍 **Seguimiento de despachos:** Estados IN_DISPATCH → IN_TRANSIT → DELIVERED
+- 📊 **Publicación de eventos:** `ShipmentCreated`, `ShipmentDispatched`, `ShipmentDelivered`, `ShipmentFailed`
+- 🌐 **Soporte multi-país:** Lógica de envío diferenciada para Colombia, Ecuador, Perú, Chile
+
+**Base de Datos:** PostgreSQL (shipping_db)
+
+- Tabla `shipments` con estado, dirección de entrega, tracking ID
+- Tabla `shipping_zones` con zonas de cobertura por país
+- Tabla `shipping_rates` con tarifas por zona y peso
+
+**Consumer de Eventos:**
+
+- `OrderConfirmed` → Crea orden de envío automáticamente
+- `OrderCancelled` → Cancela envío si aún no fue despachado
+
+**Patrón Crítico: Strangler Fig Pattern**
+
+El módulo de envíos se está **migrando desde el sistema monolítico legacy** de Arka (Actividad 6 del proyecto):
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Strangler Fig Migration                    │
+│  ┌──────────────────────┐   ┌────────────────────────┐  │
+│  │ Legacy Shipping     │   │ New Shipping Service   │  │
+│  │ (Monolito)          │   │ (Microservicio)        │  │
+│  │                      │   │                        │  │
+│  │ - Cálculo tarifas    │──▶│ - Cálculo tarifas      │  │
+│  │ - Tracking (aún)    │   │ - Creación de envío   │  │
+│  │ - Int. transporte   │   │ - Eventos Kafka        │  │
+│  └──────────────────────┘   └────────────────────────┘  │
+│                                                        │
+│  Fase 1: Proxy → El nuevo servicio redirige al legacy   │
+│  Fase 2: Funcionalidades nuevas en el microservicio      │
+│  Fase 3: Migrar tracking al microservicio                │
+│  Fase 4: Apagar el monolito de shipping                  │
+└────────────────────────────────────────────────────────┘
+```
+
+> El patrón Strangler Fig permite migrar gradualmente sin reescribir todo de golpe. El nuevo Shipping Service actúa como fachada y progresivamente asume responsabilidades del legacy.
+
+---
+
+### 3.10 Supplier Service (Servicio de Proveedores y Abastecimiento)
+
+**Tipo:** Microservicio Spring Boot + WebFlux  
+**Responsabilidades:**
+
+- 🏭 **Administración de proveedores:** CRUD de proveedores con datos de contacto, condiciones comerciales, países de operación
+- 🏢 **Gestión de almacenes:** Registro de almacenes por ubicación geográfica (Colombia, Ecuador, Perú, Chile)
+- 📝 **Generación automática de órdenes de compra:** Cuando el Inventory Service publica `LowStockAlert`, este servicio evalúa qué proveedor puede abastecer y genera una orden de compra
+- 💰 **Intercambio de presupuestos:** Integración con tiendas colaboradoras para solicitar cotizaciones (Actividad 8 del proyecto)
+- 📊 **Publicación de eventos:** `PurchaseOrderCreated`, `PurchaseOrderConfirmed`, `PurchaseOrderDelivered`, `SupplierUpdated`
+
+**Base de Datos:** PostgreSQL (supplier_db)
+
+- Tabla `suppliers` con datos de proveedor, condiciones, países
+- Tabla `warehouses` con ubicaciones y capacidad
+- Tabla `purchase_orders` con órdenes de compra a proveedores
+- Tabla `purchase_order_items` con productos y cantidades solicitadas
+
+**Consumer de Eventos:**
+
+- `LowStockAlert` → Evalúa proveedor óptimo y genera orden de compra automática
+- `ProductCreated` → Puede vincular producto con proveedor disponible
+
+**Flujo de Abastecimiento Automático:**
+
+```
+Inventory Service                Supplier Service              Proveedor Externo
+     │                                 │                              │
+     │── LowStockAlert (Kafka) ───▶│                              │
+     │  {sku, currentStock,            │                              │
+     │   reorderThreshold}             │                              │
+     │                                 │── Busca proveedor óptimo     │
+     │                                 │   por precio y lead time    │
+     │                                 │                              │
+     │                                 │── PurchaseOrderCreated ───▶│
+     │                                 │   (email/API al proveedor)   │
+     │                                 │                              │
+     │                                 │◀── Confirmación de entrega ──│
+     │                                 │                              │
+     │◀─ PurchaseOrderDelivered ──│                              │
+     │  {sku, quantity, cost}          │                              │
+     │                                 │                              │
+     │── Incrementa stock +qty         │                              │
+     │── Actualiza costo promedio      │                              │
+```
+
+> Este servicio cierra el ciclo completo de supply chain: desde la alerta de stock bajo hasta el abastecimiento automático, uno de los requerimientos principales del negocio según los PDFs del proyecto.
+
+---
+
+### 3.11 Reporting Service (Servicio de Reportes y Analítica)
+
+**Tipo:** Microservicio Spring Boot + WebFlux  
+**Responsabilidades:**
+
+- 📊 **Reportes semanales de ventas:** Total de ventas en dinero y unidades, productos más vendidos, **clientes más frecuentes** (HU7) — Exportación en **CSV y PDF**
+- 💰 **Análisis de rentabilidad:** Basado en costo promedio ponderado del período
+- 🛒 **Detección de carritos abandonados:** Listado con fecha y productos para remarketing (HU8)
+- 📈 **Dashboard de métricas:** Stock bajo, productos más vendidos, tendencias por categoría
 - 🔍 **Queries optimizadas de lectura:** Catálogo desnormalizado, vistas agregadas
+- 📝 **Reporte de productos por abastecer:** Productos con stock menor al umbral configurable (HU3) — Generación automática semanal via EventBridge + Lambda
 
 **Base de Datos:** DynamoDB (analytics_db) - **NoSQL Justificado (ver sección 4)**
+
 - Vistas materializadas desnormalizadas
 - Alta disponibilidad para lecturas concurrentes
 - Modelo de datos orientado a queries específicas
 
 **Consumer de Eventos:**
+
 - Consume **TODOS** los eventos de dominio de Kafka
 - Construye vistas agregadas en tiempo real
 - Alimenta modelo de lectura CQRS
 
 **Patrón:** CQRS (Command Query Responsibility Segregation)
+
 - **Write Model:** Otros servicios escriben en PostgreSQL
 - **Read Model:** Este servicio construye vistas optimizadas desde eventos
 - Consistencia eventual aceptable para reportes
 
+**Generación Automática de Reportes (EventBridge + Lambda):**
+
+```
+AWS EventBridge                  Lambda Report Generator          S3 Templates
+     │                                 │                              │
+     │── Cron: "rate(7 days)" ────▶│                              │
+     │   Trigger semanal               │                              │
+     │                                 │── Lee datos de DynamoDB      │
+     │                                 │── Genera CSV/PDF ────────▶│
+     │                                 │   (sales, profitability,     │
+     │                                 │    low-stock, abandoned)     │
+     │                                 │                              │
+     │                                 │── Publica: ReportGenerated   │
+     │                                 │   (Kafka → Notification)     │
+```
+
+> Esto cumple con HU3 (reportes automáticos semanales de productos por abastecer) y HU7 (reportes semanales de ventas con exportación CSV/PDF).
+
 ---
 
-### 3.7 Notification Service (Servicio de Notificaciones)
+### 3.12 Notification Service (Servicio de Notificaciones)
 
 **Tipo:** Microservicio Spring Boot + WebFlux  
 **Responsabilidades:**
-- 📧 **Envío de emails:** Confirmación de pedido, updates de estado
-- 📱 **SMS y notificaciones push:** Alertas críticas
-- 📢 **Plantillas de mensajes:** Personalización por tipo de evento
-- 🔄 **Reintentos automáticos:** Si el servicio externo falla
+
+- 📧 **Envío de emails transaccionales:** Confirmación de pedido, cambios de estado, rechazo de pago (Actividad 3 y 9 del proyecto)
+- 📱 **SMS y notificaciones push:** Alertas críticas (despachos, entregas)
+- 📢 **Plantillas de mensajes:** Almacenadas en **AWS S3** para personalización por tipo de evento y país
+- 🔄 **Reintentos automáticos:** Si el proveedor externo falla (Circuit Breaker + Retry con backoff exponencial)
+- 🛒 **Recordatorios de carrito abandonado:** Email automatizado con incentivo/descuento para recuperar ventas (HU8)
+- ⚠️ **Alertas de stock bajo:** Notificación a administradores cuando se detecta `LowStockAlert`
+- 📊 **Reportes generados:** Envía reportes semanales CSV/PDF a administradores cuando recibe `ReportGenerated`
 
 **Consumer de Eventos:**
-- `OrderConfirmed` → Email de confirmación
-- `OrderCancelled` → Email de cancelación
+
+- `OrderConfirmed` → Email de confirmación al cliente ("Tu pedido #123 ha sido confirmado")
+- `OrderCancelled` → Email de cancelación con motivo
 - `OrderDelivered` → Email de entrega exitosa
-- `CartAbandoned` → Email de recuperación con descuento
+- `ShipmentDispatched` → SMS/email con tracking de envío
+- `CartAbandoned` → Email de recuperación con descuento (programado por EventBridge)
+- `LowStockAlert` → Email/SMS al administrador
+- `PaymentFailed` → Email al cliente ("Tu pago fue rechazado, reintenta con otro método")
+- `ReportGenerated` → Email a administrador con reporte adjunto (link S3)
 
 **Integración Externa:**
-- SendGrid/AWS SES para emails
-- Twilio para SMS
-- Sin base de datos propia (stateless), usa logs para auditoría
+
+- **AWS SES** para emails transaccionales (alta entregabilidad, bajo costo para LATAM)
+- **Twilio / AWS SNS** para SMS
+- **AWS S3** para almacenamiento de plantillas de email por idioma/país
+- Sin base de datos propia (stateless), usa logs estructurados para auditoría
+
+**Patrón:** Event-driven + Dead Letter Queue
+
+- Si la notificación falla 3 veces, se envía a una DLQ (SQS) para reintento manual o investigación
+- Idempotencia: usa `eventId` para no enviar notificaciones duplicadas
+
+> **Mejora vs. versión anterior:** El Notification Service original era demasiado simplista. Esta versión refleja las Actividades 3 y 9 del proyecto Arka, incluyendo SES, plantillas S3, EventBridge scheduling, y cobertura completa de todos los eventos de negocio.
 
 ---
 
-### 3.8 Apache Kafka (Message Broker)
+### 3.13 Recommendation Service (Servicio de Recomendaciones)
+
+**Tipo:** Microservicio Spring Boot + WebFlux  
+**Responsabilidades:**
+
+- 🎯 **Recomendaciones de productos:** Basadas en historial de compras del cliente y productos relacionados (Actividad 5 del proyecto)
+- 📊 **Análisis de patrones de compra:** Clientes que compraron X también compraron Y
+- 🔗 **Productos relacionados:** Por categoría, marca, o compatibilidad técnica
+- 🏷️ **Personalización por cliente:** Recomendaciones adaptadas al historial B2B del almacén
+
+**Base de Datos:** DocumentDB (recommendation_db) — **NoSQL orientado a documentos**
+
+- Grafos de productos relacionados
+- Historial de compras por cliente para patrones de co-compra
+- Modelo flexible para queries de recomendación
+
+**Justificación DocumentDB:**
+
+- Modelo de datos orientado a grafos de relaciones entre productos
+- Queries ricas sobre documentos complejos (historial, categorías, atributos)
+- Compatible con MongoDB Driver (amplio ecosistema)
+- Managed service de AWS sin administración de cluster
+
+**Consumer de Eventos:**
+
+- `OrderConfirmed` → Actualiza historial de compras y relaciones entre productos
+- `ProductCreated` → Agrega producto al grafo de recomendaciones
+
+---
+
+### 3.14 Apache Kafka (Message Broker Principal)
 
 **Tipo:** Plataforma de Event Streaming  
 **Responsabilidades:**
+
 - 📨 **Event Bus central** para comunicación asíncrona entre microservicios
 - 🔄 **Garantía de entrega:** At-least-once delivery con confirmaciones
 - 📊 **Persistencia de eventos:** Retention configurable (7 días para eventos de dominio)
 - 🎯 **Tópicos principales:**
-  - `product-events`: ProductCreated, ProductUpdated
-  - `inventory-events`: StockReserved, StockReleased, StockUpdated
-  - `order-events`: OrderCreated, OrderConfirmed, OrderCancelled
-  - `payment-events`: PaymentProcessed, PaymentFailed
-  - `notification-events`: Eventos para envío de notificaciones
+  - `product-events`: ProductCreated, ProductUpdated, ProductDeleted
+  - `inventory-events`: StockReserved, StockReleased, StockUpdated, LowStockAlert
+  - `order-events`: OrderCreated, OrderModified, OrderConfirmed, OrderCancelled, OrderDelivered
+  - `cart-events`: CartAbandoned, CartCheckedOut, CartUpdated
+  - `payment-events`: PaymentProcessed, PaymentFailed, PaymentRefunded
+  - `shipping-events`: ShipmentCreated, ShipmentDispatched, ShipmentDelivered
+  - `supplier-events`: PurchaseOrderCreated, PurchaseOrderConfirmed, PurchaseOrderDelivered
+  - `notification-events`: Eventos internos para reintentos y DLQ
+  - `report-events`: ReportGenerated
 
 **Configuración:**
+
 - **Particiones:** Mínimo 3 por tópico para paralelismo
 - **Replication Factor:** 3 para alta disponibilidad
 - **Consumer Groups:** Un grupo por microservicio para escalado horizontal
 
 **Patrón:** Outbox Pattern (Transactional Outbox)
+
 - Cada servicio escribe eventos en tabla `outbox_events` dentro de la misma transacción
 - Un relay (@Scheduled) publica eventos pendientes a Kafka
 - Garantiza consistencia entre BD y eventos
 
 ---
 
-### 3.9 Bases de Datos
+### 3.15 AWS SQS/SNS (Mensajería Complementaria)
 
-#### PostgreSQL (catalog_db, inventory_db, order_db, payment_db)
+**Tipo:** Servicio de Colas y Pub/Sub Managed  
+**Responsabilidades:**
+
+- 📬 **SQS (Simple Queue Service):** Colas punto-a-punto para procesamiento de pasos de la Saga (Actividad 2 del proyecto), reintentos, y DLQ (Dead Letter Queue) para mensajes fallidos
+- 📢 **SNS (Simple Notification Service):** Fan-out de notificaciones a múltiples suscriptores (email, SMS, push)
+- 🔄 **Complemento a Kafka:** Kafka es el event bus principal para eventos de dominio; SQS/SNS maneja colas de procesamiento puntual (notificaciones, reintentos)
+
+**Justificación de uso conjunto con Kafka:**
+
+| Aspecto          | Kafka                                   | SQS/SNS                          |
+| ---------------- | --------------------------------------- | -------------------------------- |
+| Caso de uso      | Event streaming, event sourcing, CQRS   | Colas de trabajo, notificaciones |
+| Retención        | Configurable (días/semanas)             | Hasta 14 días                    |
+| Orden de entrega | Garantizado por partición               | FIFO optional                    |
+| Consumer groups  | Sí (escalado horizontal)                | No aplica (punto-a-punto)        |
+| Managed service  | Requiere MSK o Confluent                | Serverless nativo AWS            |
+| Ideal para       | Eventos de dominio entre microservicios | Jobs, notificaciones, DLQ        |
+
+---
+
+### 3.16 AWS EventBridge (Programación de Eventos)
+
+**Tipo:** Event Bus con reglas de scheduling  
+**Responsabilidades:**
+
+- ⏰ **Cron scheduling:** Trigger semanal para generación de reportes (CSV/PDF) via Lambda
+- 📋 **Reglas de eventos:** Ruteo condicional de eventos a diferentes targets
+- 🔔 **Scheduled notifications:** Recordatorios de carrito abandonado programados (Actividad 9 del proyecto)
+
+---
+
+### 3.17 AWS Lambda (Funciones Serverless)
+
+**Tipo:** Compute serverless  
+**Responsabilidades:**
+
+- 📊 **Lambda Report Generator:** Genera reportes semanales de ventas y stock en formato CSV/PDF, los sube a S3
+- 🔄 **Lambda Saga Handlers:** Funciones auxiliares para validaciones de pasos de la Saga (Actividad 2 del proyecto)
+- 📧 **Lambda Notification Processor:** Procesamiento de cola SQS para envío masivo de notificaciones
+
+**Justificación:** Para tareas puntuales que no requieren un servidor siempre activo, Lambda ofrece escalamiento automático y costo por ejecución.
+
+---
+
+### 3.18 AWS S3 (Almacenamiento de Objetos)
+
+**Tipo:** Object Storage  
+**Responsabilidades:**
+
+- 📄 **Plantillas de email:** Templates HTML por tipo de notificación e idioma/país (Actividad 3)
+- 📊 **Reportes generados:** Almacena CSV/PDF generados semanalmente por Lambda
+- 📦 **Archivos exportados:** Respaldo de reportes históricos
+
+---
+
+### 3.19 Bases de Datos
+
+#### PostgreSQL (catalog_db, inventory_db, order_db, cart_db, payment_db, shipping_db, supplier_db)
 
 **Justificación:**
-- ✅ **ACID requerido** para operaciones críticas (stock, pagos, pedidos)
-- ✅ **Relaciones complejas** entre entidades (productos-categorías, pedidos-items)
+
+- ✅ **ACID requerido** para operaciones críticas (stock, pagos, pedidos, envíos, compras a proveedores)
+- ✅ **Relaciones complejas** entre entidades (productos-categorías, pedidos-items, proveedores-almacenes)
 - ✅ **Transacciones atómicas** para garantizar consistencia fuerte
 - ✅ **Madurez y confiabilidad** en ambientes de producción
+- ✅ **Database per Service:** Cada microservicio tiene su propia base de datos independiente (patrón fundamental de microservicios según clase-14)
 
 **Configuración:**
-- **Connection Pooling:** R2DBC con HikariCP
+
+- **Connection Pooling:** R2DBC Pool (no HikariCP — HikariCP es para JDBC bloqueante, R2DBC usa su propio pool reactivo)
 - **Read Replicas:** Para separar tráfico de lectura
 - **Backups automáticos:** Snapshots diarios + WAL archiving
 
 #### DynamoDB (analytics_db) - NoSQL
 
 **Justificación (ver sección 4):**
+
 - ✅ **Alta disponibilidad** con replicación multi-región
 - ✅ **Baja latencia** para queries de lectura intensiva (<10ms)
 - ✅ **Escalabilidad automática** sin downtime
@@ -339,10 +761,20 @@ C4Context
 #### Redis/ElastiCache (cache_layer)
 
 **Justificación:**
+
 - ✅ **Caché de catálogo** para reducir carga en PostgreSQL
 - ✅ **Sesiones de usuario** y carritos de compra temporales
 - ✅ **Rate limiting** distribuido
 - ✅ **TTL automático** para expiración de datos
+
+#### DocumentDB (recommendation_db) - NoSQL Document
+
+**Justificación:**
+
+- ✅ **Modelo orientado a documentos** para grafos de productos relacionados y patrones de co-compra
+- ✅ **Queries ricas** sobre documentos complejos (compatible con MongoDB API)
+- ✅ **Managed service AWS** sin administración de cluster
+- ✅ **Caso de uso específico:** Servicio de Recomendaciones (Actividad 5 del proyecto)
 
 ---
 
@@ -352,15 +784,15 @@ C4Context
 
 El **Reporting Service** tiene requisitos únicos que difieren del resto de microservicios:
 
-| Requisito                | PostgreSQL (ACID)                    | DynamoDB (NoSQL)                         |
-| ------------------------ | ------------------------------------ | ---------------------------------------- |
-| **Tipo de carga**        | Escrituras transaccionales críticas  | **Lecturas masivas concurrentes** ✅     |
-| **Consistencia**         | Fuerte (ACID)                        | **Eventual (aceptable para reportes)** ✅ |
-| **Escalabilidad**        | Vertical (más potente servidor)      | **Horizontal (auto-scaling)** ✅         |
-| **Latencia en queries**  | Variable (depende de complejidad)    | **Predecible <10ms** ✅                  |
-| **Modelo de datos**      | Normalizado (evita duplicados)       | **Desnormalizado (optimizado)** ✅       |
-| **Costo a escala**       | Alto (instancias grandes)            | **Pay-per-request** ✅                   |
-| **Alta disponibilidad**  | Requiere configuración (Replicas)    | **Multi-AZ nativo** ✅                   |
+| Requisito               | PostgreSQL (ACID)                   | DynamoDB (NoSQL)                          |
+| ----------------------- | ----------------------------------- | ----------------------------------------- |
+| **Tipo de carga**       | Escrituras transaccionales críticas | **Lecturas masivas concurrentes** ✅      |
+| **Consistencia**        | Fuerte (ACID)                       | **Eventual (aceptable para reportes)** ✅ |
+| **Escalabilidad**       | Vertical (más potente servidor)     | **Horizontal (auto-scaling)** ✅          |
+| **Latencia en queries** | Variable (depende de complejidad)   | **Predecible <10ms** ✅                   |
+| **Modelo de datos**     | Normalizado (evita duplicados)      | **Desnormalizado (optimizado)** ✅        |
+| **Costo a escala**      | Alto (instancias grandes)           | **Pay-per-request** ✅                    |
+| **Alta disponibilidad** | Requiere configuración (Replicas)   | **Multi-AZ nativo** ✅                    |
 
 ### Casos de Uso Específicos en Arka que Justifican DynamoDB
 
@@ -369,9 +801,10 @@ El **Reporting Service** tiene requisitos únicos que difieren del resto de micr
 **Escenario:** Administradores consultando dashboard cada 5 segundos durante Black Friday
 
 **Problema con PostgreSQL:**
+
 ```sql
 -- Query compleja con múltiples JOINs
-SELECT 
+SELECT
   p.category_id,
   c.name,
   SUM(oi.quantity) as total_sold,
@@ -381,16 +814,18 @@ FROM order_items oi
 JOIN products p ON oi.product_id = p.id
 JOIN categories c ON p.category_id = c.id
 JOIN inventory i ON p.sku = i.sku
-WHERE o.status = 'CONFIRMED' 
+WHERE o.status = 'CONFIRMED'
   AND o.created_at >= NOW() - INTERVAL '7 days'
 GROUP BY p.category_id, c.name;
 ```
+
 - Escanea millones de filas en `order_items`
 - Múltiples JOINs entre 4 tablas
 - Carga alta en CPU/RAM durante picos de tráfico
 - Latencia > 2 segundos en hora pico
 
 **Solución con DynamoDB:**
+
 ```javascript
 // Vista materializada desnormalizada
 {
@@ -403,6 +838,7 @@ GROUP BY p.category_id, c.name;
   "lastUpdated": "2026-02-21T14:30:00Z"
 }
 ```
+
 - **Query directa por PK:** Latencia <5ms
 - **Datos pre-agregados:** Sin cálculos en tiempo de lectura
 - **Auto-scaling:** Maneja 10,000 req/s sin configuración
@@ -412,9 +848,10 @@ GROUP BY p.category_id, c.name;
 **Escenario:** Marketing ejecuta campañas basadas en carritos abandonados de las últimas 24h
 
 **Problema con PostgreSQL:**
+
 ```sql
 -- Necesita escanear tabla completa de carritos
-SELECT 
+SELECT
   c.id, c.customer_email, c.created_at,
   p.name, ci.quantity, ci.price
 FROM shopping_carts c
@@ -424,11 +861,13 @@ WHERE c.status = 'ABANDONED'
   AND c.abandoned_at >= NOW() - INTERVAL '24 hours'
 ORDER BY c.abandoned_at DESC;
 ```
+
 - Full table scan en `shopping_carts` (millones de registros históricos)
 - Index poco efectivo por rango de fechas
 - Compite por recursos con operaciones transaccionales críticas
 
 **Solución con DynamoDB (con GSI):**
+
 ```javascript
 // Partition Key: STATUS, Sort Key: ABANDONED_AT
 // Global Secondary Index
@@ -450,6 +889,7 @@ ORDER BY c.abandoned_at DESC;
   "totalValue": 1599.99
 }
 ```
+
 - **Query por GSI:** Latencia <10ms
 - **Sin impacto** en operaciones transaccionales (BD separada)
 - **Datos desnormalizados:** Toda la info del carrito en un item
@@ -459,19 +899,21 @@ ORDER BY c.abandoned_at DESC;
 **Escenario:** CFO solicita reporte de rentabilidad mensual por categoría
 
 **Desafío Identificado en clase-01:**
+
 > "Cómo se maneja la rentabilidad en reportes periódicos, cuando se base en variables dinámicas como el costo, que por ejemplo, puede cambiar de lunes a jueves."  
 > **Solución Retail:** Costo promedio ponderado del período analizado
 
 **Problema con PostgreSQL:**
+
 ```sql
 -- Calcular costo promedio ponderado en tiempo de query
-SELECT 
+SELECT
   p.category_id,
   SUM((oi.quantity * oi.price) - (oi.quantity * weighted_cost.avg_cost)) as profit
 FROM order_items oi
 JOIN (
   -- Subquery compleja para calcular costo promedio ponderado
-  SELECT 
+  SELECT
     product_id,
     SUM(cost * quantity) / SUM(quantity) as avg_cost
   FROM inventory_movements
@@ -482,6 +924,7 @@ WHERE o.status = 'CONFIRMED'
   AND o.created_at BETWEEN '2026-02-01' AND '2026-02-28'
 GROUP BY p.category_id;
 ```
+
 - Subqueries anidadas muy costosas
 - Cálculo en cada ejecución (no cacheables fácilmente)
 - Timeout en reportes históricos (>12 meses)
@@ -507,6 +950,7 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 ```
 
 **Flujo de actualización:**
+
 1. `OrderConfirmed` event → Incrementa revenue
 2. `ProductCostUpdated` event → Recalcula costo promedio ponderado
 3. Ambos actualizan el mismo documento (atomic counters)
@@ -516,8 +960,8 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 
 ### Comparativa Final: PostgreSQL vs DynamoDB para Reportes
 
-| Criterio                    | PostgreSQL (Normalizado)     | DynamoDB (Desnormalizado)       |
-| --------------------------- | ---------------------------- | ------------------------------- |
+| Criterio                     | PostgreSQL (Normalizado)     | DynamoDB (Desnormalizado)       |
+| ---------------------------- | ---------------------------- | ------------------------------- |
 | **Latencia p95 en lecturas** | 500-2000ms                   | **<10ms** ✅                    |
 | **Escalabilidad horizontal** | Difícil (sharding manual)    | **Automática** ✅               |
 | **Concurrencia de lecturas** | Limitada por hardware        | **Ilimitada (auto-scale)** ✅   |
@@ -561,6 +1005,7 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 ```
 
 **Principio CQRS aplicado:**
+
 - ✅ **Write Model (PostgreSQL):** Consistencia fuerte para transacciones críticas
 - ✅ **Read Model (DynamoDB):** Optimizado para queries analíticas de alta concurrencia
 - ✅ **Sincronización:** Eventos de Kafka garantizan consistencia eventual
@@ -580,6 +1025,7 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 | **Casos de uso**             | **Catálogos, métricas, caché** ✅ | Documentos complejos, búsquedas texto |
 
 **Decisión:** DynamoDB para el stack Arka por:
+
 1. **Simplicidad operacional** (serverless, sin administración de cluster)
 2. **Integración nativa** con el stack AWS
 3. **Costo predecible** con on-demand pricing
@@ -587,9 +1033,93 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 
 ---
 
-## 5. Identificación de Cuellos de Botella en el Flujo de Retail
+## 5. Patrones Transversales de la Arquitectura
 
-### 5.1 Consistencia Eventual en Inventario (Problema Crítico)
+### 5.1 Service Discovery
+
+**Problema:** En un entorno dinámico con contenedores y auto-scaling, las IPs y puertos de los microservicios cambian constantemente. Hardcodear URLs es frágil y no escala.
+
+**Solución por Entorno:**
+
+| Entorno     | Estrategia                                | Tipo                |
+| ----------- | ----------------------------------------- | ------------------- |
+| Desarrollo  | Docker Compose DNS por nombre de servicio | Server-Side (DNS)   |
+| Producción  | AWS ECS Service Discovery / EKS DNS       | Server-Side (Cloud) |
+| Alternativa | Spring Cloud + Netflix Eureka             | Client-Side         |
+
+> En producción con AWS ECS, el service discovery es automático: cada servicio se registra en AWS Cloud Map y el ALB enruta usando DNS internos. No es necesario implementar Eureka si se usa ECS/EKS.
+
+### 5.2 Domain Events vs Integration Events
+
+Distinción fundamental para una arquitectura EDA bien diseñada (según clase-14):
+
+| Tipo              | Scope                      | Ejemplo                                 | Características                      |
+| ----------------- | -------------------------- | --------------------------------------- | ------------------------------------ |
+| Domain Event      | Dentro del Bounded Context | `StockDecremented(sku, qty, remaining)` | Detallados, lenguaje del dominio     |
+| Integration Event | Entre microservicios       | `StockReserved(orderId, sku)`           | Contrato público, mínima información |
+
+**Regla clave:** Solo los **Integration Events** se publican a Kafka. Los Domain Events se procesan internamente dentro del servicio.
+
+```java
+// Domain Event (interno al Inventory Service)
+record StockDecremented(String sku, int quantity, int remainingStock, Instant timestamp) {}
+
+// Integration Event (publicado a Kafka)
+record StockReservedEvent(
+    String eventId,       // UUID para idempotencia
+    String eventType,     // "StockReserved"
+    String orderId,       // Mínima información necesaria
+    String sku,
+    Instant timestamp
+) {}
+```
+
+> Los Integration Events deben ser **versionables** y contener el **mínimo de información necesaria** para que otros servicios reaccionen. Esto reduce el acoplamiento entre servicios.
+
+### 5.3 Outbox Pattern (Transactional Outbox)
+
+Garantiza consistencia entre escritura en BD y publicación de eventos (resuelve el problema de Dual Write según clase-14):
+
+**Implementación en cada microservicio que publica eventos:**
+
+1. El servicio guarda datos en su tabla principal
+2. En la **misma transacción**, guarda el evento en la tabla `outbox_events`
+3. Un **Outbox Relay** (`@Scheduled` o Debezium CDC) lee eventos pendientes y los publica a Kafka
+4. Marca los eventos como `PUBLISHED`
+
+| Enfoque del Relay | Cómo funciona             | Cuándo usarlo                  |
+| ----------------- | ------------------------- | ------------------------------ |
+| @Scheduled        | Polling periódico a la BD | Simple, sin dependencias extra |
+| Debezium (CDC)    | Lee el WAL de PostgreSQL  | Alta frecuencia, sin polling   |
+
+> Para Arka, se recomienda comenzar con `@Scheduled` (polling cada 5 segundos) e iterar a Debezium si el volumen de eventos lo justifica.
+
+### 5.4 Idempotencia en Consumers
+
+Con entrega **at-least-once** de Kafka, los consumers deben manejar eventos duplicados:
+
+```java
+@KafkaListener(topics = "order-events")
+public Mono<Void> onOrderCreated(OrderCreatedEvent event) {
+    return processedEventsRepository.existsByEventId(event.eventId())
+        .flatMap(alreadyProcessed -> {
+            if (alreadyProcessed) {
+                log.warn("Event {} already processed, skipping", event.eventId());
+                return Mono.empty();
+            }
+            return processEvent(event)
+                .then(processedEventsRepository.save(new ProcessedEvent(event.eventId())));
+        });
+}
+```
+
+> Cada consumer mantiene una tabla `processed_events` con los `eventId` ya procesados. Esto previene efectos duplicados (ej: descontar stock dos veces).
+
+---
+
+## 6. Identificación de Cuellos de Botella en el Flujo de Retail
+
+### 6.1 Consistencia Eventual en Inventario (Problema Crítico)
 
 **Escenario:** 100 clientes intentan comprar el mismo producto con solo 5 unidades en stock
 
@@ -628,7 +1158,7 @@ Cliente 2 → API Gateway → Order Service → Inventory Service (check stock)
    │  ├─ SI → Decrementa stock + crea reserva temporal (15 min)
    │  │      └─ Publica: StockReserved
    │  └─ NO → Publica: StockReserveFailed
-   
+
 3. Order Service consume eventos:
    ├─ StockReserved → Transición a STOCK_RESERVED
    │                  └─ Trigger: Payment Service
@@ -658,18 +1188,20 @@ Cliente 2 → API Gateway → Order Service → Inventory Service (check stock)
 ```
 
 **Ventajas de la Solución:**
+
 - ✅ **Lock pesimista** en BD (`SELECT FOR UPDATE`) previene race conditions
 - ✅ **Reserva temporal** con timeout (15 min) libera stock si el pago no se completa
 - ✅ **Compensación automática** mediante eventos (Saga Pattern)
 - ✅ **Idempotencia** mediante `orderId` en eventos (previene procesamiento duplicado)
 
 **Trade-off aceptado:**
+
 - ⚠️ **Consistencia eventual:** El cliente ve "Orden pendiente" durante 2-5 segundos mientras se procesa
 - ✅ **Mitigación:** WebSockets o polling en frontend para actualizar estado en tiempo real
 
 ---
 
-### 5.2 Timeout de Reserva de Stock
+### 6.2 Timeout de Reserva de Stock
 
 **Problema:** Cliente reserva producto, inicia pago pero abandona el checkout → stock bloqueado indefinidamente
 
@@ -679,13 +1211,13 @@ Cliente 2 → API Gateway → Order Service → Inventory Service (check stock)
 @Scheduled(fixedRate = 60000) // Cada 60 segundos
 public void releaseExpiredReservations() {
     LocalDateTime threshold = LocalDateTime.now().minus(15, ChronoUnit.MINUTES);
-    
+
     inventoryRepository.findExpiredReservations(threshold)
         .flatMap(reservation -> {
             reservation.setStatus(ReservationStatus.EXPIRED);
             return inventoryRepository.save(reservation)
                 .then(stockRepository.incrementStock(reservation.getSku(), reservation.getQuantity()))
-                .then(kafkaProducer.send("inventory-events", 
+                .then(kafkaProducer.send("inventory-events",
                     new StockReleasedEvent(reservation.getOrderId(), "Timeout")));
         })
         .subscribe();
@@ -693,6 +1225,7 @@ public void releaseExpiredReservations() {
 ```
 
 **Comportamiento:**
+
 1. Reservas con `created_at < NOW() - 15 minutes` se marcan como `EXPIRED`
 2. Stock se restaura automáticamente
 3. Evento `StockReleased` notifica a Order Service
@@ -700,7 +1233,7 @@ public void releaseExpiredReservations() {
 
 ---
 
-### 5.3 Fallos en Cascada (Cascading Failures)
+### 6.3 Fallos en Cascada (Cascading Failures)
 
 **Escenario:** Payment Gateway externo (Stripe) está lento (5s de latencia) → Order Service espera → API Gateway timeout → Todos los endpoints del API se bloquean
 
@@ -734,7 +1267,7 @@ public CircuitBreakerConfig circuitBreakerConfig() {
 
 @Service
 public class PaymentGatewayClient {
-    
+
     @CircuitBreaker(name = "payment-gateway", fallbackMethod = "paymentFallback")
     public Mono<PaymentResponse> processPayment(PaymentRequest request) {
         return webClient.post()
@@ -744,15 +1277,15 @@ public class PaymentGatewayClient {
             .bodyToMono(PaymentResponse.class)
             .timeout(Duration.ofSeconds(5)); // Timeout agresivo
     }
-    
+
     // Fallback method
     private Mono<PaymentResponse> paymentFallback(PaymentRequest request, Exception ex) {
         log.error("Payment gateway failed, executing fallback", ex);
-        
+
         // Opción 1: Encolar para retry asíncrono
         return paymentQueueService.enqueue(request)
             .thenReturn(PaymentResponse.pending(request.getOrderId()));
-        
+
         // Opción 2: Respuesta inmediata al cliente
         // return Mono.just(PaymentResponse.temporaryFailure());
     }
@@ -760,6 +1293,7 @@ public class PaymentGatewayClient {
 ```
 
 **Estados del Circuit Breaker:**
+
 1. **CLOSED (Normal):** Todas las requests pasan al Payment Gateway
 2. **OPEN (Protección):** 50% de fallos detectados → Todas las requests usan fallback (fail-fast)
 3. **HALF-OPEN (Prueba):** Después de 30s, permite 5 requests de prueba
@@ -767,6 +1301,7 @@ public class PaymentGatewayClient {
    - Si <50% fallan → Vuelve a CLOSED (recuperación)
 
 **Ventajas:**
+
 - ✅ **Fail-fast:** Respuesta inmediata sin esperar timeout
 - ✅ **Recuperación automática:** Auto-healing cuando el servicio vuelve
 - ✅ **Protección del sistema:** Thread pool no se agota
@@ -774,7 +1309,7 @@ public class PaymentGatewayClient {
 
 ---
 
-### 5.4 Dual-Write Problem (Inconsistencia BD + Kafka)
+### 6.4 Dual-Write Problem (Inconsistencia BD + Kafka)
 
 **Escenario:** Order Service guarda pedido en PostgreSQL pero falla al publicar evento a Kafka → Inventory Service nunca se entera
 
@@ -784,7 +1319,7 @@ public class PaymentGatewayClient {
 @Transactional
 public Mono<Order> createOrder(CreateOrderRequest request) {
     return orderRepository.save(order)                    // 1. Escribe en BD ✅
-        .flatMap(saved -> 
+        .flatMap(saved ->
             kafkaProducer.send("order-created", event))   // 2. Publica a Kafka ❌ (falla)
         .thenReturn(saved);
 }
@@ -806,7 +1341,7 @@ public Mono<Order> createOrder(CreateOrderRequest request) {
                 .topic("order-events")
                 .status(OutboxStatus.PENDING)
                 .build();
-                
+
             return outboxRepository.save(event)
                 .thenReturn(saved);
         });
@@ -818,11 +1353,11 @@ public Mono<Order> createOrder(CreateOrderRequest request) {
 ```java
 @Component
 public class OutboxRelay {
-    
+
     @Scheduled(fixedDelay = 5000) // Cada 5 segundos
     public void publishPendingEvents() {
         outboxRepository.findByStatus(OutboxStatus.PENDING)
-            .flatMap(event -> 
+            .flatMap(event ->
                 kafkaProducer.send(event.getTopic(), event.getPayload())
                     .then(outboxRepository.updateStatus(event.getId(), OutboxStatus.PUBLISHED))
                     .onErrorResume(ex -> {
@@ -836,6 +1371,7 @@ public class OutboxRelay {
 ```
 
 **Garantías:**
+
 - ✅ **Atomicidad:** Orden + Evento se guardan en la misma transacción (ACID)
 - ✅ **Eventual delivery:** El relay reintenta hasta que Kafka acepte el evento
 - ✅ **Idempotencia:** Consumers deben usar `eventId` para detectar duplicados
@@ -843,15 +1379,15 @@ public class OutboxRelay {
 
 ---
 
-### 5.5 Consultas Lentas en Reportes (Query Performance)
+### 6.5 Consultas Lentas en Reportes (Query Performance)
 
 **Problema:** Reporte de "Top 10 productos más vendidos del mes" hace JOIN entre 4 tablas con millones de registros
 
 #### ❌ Query Síncrona en PostgreSQL
 
 ```sql
-SELECT 
-    p.sku, p.name, 
+SELECT
+    p.sku, p.name,
     COUNT(oi.id) as order_count,
     SUM(oi.quantity) as total_sold,
     SUM(oi.quantity * oi.price) as revenue
@@ -866,6 +1402,7 @@ LIMIT 10;
 ```
 
 **Problemas:**
+
 - ⚠️ Escanea 2M+ registros en `order_items`
 - ⚠️ Múltiples JOINs costosos
 - ⚠️ Latencia 5-10 segundos en hora pico
@@ -879,7 +1416,7 @@ LIMIT 10;
 @KafkaListener(topics = "order-events")
 public Mono<Void> onOrderConfirmed(OrderConfirmedEvent event) {
     return event.getItems().stream()
-        .map(item -> 
+        .map(item ->
             dynamoDbClient.updateItem(UpdateItemRequest.builder()
                 .tableName("product_sales_monthly")
                 .key(Map.of(
@@ -922,6 +1459,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 ```
 
 **Ventajas:**
+
 - ✅ Latencia <10ms (sin JOINs, sin agregaciones)
 - ✅ Datos pre-calculados en cada evento
 - ✅ Sin impacto en PostgreSQL transaccional
@@ -929,21 +1467,25 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ---
 
-## 6. Flujos Críticos del Sistema
+## 7. Flujos Críticos del Sistema
 
-### 6.1 Flujo de Creación de Pedido (Happy Path - Saga Exitosa)
+### 7.1 Flujo de Creación de Pedido (Happy Path - Saga Exitosa)
 
 ```
 [Cliente Web]
     │
-    │ 1. POST /api/orders
-    │    Body: { items: [...], customerId: "..." }
+    │ 1. POST /api/cart/checkout (o POST /api/orders)
+    │    Body: { cartId: "...", customerId: "..." }
     ▼
 [API Gateway]
-    │ Auth + Rate Limiting
+    │ Auth (JWT validation via Auth Service) + Rate Limiting
     ▼
-[Order Service]
-    │ 2. Crea orden con estado PENDING
+[BFF Web/Mobile]
+    │ Adapta request según plataforma
+    ▼
+[Cart Service → Order Service]
+    │ 2. Cart Service publica CartCheckedOut
+    │    Order Service crea orden con estado PENDING
     │    order_id = uuid-123
     │    Guarda en order_db (PostgreSQL)
     │
@@ -989,7 +1531,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
     │                         │
     │ 11. Consume             │ 12. Consume StockReserved
     │     StockReserved       │     - Llama a Payment Gateway
-    │     - Actualiza estado: │       (Stripe/MercadoPago)
+    │     - Actualiza estado: │       (MercadoPago/PayU)
     │       STOCK_RESERVED    │     - Timeout: 30s
     │                         │     - Circuit Breaker activo
     │                         │
@@ -1013,25 +1555,25 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
     ▼                                                    ▼
 [Kafka Broker]
     │
-    ├─────────────────────────┐
-    ▼                         ▼
-[Notification Service]   [Reporting Service]
-    │                         │
-    │ 16. Email de           │ 17. Actualiza métricas:
-    │     confirmación       │     - pending_orders--
-    │     "Tu pedido #123    │     - confirmed_orders++
-    │      ha sido           │     - total_revenue += amount
-    │      confirmado"       │     - Actualiza tabla de
-    │                         │       top productos
-    ▼                         ▼
-[SendGrid/SES]           [DynamoDB]
+    ├─────────────────────────┬──────────────────────────┐
+    ▼                         ▼                          ▼
+[Notification Service]   [Reporting Service]        [Shipping Service]
+    │                         │                          │
+    │ 16. Email de           │ 17. Actualiza métricas:  │ 18. Consume OrderConfirmed
+    │     confirmación       │     - pending_orders--   │     - Crea orden de envío
+    │     "Tu pedido #123    │     - confirmed_orders++ │     - Estado: IN_DISPATCH
+    │      ha sido           │     - total_revenue +=   │     - Publica:
+    │      confirmado"       │     - top productos      │       ShipmentCreated
+    │                         │                          │
+    ▼                         ▼                          ▼
+[AWS SES]                [DynamoDB]               [shipping_db]
 
-[Cliente recibe email + puede consultar estado en frontend]
+[Cliente recibe email + puede consultar estado + tracking de envío en frontend]
 ```
 
 ---
 
-### 6.2 Flujo de Compensación (Saga Fallida - Stock Insuficiente)
+### 7.2 Flujo de Compensación (Saga Fallida - Stock Insuficiente)
 
 ```
 [Cliente Web]
@@ -1060,7 +1602,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ---
 
-### 6.3 Flujo de Compensación (Saga Fallida - Pago Rechazado)
+### 7.3 Flujo de Compensación (Saga Fallida - Pago Rechazado)
 
 ```
 [Order Service]
@@ -1095,11 +1637,12 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ---
 
-## 7. Patrones de Resiliencia Implementados
+## 8. Patrones de Resiliencia Implementados
 
-### 7.1 Circuit Breaker (Resilience4j)
+### 8.1 Circuit Breaker (Resilience4j)
 
 **Aplicado en:**
+
 - Order Service → Inventory Service
 - Payment Service → Payment Gateway externo
 - Notification Service → SendGrid
@@ -1125,9 +1668,10 @@ resilience4j:
 
 ---
 
-### 7.2 Retry Pattern con Backoff Exponencial
+### 8.2 Retry Pattern con Backoff Exponencial
 
 **Aplicado en:**
+
 - Publicación de eventos a Kafka (transient failures)
 - Llamadas HTTP a servicios externos
 
@@ -1146,7 +1690,7 @@ public RetryConfig retryConfig() {
 
 ---
 
-### 7.3 Bulkhead Pattern
+### 8.3 Bulkhead Pattern
 
 **Aislamiento de thread pools** para prevenir que un servicio lento consuma todos los recursos:
 
@@ -1163,7 +1707,7 @@ public ThreadPoolBulkheadConfig bulkheadConfig() {
 
 ---
 
-### 7.4 Timeout Agresivo
+### 8.4 Timeout Agresivo
 
 **Configuración en WebClient:**
 
@@ -1173,10 +1717,10 @@ public WebClient webClient() {
     HttpClient httpClient = HttpClient.create()
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
         .responseTimeout(Duration.ofSeconds(5))
-        .doOnConnected(conn -> 
+        .doOnConnected(conn ->
             conn.addHandlerLast(new ReadTimeoutHandler(5))
                 .addHandlerLast(new WriteTimeoutHandler(5)));
-    
+
     return WebClient.builder()
         .clientConnector(new ReactorClientHttpConnector(httpClient))
         .build();
@@ -1185,87 +1729,103 @@ public WebClient webClient() {
 
 ---
 
-## 8. Tecnologías y Herramientas del Stack
+## 9. Tecnologías y Herramientas del Stack
 
-| Componente              | Tecnología                                  | Justificación                                                      |
-| ----------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
-| **Framework Backend**   | Spring Boot 3.2 + WebFlux                   | Reactive streams, alto throughput, non-blocking I/O                |
-| **Persistencia**        | Spring Data R2DBC                           | Acceso reactivo a PostgreSQL                                       |
-| **Message Broker**      | Apache Kafka (Confluent Cloud o MSK)        | Event streaming, alta disponibilidad, retención de eventos         |
-| **API Gateway**         | AWS API Gateway + Application Load Balancer | Managed service, integración nativa con AWS, SSL termination       |
-| **BD Transaccional**    | PostgreSQL 15 (RDS Multi-AZ)                | ACID, relaciones complejas, madurez                                |
-| **BD Analítica**        | Amazon DynamoDB                             | Baja latencia, escalabilidad horizontal, pay-per-request           |
-| **Caché**               | Redis/ElastiCache                           | In-memory, sub-millisecond latency                                 |
-| **Service Discovery**   | Docker Compose DNS (dev) / AWS ECS Service Discovery (prod) | Auto-discovery de servicios en contenedores           |
-| **Resiliencia**         | Resilience4j                                | Circuit breaker, retry, bulkhead, rate limiter                     |
-| **Observabilidad**      | Spring Boot Actuator + Micrometer + CloudWatch | Métricas, health checks, traces distribuidos                |
-| **CI/CD**               | GitHub Actions + AWS CodePipeline           | Despliegue automatizado a ECS/EKS                                  |
-| **Orquestación**        | Docker Compose (dev) / Amazon ECS (prod)    | Gestión de contenedores                                            |
-| **Logging**             | SLF4J + Logback + CloudWatch Logs           | Logs centralizados, búsqueda y análisis                            |
-| **Autenticación**       | Spring Security + JWT                       | Stateless authentication, integración con OAuth2                   |
+| Componente             | Tecnología                                                  | Justificación                                                 |
+| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
+| **Framework Backend**  | Spring Boot 3.2 + WebFlux                                   | Reactive streams, alto throughput, non-blocking I/O           |
+| **Persistencia**       | Spring Data R2DBC                                           | Acceso reactivo a PostgreSQL                                  |
+| **Message Broker**     | Apache Kafka (Confluent Cloud o MSK)                        | Event streaming, alta disponibilidad, retención de eventos    |
+| **Colas y Pub/Sub**    | AWS SQS/SNS                                                 | Colas de trabajo, DLQ, notificaciones fan-out                 |
+| **Event Scheduling**   | AWS EventBridge                                             | Cron scheduling para reportes y notificaciones programadas    |
+| **Serverless Compute** | AWS Lambda (Java)                                           | Report generation, saga handlers, procesamiento puntual       |
+| **API Gateway**        | AWS API Gateway + Application Load Balancer                 | Managed service, integración nativa con AWS, SSL termination  |
+| **BFF Layer**          | Spring Boot + WebFlux (BFF Web + BFF Mobile)                | Optimización de respuesta por tipo de cliente                 |
+| **BD Transaccional**   | PostgreSQL 15 (RDS Multi-AZ)                                | ACID, relaciones complejas, madurez                           |
+| **BD Analítica**       | Amazon DynamoDB                                             | Baja latencia, escalabilidad horizontal, pay-per-request      |
+| **BD Recomendaciones** | Amazon DocumentDB                                           | Documentos complejos, compatible MongoDB, grafos de productos |
+| **Caché**              | Redis/ElastiCache                                           | In-memory, sub-millisecond latency                            |
+| **Object Storage**     | AWS S3                                                      | Plantillas email, reportes CSV/PDF, archivos exportados       |
+| **Service Discovery**  | Docker Compose DNS (dev) / AWS ECS Service Discovery (prod) | Auto-discovery de servicios en contenedores                   |
+| **Resiliencia**        | Resilience4j                                                | Circuit breaker, retry, bulkhead, rate limiter                |
+| **Observabilidad**     | Spring Boot Actuator + Micrometer + CloudWatch + Grafana    | Métricas, health checks, traces distribuidos, dashboards      |
+| **CI/CD**              | GitHub Actions + AWS CodePipeline                           | Despliegue automatizado a ECS/EKS                             |
+| **Orquestación**       | Docker Compose (dev) / Amazon ECS (prod)                    | Gestión de contenedores                                       |
+| **Logging**            | SLF4J + Logback + CloudWatch Logs                           | Logs centralizados, búsqueda y análisis                       |
+| **Autenticación**      | Spring Security + JWT (RS256)                               | Stateless authentication, integración con OAuth2              |
 
 ---
 
-## 9. Métricas de Éxito y SLOs
+## 10. Métricas de Éxito y SLOs
 
 ### Service Level Objectives (SLOs)
 
-| Métrica                        | Objetivo (SLO)       | Medición                          |
-| ------------------------------ | -------------------- | --------------------------------- |
-| **Disponibilidad (Uptime)**    | 99.9%                | Tiempo sin errores 5xx            |
-| **Latencia API (p95)**         | <500ms               | Tiempo de respuesta percentil 95  |
-| **Latencia DB (p95)**          | <50ms                | Query execution time              |
-| **Latencia Reporting (p95)**   | <100ms               | DynamoDB query time               |
-| **Throughput de pedidos**      | 1000 pedidos/minuto  | Kafka produce rate                |
-| **Tasa de error de pagos**     | <1%                  | PaymentFailed / Total Payments    |
-| **Tiempo de recuperación (MTTR)** | <5 minutos       | Time to recovery after incident   |
-| **Consistencia eventual**      | <5 segundos          | Tiempo entre evento y propagación |
+| Métrica                           | Objetivo (SLO)      | Medición                          |
+| --------------------------------- | ------------------- | --------------------------------- |
+| **Disponibilidad (Uptime)**       | 99.9%               | Tiempo sin errores 5xx            |
+| **Latencia API (p95)**            | <500ms              | Tiempo de respuesta percentil 95  |
+| **Latencia DB (p95)**             | <50ms               | Query execution time              |
+| **Latencia Reporting (p95)**      | <100ms              | DynamoDB query time               |
+| **Throughput de pedidos**         | 1000 pedidos/minuto | Kafka produce rate                |
+| **Tasa de error de pagos**        | <1%                 | PaymentFailed / Total Payments    |
+| **Tiempo de recuperación (MTTR)** | <5 minutos          | Time to recovery after incident   |
+| **Consistencia eventual**         | <5 segundos         | Tiempo entre evento y propagación |
 
 ---
 
-## 10. Plan de Implementación (Fases)
+## 11. Plan de Implementación (Fases)
 
-### Fase 1: MVP - Monolito Modular (Semanas 1-4)
+> Alineado con los Hitos del proyecto Arka definidos en los PDFs.
+
+### Fase 1: MVP - Sistema de Órdenes (Actividades AWS 1-3)
 
 - ✅ Implementar arquitectura limpia con módulos bien delimitados
-- ✅ PostgreSQL como única BD
-- ✅ REST APIs síncronas
-- ✅ Validar modelo de dominio y lógica de negocio
+- ✅ Catalog Service + Inventory Service + Order Service + Payment Service
+- ✅ PostgreSQL por servicio (Database per Service)
+- ✅ Kafka + patrón Saga Choreography para flujo de órdenes
+- ✅ Outbox Pattern para consistencia BD ↔ Kafka
+- ✅ Notification Service con SES para emails transaccionales
 
-### Fase 2: Introducción de Kafka (Semanas 5-6)
+### Fase 2: Sistemas de Cloud (Actividades AWS 4-6)
 
-- ✅ Instalar Kafka (Docker Compose local)
-- ✅ Implementar Outbox Pattern
-- ✅ Eventos de dominio básicos (ProductCreated, OrderCreated)
-- ✅ Consumer en Reporting Service
+- ✅ Cart Service independiente con detección de abandono
+- ✅ BFF Web + BFF Mobile (Spring Cloud con AWS)
+- ✅ Recommendation Service con DocumentDB
+- ✅ Shipping Service con Strangler Fig Pattern (proxy al legacy)
 
-### Fase 3: Extracción de Microservicios (Semanas 7-10)
+### Fase 3: Microservicios Avanzados (Actividades AWS 7-9)
 
-- ✅ Extraer Inventory Service (primer microservicio)
-- ✅ Implementar Database per Service
-- ✅ Comunicación híbrida (REST síncrono + Kafka asíncrono)
-- ✅ Extraer Order Service con Saga Pattern
-- ✅ Extraer Payment Service con Circuit Breaker
+- ✅ Supplier Service con órdenes de compra automáticas
+- ✅ Reporting Service + CQRS con DynamoDB
+- ✅ EventBridge + Lambda para reportes semanales CSV/PDF
+- ✅ Notification Service completo (todas las plantillas S3)
+- ✅ Completar migración Strangler Fig del Shipping
 
-### Fase 4: CQRS y DynamoDB (Semanas 11-12)
+### Fase 4: DevOps - Pipeline y CI/CD (Actividades DevOps 1-4)
 
-- ✅ Implementar Reporting Service independiente
-- ✅ Migrar vistas de lectura a DynamoDB
-- ✅ Event handlers para construir read model
+- ✅ Pipeline EC2: Develop → Build → Push → Deploy
+- ✅ Pipeline Lambda: Develop → Lint → Build → Test → Push → Deploy
+- ✅ Pair Programming + Code Review + Jira tracking
 
-### Fase 5: Producción y Observabilidad (Semanas 13-14)
+### Fase 5: Infraestructura como Código (Actividad DevOps 5)
 
+- ✅ Generación de archivos de infraestructura (CloudFormation / Terraform)
 - ✅ Desplegar en AWS ECS/EKS
-- ✅ Configurar API Gateway y Load Balancers
-- ✅ Implementar distributed tracing (AWS X-Ray)
-- ✅ Alertas y dashboards (CloudWatch + Grafana)
-- ✅ Pruebas de carga y caos engineering
+- ✅ Configurar API Gateway, ALB y Security Groups
+
+### Fase 6: Observabilidad y Producción (Actividad DevOps 6)
+
+- ✅ Generación de alarmas y paneles de control (CloudWatch + Grafana)
+- ✅ Análisis de logs (CloudWatch Logs)
+- ✅ Identificación de cuellos de botella y resiliencia
+- ✅ Alertas de borde
+- ✅ Pruebas de carga y chaos engineering
 
 ---
 
-## 11. Consideraciones de Seguridad
+## 12. Consideraciones de Seguridad
 
-### 11.1 Autenticación y Autorización
+### 12.1 Autenticación y Autorización
 
 - ✅ **JWT tokens** firmados con RS256 (asymmetric key)
 - ✅ **Refresh tokens** con rotación automática
@@ -1274,21 +1834,21 @@ public WebClient webClient() {
   - `ADMIN`: Gestionar inventario, ver reportes
   - `SUPPORT`: Consultar pedidos, cancelar pedidos
 
-### 11.2 Seguridad en Comunicación
+### 12.2 Seguridad en Comunicación
 
 - ✅ **HTTPS obligatorio** en todas las APIs públicas
 - ✅ **mTLS (mutual TLS)** entre microservicios (opcional en ECS)
 - ✅ **VPC privada** para PostgreSQL y Kafka
 - ✅ **Security Groups** estrictos (least privilege)
 
-### 11.3 Protección de Datos Sensibles
+### 12.3 Protección de Datos Sensibles
 
 - ✅ **Encriptación at-rest:** RDS y DynamoDB con KMS
 - ✅ **Encriptación in-transit:** TLS 1.3
 - ✅ **Secrets Manager:** Credenciales de BD y API keys
 - ✅ **PCI DSS compliance:** Tokenización de tarjetas en Payment Gateway
 
-### 11.4 Rate Limiting y DDoS Protection
+### 12.4 Rate Limiting y DDoS Protection
 
 - ✅ **API Gateway rate limiting:** 100 req/s por IP
 - ✅ **AWS WAF:** Protección contra OWASP Top 10
@@ -1296,65 +1856,108 @@ public WebClient webClient() {
 
 ---
 
-## 12. Resumen de Decisiones Arquitectónicas
+## 13. Resumen de Decisiones Arquitectónicas
 
 ### ✅ Decisiones Clave
 
-1. **Arquitectura de Microservicios con Database per Service**
+1. **Arquitectura de Microservicios con Database per Service (11 servicios)**
    - Justificación: Autonomía de equipos, escalabilidad horizontal, resiliencia
+   - Servicios: Auth, Catalog, Inventory, Cart, Order, Payment, Shipping, Supplier, Reporting, Notification, Recommendation
    - Trade-off: Complejidad operacional, consistencia eventual
 
-2. **Comunicación Asíncrona con Kafka**
+2. **Backend for Frontend (BFF) para Web y Mobile**
+   - Justificación: Optimización de payload por plataforma, mejor UX, equipos de frontend independientes
+   - Trade-off: Duplicación parcial de lógica de agregación
+
+3. **Comunicación Asíncrona con Kafka + SQS/SNS**
    - Justificación: Desacoplamiento temporal, tolerancia a fallos, event sourcing
+   - Kafka: Event bus principal para eventos de dominio | SQS/SNS: Colas de trabajo y notificaciones
    - Trade-off: Debugging más complejo, curva de aprendizaje
 
-3. **Saga Pattern (Choreography) para Transacciones Distribuidas**
+4. **Saga Pattern (Choreography) para Transacciones Distribuidas**
    - Justificación: Sin punto único de fallo, servicios autónomos
-   - Trade-off: Flujo distribuido difícil de trazar
+   - Flujo: Order → Inventory → Payment → Shipping (con compensaciones automáticas)
+   - Trade-off: Flujo distribuido difícil de trazar (mitigado con tracing distribuido)
 
-4. **CQRS con DynamoDB para Analítica**
-   - Justificación: Latencia <10ms, escalabilidad ilimitada, costo eficiente
+5. **Strangler Fig Pattern para Migración de Shipping**
+   - Justificación: Migración gradual del monolito legacy sin big-bang rewrite
+   - Fases: Proxy → Funcionalidades nuevas → Migración tracking → Apagar legacy
+   - Trade-off: Período de coexistencia entre monolito y microservicio
+
+6. **CQRS con DynamoDB para Analítica + DocumentDB para Recomendaciones**
+   - Justificación: Latencia <10ms para reportes, modelo flexible para grafos de productos
    - Trade-off: Consistencia eventual aceptable
 
-5. **Outbox Pattern para Garantizar Consistencia**
-   - Justificación: Atomicidad entre BD y eventos
-   - Trade-off: Tabla adicional, polling overhead
+7. **Outbox Pattern para Garantizar Consistencia**
+   - Justificación: Atomicidad entre BD y eventos, resuelve Dual Write
+   - Trade-off: Tabla adicional, polling overhead (mitigable con Debezium CDC)
 
-6. **Circuit Breaker en Integraciones Externas**
-   - Justificación: Prevenir cascading failures
+8. **Circuit Breaker + Retry + Bulkhead en Integraciones Externas**
+   - Justificación: Prevenir cascading failures (Payment Gateway, Email Provider)
    - Trade-off: Lógica de fallback necesaria
 
-7. **Stack Reactivo (Spring WebFlux + R2DBC)**
-   - Justificación: Alto throughput, non-blocking I/O
+9. **Stack Reactivo (Spring WebFlux + R2DBC)**
+   - Justificación: Alto throughput, non-blocking I/O para B2B con alta concurrencia
    - Trade-off: Paradigma funcional, curva de aprendizaje
+
+10. **Serverless para Tareas Periódicas (EventBridge + Lambda)**
+    - Justificación: Generación de reportes CSV/PDF, sin servidor siempre activo, costo por ejecución
+    - Trade-off: Cold starts, límite de 15 min de ejecución
 
 ---
 
-## 13. Próximos Pasos
+## 14. Próximos Pasos
 
 1. ✅ **Validar este diseño** con stakeholders técnicos y de negocio
 2. ✅ **Crear diagramas de secuencia** detallados para cada flujo crítico
-3. ✅ **Definir contratos de eventos** (JSON Schema para cada evento de Kafka)
+3. ✅ **Definir contratos de eventos** (JSON Schema para cada Integration Event de Kafka)
 4. ✅ **Prototipar Saga Pattern** con Inventory + Order + Payment en ambiente local
-5. ✅ **Pruebas de carga** para validar SLOs de latencia y throughput
-6. ✅ **Implementar CI/CD pipeline** con despliegue blue-green en ECS
+5. ✅ **Implementar Cart Service** con detección de carritos abandonados
+6. ✅ **Diseñar Strangler Fig** para Shipping Service (proxy hacia legacy)
+7. ✅ **Modelar Supplier Service** con flujo de órdenes de compra automáticas
+8. ✅ **Pruebas de carga** para validar SLOs de latencia y throughput
+9. ✅ **Implementar CI/CD pipelines** para EC2 y Lambda (Actividades DevOps 3-4)
+10. ✅ **Configurar observabilidad** con alarmas, dashboards, análisis de logs (Actividad DevOps 6)
 
 ---
 
-## 14. Referencias
+## 15. Referencias
 
 - [C4 Model - Diagrams as Code](https://c4model.com/)
 - [Microservices Patterns - Chris Richardson](https://microservices.io/patterns/)
 - [Building Event-Driven Microservices - O'Reilly](https://www.oreilly.com/library/view/building-event-driven-microservices/9781492057888/)
-- [CQRS Journey - Microsoft](https://learn.microsoft.com/en-us/previous-versions/msp-n-p/jj554200(v=pandp.10))
+- [CQRS Journey - Microsoft](<https://learn.microsoft.com/en-us/previous-versions/msp-n-p/jj554200(v=pandp.10)>)
 - [Saga Pattern - Microsoft Azure](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga)
+- [Strangler Fig Pattern - Martin Fowler](https://martinfowler.com/bliki/StranglerFigApplication.html)
+- [Backend for Frontend Pattern - Sam Newman](https://samnewman.io/patterns/architectural/bff/)
 - [DynamoDB Best Practices - AWS](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
+- [Amazon DocumentDB - AWS](https://docs.aws.amazon.com/documentdb/)
 - [Spring WebFlux Documentation](https://docs.spring.io/spring-framework/reference/web/webflux.html)
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
 - [Resilience4j Guide](https://resilience4j.readme.io/)
+- [AWS EventBridge](https://docs.aws.amazon.com/eventbridge/)
+- [AWS Lambda](https://docs.aws.amazon.com/lambda/)
 
 ---
 
 **Documento elaborado por:** Agente de Arquitectura Senior  
 **Última actualización:** 21 de Febrero, 2026  
-**Versión:** 1.0
+**Versión:** 2.0 (Refinada con contexto completo de los PDFs del proyecto)
+
+### Changelog v2.0
+
+| Cambio                                   | Detalle                                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Contexto de negocio corregido**        | Arka distribuye accesorios para PC (B2B), no equipos tecnológicos genéricos               |
+| **Expansión LATAM añadida**              | Soporte multi-país (CO, EC, PE, CL) con multi-moneda                                      |
+| **Cart Service separado**                | Extraído del Order Service como módulo independiente (según PDFs del proyecto)            |
+| **Shipping Service añadido**             | Nuevo servicio con Strangler Fig Pattern para migración del monolito legacy               |
+| **Supplier Service añadido**             | Gestión de proveedores, almacenes y órdenes de compra automáticas                         |
+| **Auth Service añadido**                 | Servicio dedicado de autenticación con RBAC (CUSTOMER, ADMIN, SUPPORT)                    |
+| **Recommendation Service añadido**       | Servicio de recomendaciones con DocumentDB (Actividad 5 del proyecto)                     |
+| **BFF Layer añadida**                    | Backend for Frontend separado para Web y Mobile                                           |
+| **AWS Services expandidos**              | SQS/SNS, EventBridge, Lambda, S3, DocumentDB integrados según requerimientos del proyecto |
+| **Reportes automatizados**               | EventBridge + Lambda para generación semanal de CSV/PDF (HU3, HU7)                        |
+| **Notification Service expandido**       | Plantillas S3, SES, cobertura completa de eventos, DLQ para reintentos                    |
+| **Section 5 (Patrones Transversales)**   | Service Discovery, Domain vs Integration Events, Outbox Pattern, Idempotencia             |
+| **Decisiones arquitectónicas ampliadas** | 10 decisiones documentadas (antes 7), incluyendo BFF, Strangler Fig, Serverless           |
