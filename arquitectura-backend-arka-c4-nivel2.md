@@ -1,10 +1,7 @@
 # Arquitectura Backend Arka - Diagrama C4 Nivel 2 (Contenedores)
 
-**Autor:** Senior Software Architect  
-**Fecha:** 21 de Febrero, 2026  
 **Proyecto:** Arka - Plataforma B2B de Distribución de Accesorios para PC  
-**Stack Técnico:** Java + Spring Boot, Kafka, PostgreSQL, DynamoDB, AWS (SQS/SNS, Lambda, EventBridge, SES, S3, DocumentDB)  
-**Versión:** 2.0 (Refinada con contexto completo del proyecto)
+**Stack Técnico:** Java + Spring Boot, Kafka, PostgreSQL, DynamoDB, AWS (SQS/SNS, Lambda, EventBridge, SES, S3, DocumentDB)
 
 ---
 
@@ -326,7 +323,7 @@ graph TB
 **Caché:** Redis (cache_layer)
 
 - Carritos activos en sesión cacheados para rápido acceso
-- TTL de 24h para carritos temporales de usuarios anónimos
+- TTL de 24h para carritos activos no finalizados
 
 **Patrón:** Event-driven — El carrito no conoce al Order Service; solo emite eventos
 
@@ -432,11 +429,11 @@ graph TB
 - `OrderConfirmed` → Crea orden de envío automáticamente
 - `OrderCancelled` → Cancela envío si aún no fue despachado
 
-**Patrón Crítico: Strangler Fig Pattern**
+#### Patrón Crítico: Strangler Fig Pattern
 
 El módulo de envíos se está **migrando desde el sistema monolítico legacy** de Arka (Actividad 6 del proyecto):
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │                   Strangler Fig Migration                    │
 │  ┌──────────────────────┐   ┌────────────────────────┐  │
@@ -484,7 +481,7 @@ El módulo de envíos se está **migrando desde el sistema monolítico legacy** 
 
 **Flujo de Abastecimiento Automático:**
 
-```
+```text
 Inventory Service                Supplier Service              Proveedor Externo
      │                                 │                              │
      │── LowStockAlert (Kafka) ───▶│                              │
@@ -541,7 +538,7 @@ Inventory Service                Supplier Service              Proveedor Externo
 
 **Generación Automática de Reportes (EventBridge + Lambda):**
 
-```
+```text
 AWS EventBridge                  Lambda Report Generator          S3 Templates
      │                                 │                              │
      │── Cron: "rate(7 days)" ────▶│                              │
@@ -657,7 +654,7 @@ AWS EventBridge                  Lambda Report Generator          S3 Templates
 **Patrón:** Outbox Pattern (Transactional Outbox)
 
 - Cada servicio escribe eventos en tabla `outbox_events` dentro de la misma transacción
-- Un relay (@Scheduled) publica eventos pendientes a Kafka
+- Un relay (polling periódico) publica eventos pendientes a Kafka
 - Garantiza consistencia entre BD y eventos
 
 ---
@@ -814,16 +811,16 @@ GROUP BY p.category_id, c.name;
 
 **Solución con DynamoDB:**
 
-```javascript
+```jsonc
 // Vista materializada desnormalizada
 {
   "PK": "METRICS#CATEGORY#123",
   "SK": "WEEK#2026-W08",
   "categoryName": "Tarjetas Gráficas",
   "totalSold": 247,
-  "revenue": 394530.00,
-  "avgCost": 1200.50,
-  "lastUpdated": "2026-02-21T14:30:00Z"
+  "revenue": 394530.0,
+  "avgCost": 1200.5,
+  "lastUpdated": "2026-02-21T14:30:00Z",
 }
 ```
 
@@ -856,13 +853,13 @@ ORDER BY c.abandoned_at DESC;
 
 **Solución con DynamoDB (con GSI):**
 
-```javascript
+```jsonc
 // Partition Key: STATUS, Sort Key: ABANDONED_AT
 // Global Secondary Index
 {
   "PK": "CART#uuid-123",
   "SK": "METADATA",
-  "GSI1PK": "STATUS#ABANDONED",  // Index para query rápida
+  "GSI1PK": "STATUS#ABANDONED", // Index para query rápida
   "GSI1SK": "2026-02-21T10:00:00Z",
   "customerEmail": "user@example.com",
   "items": [
@@ -870,11 +867,11 @@ ORDER BY c.abandoned_at DESC;
       "sku": "GPU-RTX4090",
       "name": "NVIDIA RTX 4090",
       "quantity": 1,
-      "price": 1599.99
-    }
+      "price": 1599.99,
+    },
   ],
   "abandonedAt": "2026-02-21T10:00:00Z",
-  "totalValue": 1599.99
+  "totalValue": 1599.99,
 }
 ```
 
@@ -921,19 +918,19 @@ GROUP BY p.category_id;
 
 El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed` de Kafka y mantiene agregaciones pre-calculadas:
 
-```javascript
+```jsonc
 // Documento actualizado en tiempo real con cada evento
 {
   "PK": "PROFITABILITY#CATEGORY#123",
   "SK": "MONTH#2026-02",
   "categoryName": "Tarjetas Gráficas",
-  "totalRevenue": 1250000.00,
-  "totalCost": 890000.00,        // Costo promedio ponderado pre-calculado
-  "profit": 360000.00,
+  "totalRevenue": 1250000.0,
+  "totalCost": 890000.0, // Costo promedio ponderado pre-calculado
+  "profit": 360000.0,
   "profitMargin": 28.8,
   "unitsSold": 534,
   "lastEventProcessed": "event-uuid-999",
-  "lastUpdated": "2026-02-28T23:59:59Z"
+  "lastUpdated": "2026-02-28T23:59:59Z",
 }
 ```
 
@@ -962,7 +959,7 @@ El **Reporting Service** consume eventos `ProductCostUpdated` y `OrderConfirmed`
 
 ### Arquitectura Híbrida: Lo Mejor de Ambos Mundos
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Microservicios (Write)                   │
 │  [Catalog, Inventory, Order, Payment Services]              │
@@ -1048,18 +1045,20 @@ Distinción fundamental para una arquitectura EDA bien diseñada (según clase-1
 
 **Regla clave:** Solo los **Integration Events** se publican a Kafka. Los Domain Events se procesan internamente dentro del servicio.
 
-```java
-// Domain Event (interno al Inventory Service)
-record StockDecremented(String sku, int quantity, int remainingStock, Instant timestamp) {}
+**Ejemplo de Domain Event (interno):**
 
-// Integration Event (publicado a Kafka)
-record StockReservedEvent(
-    String eventId,       // UUID para idempotencia
-    String eventType,     // "StockReserved"
-    String orderId,       // Mínima información necesaria
-    String sku,
-    Instant timestamp
-) {}
+- `StockDecremented` → Campos: `sku`, `quantity`, `remainingStock`, `timestamp`
+
+**Ejemplo de Integration Event (publicado a Kafka):**
+
+```json
+{
+  "eventId": "uuid-para-idempotencia",
+  "eventType": "StockReserved",
+  "orderId": "order-123",
+  "sku": "GPU-RTX4090",
+  "timestamp": "2026-02-21T14:30:00Z"
+}
 ```
 
 > Los Integration Events deben ser **versionables** y contener el **mínimo de información necesaria** para que otros servicios reaccionen. Esto reduce el acoplamiento entre servicios.
@@ -1068,38 +1067,30 @@ record StockReservedEvent(
 
 Garantiza consistencia entre escritura en BD y publicación de eventos (resuelve el problema de Dual Write según clase-14):
 
-**Implementación en cada microservicio que publica eventos:**
+**Pasos en cada microservicio que publica eventos:**
 
 1. El servicio guarda datos en su tabla principal
 2. En la **misma transacción**, guarda el evento en la tabla `outbox_events`
-3. Un **Outbox Relay** (`@Scheduled` o Debezium CDC) lee eventos pendientes y los publica a Kafka
+3. Un **Outbox Relay** (polling periódico o Debezium CDC) lee eventos pendientes y los publica a Kafka
 4. Marca los eventos como `PUBLISHED`
 
-| Enfoque del Relay | Cómo funciona             | Cuándo usarlo                  |
-| ----------------- | ------------------------- | ------------------------------ |
-| @Scheduled        | Polling periódico a la BD | Simple, sin dependencias extra |
-| Debezium (CDC)    | Lee el WAL de PostgreSQL  | Alta frecuencia, sin polling   |
+| Enfoque del Relay | Cómo funciona            | Cuándo usarlo                  |
+| ----------------- | ------------------------ | ------------------------------ |
+| Polling periódico | Polling cada N segundos  | Simple, sin dependencias extra |
+| Debezium (CDC)    | Lee el WAL de PostgreSQL | Alta frecuencia, sin polling   |
 
-> Para Arka, se recomienda comenzar con `@Scheduled` (polling cada 5 segundos) e iterar a Debezium si el volumen de eventos lo justifica.
+> Para Arka, se recomienda comenzar con **polling periódico** (cada 5 segundos) e iterar a Debezium si el volumen de eventos lo justifica.
 
 ### 5.4 Idempotencia en Consumers
 
 Con entrega **at-least-once** de Kafka, los consumers deben manejar eventos duplicados:
 
-```java
-@KafkaListener(topics = "order-events")
-public Mono<Void> onOrderCreated(OrderCreatedEvent event) {
-    return processedEventsRepository.existsByEventId(event.eventId())
-        .flatMap(alreadyProcessed -> {
-            if (alreadyProcessed) {
-                log.warn("Event {} already processed, skipping", event.eventId());
-                return Mono.empty();
-            }
-            return processEvent(event)
-                .then(processedEventsRepository.save(new ProcessedEvent(event.eventId())));
-        });
-}
-```
+**Estrategia de idempotencia:**
+
+1. Consumer recibe evento de Kafka
+2. Verifica si `eventId` ya existe en tabla `processed_events`
+3. Si ya fue procesado → lo ignora (skip)
+4. Si es nuevo → procesa el evento y registra `eventId` en `processed_events`
 
 > Cada consumer mantiene una tabla `processed_events` con los `eventId` ya procesados. Esto previene efectos duplicados (ej: descontar stock dos veces).
 
@@ -1113,7 +1104,7 @@ public Mono<Void> onOrderCreated(OrderCreatedEvent event) {
 
 #### ❌ Arquitectura Síncrona (API Composition)
 
-```
+```text
 Cliente 1 → API Gateway → Order Service → Inventory Service (check stock)
                                         ↓
                                     5 unidades disponibles ✅
@@ -1135,7 +1126,7 @@ Cliente 2 → API Gateway → Order Service → Inventory Service (check stock)
 
 #### ✅ Arquitectura Asíncrona con Saga Pattern (Solución)
 
-```
+```text
 1. Cliente → Order Service: POST /orders
    ├─ Crea orden con estado PENDING
    └─ Publica evento: OrderCreated
@@ -1195,40 +1186,29 @@ Cliente 2 → API Gateway → Order Service → Inventory Service (check stock)
 
 **Solución:** Cron Job en Inventory Service
 
-```java
-@Scheduled(fixedRate = 60000) // Cada 60 segundos
-public void releaseExpiredReservations() {
-    LocalDateTime threshold = LocalDateTime.now().minus(15, ChronoUnit.MINUTES);
+**Comportamiento del Job periódico (cada 60 segundos):**
 
-    inventoryRepository.findExpiredReservations(threshold)
-        .flatMap(reservation -> {
-            reservation.setStatus(ReservationStatus.EXPIRED);
-            return inventoryRepository.save(reservation)
-                .then(stockRepository.incrementStock(reservation.getSku(), reservation.getQuantity()))
-                .then(kafkaProducer.send("inventory-events",
-                    new StockReleasedEvent(reservation.getOrderId(), "Timeout")));
-        })
-        .subscribe();
-}
-```
+1. Consulta reservas con `created_at < NOW() - 15 minutos` y `status = PENDING`
+2. Marca las reservas como `EXPIRED`
+3. Restaura stock (`+quantity`) para cada reserva expirada
+4. Publica evento `StockReleased` a Kafka con motivo "Timeout"
 
-**Comportamiento:**
+**Resultado:**
 
-1. Reservas con `created_at < NOW() - 15 minutes` se marcan como `EXPIRED`
-2. Stock se restaura automáticamente
-3. Evento `StockReleased` notifica a Order Service
-4. Order Service transiciona el pedido a `CANCELLED`
+1. Stock se restaura automáticamente
+2. Evento `StockReleased` notifica a Order Service
+3. Order Service transiciona el pedido a `CANCELLED`
 
 ---
 
 ### 6.3 Fallos en Cascada (Cascading Failures)
 
-**Escenario:** Payment Gateway externo (Stripe) está lento (5s de latencia) → Order Service espera → API Gateway timeout → Todos los endpoints del API se bloquean
+**Escenario:** Payment Gateway externo (MercadoPago/PayU) está lento (5s de latencia) → Order Service espera → API Gateway timeout → Todos los endpoints del API se bloquean
 
 #### ❌ Sin Circuit Breaker
 
-```
-Cliente → API Gateway → Order Service → Payment Service → [Stripe lento 5s]
+```text
+Cliente → API Gateway → Order Service → Payment Service → [Gateway lento 5s]
                                                           ↓
                                             Thread pool agotado
                                                           ↓
@@ -1241,44 +1221,17 @@ Cliente → API Gateway → Order Service → Payment Service → [Stripe lento 
 
 #### ✅ Con Circuit Breaker (Resilience4j)
 
-```java
-// Configuración en Payment Service
-@Bean
-public CircuitBreakerConfig circuitBreakerConfig() {
-    return CircuitBreakerConfig.custom()
-        .failureRateThreshold(50)                    // 50% de fallos → OPEN
-        .waitDurationInOpenState(Duration.ofSeconds(30))  // Espera 30s antes de Half-Open
-        .slidingWindowSize(10)                       // Evalúa últimas 10 llamadas
-        .minimumNumberOfCalls(5)                     // Mínimo 5 llamadas para evaluar
-        .build();
-}
+**Configuración del Circuit Breaker (Payment Gateway):**
 
-@Service
-public class PaymentGatewayClient {
+| Parámetro              | Valor | Descripción                              |
+| ---------------------- | ----- | ---------------------------------------- |
+| Failure Rate Threshold | 50%   | Porcentaje de fallos para abrir circuito |
+| Wait in Open State     | 30s   | Tiempo antes de probar Half-Open         |
+| Sliding Window Size    | 10    | Últimas N llamadas evaluadas             |
+| Minimum Calls          | 5     | Mínimo de llamadas antes de evaluar      |
+| Timeout por llamada    | 5s    | Timeout agresivo por request             |
 
-    @CircuitBreaker(name = "payment-gateway", fallbackMethod = "paymentFallback")
-    public Mono<PaymentResponse> processPayment(PaymentRequest request) {
-        return webClient.post()
-            .uri("/v1/charges")
-            .bodyValue(request)
-            .retrieve()
-            .bodyToMono(PaymentResponse.class)
-            .timeout(Duration.ofSeconds(5)); // Timeout agresivo
-    }
-
-    // Fallback method
-    private Mono<PaymentResponse> paymentFallback(PaymentRequest request, Exception ex) {
-        log.error("Payment gateway failed, executing fallback", ex);
-
-        // Opción 1: Encolar para retry asíncrono
-        return paymentQueueService.enqueue(request)
-            .thenReturn(PaymentResponse.pending(request.getOrderId()));
-
-        // Opción 2: Respuesta inmediata al cliente
-        // return Mono.just(PaymentResponse.temporaryFailure());
-    }
-}
-```
+**Fallback:** Si el circuito está abierto, el pago se encola para retry asíncrono y se responde con estado "pendiente".
 
 **Estados del Circuit Breaker:**
 
@@ -1301,62 +1254,28 @@ public class PaymentGatewayClient {
 
 **Escenario:** Order Service guarda pedido en PostgreSQL pero falla al publicar evento a Kafka → Inventory Service nunca se entera
 
-#### ❌ Sin Outbox Pattern
+#### ❌ Sin Outbox Pattern (Anti-patrón Dual Write)
 
-```java
-@Transactional
-public Mono<Order> createOrder(CreateOrderRequest request) {
-    return orderRepository.save(order)                    // 1. Escribe en BD ✅
-        .flatMap(saved ->
-            kafkaProducer.send("order-created", event))   // 2. Publica a Kafka ❌ (falla)
-        .thenReturn(saved);
-}
-```
+1. Servicio guarda datos en PostgreSQL (transacción ACID) ✅
+2. En la misma operación, intenta publicar a Kafka ❌
+3. Si Kafka falla, la BD ya confirmó → **inconsistencia**
 
 **Problema:** Si Kafka está caído, la transacción de BD se confirma pero el evento nunca se publica → **Inconsistencia**
 
 #### ✅ Con Transactional Outbox Pattern
 
-```java
-@Transactional
-public Mono<Order> createOrder(CreateOrderRequest request) {
-    return orderRepository.save(order)
-        .flatMap(saved -> {
-            // Evento se guarda en la MISMA transacción
-            OutboxEvent event = OutboxEvent.builder()
-                .eventType("OrderCreated")
-                .payload(toJson(new OrderCreatedEvent(saved)))
-                .topic("order-events")
-                .status(OutboxStatus.PENDING)
-                .build();
+**Solución:** Dentro de una **misma transacción ACID**:
 
-            return outboxRepository.save(event)
-                .thenReturn(saved);
-        });
-}
-```
+1. Guarda la orden en tabla `orders`
+2. Guarda el evento en tabla `outbox_events` con status `PENDING`
+3. Ambas escrituras son atómicas → si una falla, ambas se revierten
 
-**Relay que publica eventos pendientes:**
+**Outbox Relay (polling cada 5 segundos):**
 
-```java
-@Component
-public class OutboxRelay {
-
-    @Scheduled(fixedDelay = 5000) // Cada 5 segundos
-    public void publishPendingEvents() {
-        outboxRepository.findByStatus(OutboxStatus.PENDING)
-            .flatMap(event ->
-                kafkaProducer.send(event.getTopic(), event.getPayload())
-                    .then(outboxRepository.updateStatus(event.getId(), OutboxStatus.PUBLISHED))
-                    .onErrorResume(ex -> {
-                        log.error("Failed to publish event {}, will retry", event.getId(), ex);
-                        return Mono.empty(); // Retry en la siguiente ejecución
-                    })
-            )
-            .subscribe();
-    }
-}
-```
+1. Lee eventos con status `PENDING` de tabla `outbox_events`
+2. Publica cada evento al tópico de Kafka correspondiente
+3. Marca el evento como `PUBLISHED`
+4. Si falla la publicación, el evento permanece `PENDING` y se reintenta en el siguiente ciclo
 
 **Garantías:**
 
@@ -1398,53 +1317,28 @@ LIMIT 10;
 
 #### ✅ CQRS con Vista Materializada en DynamoDB
 
-**Reporting Service consume eventos `OrderConfirmed`:**
+**Actualización de vista materializada (al consumir `OrderConfirmed`):**
 
-```java
-@KafkaListener(topics = "order-events")
-public Mono<Void> onOrderConfirmed(OrderConfirmedEvent event) {
-    return event.getItems().stream()
-        .map(item ->
-            dynamoDbClient.updateItem(UpdateItemRequest.builder()
-                .tableName("product_sales_monthly")
-                .key(Map.of(
-                    "PK", AttributeValue.builder().s("PRODUCT#" + item.getSku()).build(),
-                    "SK", AttributeValue.builder().s("MONTH#" + YearMonth.now()).build()
-                ))
-                .updateExpression("ADD order_count :one, total_sold :qty, revenue :rev")
-                .expressionAttributeValues(Map.of(
-                    ":one", AttributeValue.builder().n("1").build(),
-                    ":qty", AttributeValue.builder().n(String.valueOf(item.getQuantity())).build(),
-                    ":rev", AttributeValue.builder().n(String.valueOf(item.getTotal())).build()
-                ))
-                .build())
-        )
-        .collect(Collectors.toList())
-        .flatMap(updates -> Flux.fromIterable(updates).flatMap(u -> Mono.fromFuture(u)).then());
-}
-```
+Para cada item del pedido, el Reporting Service actualiza la vista en DynamoDB:
 
-**Query ultra-rápida:**
+- Incrementa `order_count` (+1)
+- Acumula `total_sold` (+quantity)
+- Acumula `revenue` (+item total)
+- Clave: `PK=PRODUCT#{sku}`, `SK=MONTH#{año-mes}`
+- Operación atómica (DynamoDB atomic counters)
 
-```java
-// Top 10 productos → Query en DynamoDB con GSI
-public Mono<List<ProductSalesDTO>> getTop10Products() {
-    return Mono.fromFuture(
-        dynamoDbClient.query(QueryRequest.builder()
-            .tableName("product_sales_monthly")
-            .indexName("GSI-SalesByMonth")  // Global Secondary Index
-            .keyConditionExpression("month = :month")
-            .expressionAttributeValues(Map.of(
-                ":month", AttributeValue.builder().s("2026-02").build()
-            ))
-            .scanIndexForward(false)  // Descending order
-            .limit(10)
-            .build())
-    ).map(response -> response.items().stream()
-        .map(this::toDTO)
-        .collect(Collectors.toList()));
-}
-```
+**Query Top 10 productos (DynamoDB con GSI):**
+
+| Parámetro    | Valor                   |
+| ------------ | ----------------------- |
+| Tabla        | `product_sales_monthly` |
+| Index        | `GSI-SalesByMonth`      |
+| Filtro       | Mes actual              |
+| Orden        | Descendente por ventas  |
+| Limit        | 10                      |
+| **Latencia** | **<10ms**               |
+
+> Sin JOINs, datos pre-agregados en cada evento.
 
 **Ventajas:**
 
@@ -1459,7 +1353,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ### 7.1 Flujo de Creación de Pedido (Happy Path - Saga Exitosa)
 
-```
+```text
 [Cliente Web]
     │
     │ 1. POST /api/cart/checkout (o POST /api/orders)
@@ -1563,7 +1457,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ### 7.2 Flujo de Compensación (Saga Fallida - Stock Insuficiente)
 
-```
+```text
 [Cliente Web]
     │ POST /api/orders (solicita 10 unidades)
     ▼
@@ -1592,7 +1486,7 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 ### 7.3 Flujo de Compensación (Saga Fallida - Pago Rechazado)
 
-```
+```text
 [Order Service]
     │ Orden en estado STOCK_RESERVED
     │ (stock ya descontado)
@@ -1633,26 +1527,14 @@ public Mono<List<ProductSalesDTO>> getTop10Products() {
 
 - Order Service → Inventory Service
 - Payment Service → Payment Gateway externo
-- Notification Service → SendGrid
+- Notification Service → Email Provider
 
 **Configuración recomendada:**
 
-```yaml
-# application.yml
-resilience4j:
-  circuitbreaker:
-    instances:
-      payment-gateway:
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 30s
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        permitted-number-of-calls-in-half-open-state: 3
-      inventory-service:
-        failure-rate-threshold: 60
-        wait-duration-in-open-state: 20s
-        sliding-window-size: 20
-```
+| Instancia         | Failure Threshold | Wait Open State | Window | Min Calls | Half-Open Calls |
+| ----------------- | ----------------- | --------------- | ------ | --------- | --------------- |
+| payment-gateway   | 50%               | 30s             | 10     | 5         | 3               |
+| inventory-service | 60%               | 20s             | 20     | -         | -               |
 
 ---
 
@@ -1663,18 +1545,15 @@ resilience4j:
 - Publicación de eventos a Kafka (transient failures)
 - Llamadas HTTP a servicios externos
 
-```java
-@Bean
-public RetryConfig retryConfig() {
-    return RetryConfig.custom()
-        .maxAttempts(3)
-        .waitDuration(Duration.ofSeconds(1))
-        .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2))
-        .retryExceptions(ConnectException.class, TimeoutException.class)
-        .ignoreExceptions(BusinessException.class)
-        .build();
-}
-```
+**Configuración de Retry:**
+
+| Parámetro        | Valor                        |
+| ---------------- | ---------------------------- |
+| Max intentos     | 3                            |
+| Espera inicial   | 1 segundo                    |
+| Backoff          | Exponencial (x2 por intento) |
+| Reintentar en    | Errores de conexión, timeout |
+| No reintentar en | Errores de negocio           |
 
 ---
 
@@ -1682,38 +1561,24 @@ public RetryConfig retryConfig() {
 
 **Aislamiento de thread pools** para prevenir que un servicio lento consuma todos los recursos:
 
-```java
-@Bean
-public ThreadPoolBulkheadConfig bulkheadConfig() {
-    return ThreadPoolBulkheadConfig.custom()
-        .maxThreadPoolSize(10)
-        .coreThreadPoolSize(5)
-        .queueCapacity(100)
-        .build();
-}
-```
+| Parámetro          | Valor |
+| ------------------ | ----- |
+| Thread pool máximo | 10    |
+| Thread pool mínimo | 5     |
+| Capacidad de cola  | 100   |
 
 ---
 
 ### 8.4 Timeout Agresivo
 
-**Configuración en WebClient:**
+**Configuración de timeouts en HTTP Client:**
 
-```java
-@Bean
-public WebClient webClient() {
-    HttpClient httpClient = HttpClient.create()
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-        .responseTimeout(Duration.ofSeconds(5))
-        .doOnConnected(conn ->
-            conn.addHandlerLast(new ReadTimeoutHandler(5))
-                .addHandlerLast(new WriteTimeoutHandler(5)));
-
-    return WebClient.builder()
-        .clientConnector(new ReactorClientHttpConnector(httpClient))
-        .build();
-}
-```
+| Tipo de timeout | Valor |
+| --------------- | ----- |
+| Conexión        | 5s    |
+| Respuesta       | 5s    |
+| Lectura         | 5s    |
+| Escritura       | 5s    |
 
 ---
 
@@ -1925,27 +1790,3 @@ public WebClient webClient() {
 - [Resilience4j Guide](https://resilience4j.readme.io/)
 - [AWS EventBridge](https://docs.aws.amazon.com/eventbridge/)
 - [AWS Lambda](https://docs.aws.amazon.com/lambda/)
-
----
-
-**Documento elaborado por:** Agente de Arquitectura Senior  
-**Última actualización:** 21 de Febrero, 2026  
-**Versión:** 2.0 (Refinada con contexto completo de los PDFs del proyecto)
-
-### Changelog v2.0
-
-| Cambio                                   | Detalle                                                                                   |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **Contexto de negocio corregido**        | Arka distribuye accesorios para PC (B2B), no equipos tecnológicos genéricos               |
-| **Expansión LATAM añadida**              | Soporte multi-país (CO, EC, PE, CL) con multi-moneda                                      |
-| **Cart Service separado**                | Extraído del Order Service como módulo independiente (según PDFs del proyecto)            |
-| **Shipping Service añadido**             | Nuevo servicio con Strangler Fig Pattern para migración del monolito legacy               |
-| **Supplier Service añadido**             | Gestión de proveedores, almacenes y órdenes de compra automáticas                         |
-| **Auth Service añadido**                 | Servicio dedicado de autenticación con RBAC (CUSTOMER, ADMIN, SUPPORT)                    |
-| **Recommendation Service añadido**       | Servicio de recomendaciones con DocumentDB (Actividad 5 del proyecto)                     |
-| **BFF Layer añadida**                    | Backend for Frontend separado para Web y Mobile                                           |
-| **AWS Services expandidos**              | SQS/SNS, EventBridge, Lambda, S3, DocumentDB integrados según requerimientos del proyecto |
-| **Reportes automatizados**               | EventBridge + Lambda para generación semanal de CSV/PDF (HU3, HU7)                        |
-| **Notification Service expandido**       | Plantillas S3, SES, cobertura completa de eventos, DLQ para reintentos                    |
-| **Section 5 (Patrones Transversales)**   | Service Discovery, Domain vs Integration Events, Outbox Pattern, Idempotencia             |
-| **Decisiones arquitectónicas ampliadas** | 10 decisiones documentadas (antes 7), incluyendo BFF, Strangler Fig, Serverless           |
