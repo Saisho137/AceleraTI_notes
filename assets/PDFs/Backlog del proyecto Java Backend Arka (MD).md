@@ -87,9 +87,9 @@ sus operaciones.
 
 Se recomienda priorizar las historias de usuario de la siguiente manera:
 
-1. **Alta Prioridad:** HU1, HU2, HU4
-2. **Media Prioridad:** HU3, HU5, HU6
-3. **Baja Prioridad:** HU7, HU8
+1. **Alta Prioridad:** HU1, HU2, HU4, HU6
+2. **Media Prioridad:** HU7, HU8
+3. **Baja Prioridad:** HU5, HU3
 
 ## 4. Conclusión
 
