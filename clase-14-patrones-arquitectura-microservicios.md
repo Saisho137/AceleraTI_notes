@@ -2,7 +2,9 @@
 
 Diseñando Sistemas Distribuidos Resilientes - Arka
 
-Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_24_25_patrones_arquitectura_microservicios/#/title-slide>
+- Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_24_25_patrones_arquitectura_microservicios/#/title-slide>
+- Lab: <https://manulasker.github.io/enyoi_java_slides/lab_2_arka_microservicios_reactivos/intro>
+- Repo Lab: <https://github.com/Saisho137/arka-system-simple-lab-enyoi>
 
 ## Índice
 
@@ -16,12 +18,7 @@ Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_24_25_patron
 8. [Patrón Saga](#patrón-saga)
 9. [Patrón Outbox](#outbox-pattern)
 10. [Resumen Final](#resumen-final)
-
-Outbox Pattern
-
-## Resumen
-
-Los microservicios representan una arquitectura donde aplicaciones se descomponen en servicios pequeños e independientes que se comunican entre sí. Esta clase cubre los patrones fundamentales para diseñar sistemas distribuidos resilientes: comunicación síncrona/asíncrona, API Gateway y BFF, service discovery, circuit breaker para tolerancia a fallos, database per service, arquitectura dirigida por eventos (EDA) con Event Sourcing y CQRS, y el patrón Saga para transacciones distribuidas (coreografía vs orquestación).
+11. [Laboratorio Práctico](#laboratorio-práctico)
 
 ## De Monolito a Microservicios
 
@@ -653,19 +650,6 @@ public Mono<Product> createProduct(Product product) {
 | Saga                 | Transacciones distribuidas    | Flujo Orden → Stock → Pago        |
 | Outbox               | Dual-write inconsistency      | Garantizar publicación de eventos |
 
-### Próximo paso: Lab práctico
-
-En el laboratorio implementaremos:
-
-1. Inventory Service con Spring WebFlux + R2DBC
-2. Order Service con máquina de estados de la Saga
-3. Kafka como message broker para eventos
-4. Docker Compose para la infraestructura completa
-5. Patrón Saga Coreografiada para el flujo de órdenes
-6. Outbox Pattern para garantizar consistencia
-
-> Todo el stack: Java 17+ / Spring WebFlux / R2DBC / PostgreSQL / Kafka / Docker
-
 ### Recursos
 
 1. [Microservices Patterns - Chris Richardson](https://microservices.io/patterns/)
@@ -675,6 +659,7 @@ En el laboratorio implementaremos:
 5. [Clean Architecture Plugin - Bancolombia](https://github.com/bancolombia/scaffold-clean-architecture)
 6. [Resilience4j Documentation](https://resilience4j.readme.io/)
 7. [Apache Kafka Documentation](https://kafka.apache.org/42/getting-started/introduction/)
+8. [DynamoDB DAX - AWS](https://docs.aws.amazon.com/es_es/amazondynamodb/latest/developerguide/DAX.concepts.html)
 
 ---
 
@@ -733,3 +718,63 @@ Cuando ocurren timeouts a nivel de infraestructura (ej: API Gateway) y no del mi
 3. **CQRS + Event Sourcing:** Vista de lectura desnormalizada alimentada por eventos
 4. **Saga Pattern:** Para transacciones que abarcan múltiples servicios
 5. **Reconsiderar boundaries:** Si dos entidades siempre se consultan juntas, quizá pertenecen al mismo servicio
+
+---
+
+## Próximo paso: Lab práctico
+
+En el laboratorio implementaremos:
+
+1. Inventory Service con Spring WebFlux + R2DBC
+2. Order Service con máquina de estados de la Saga
+3. Kafka como message broker para eventos
+4. Docker Compose para la infraestructura completa
+5. Patrón Saga Coreografiada para el flujo de órdenes
+6. Outbox Pattern para garantizar consistencia
+
+> Todo el stack: Java 17+ / Spring WebFlux / R2DBC / PostgreSQL / Kafka / Docker
+
+## Laboratorio Práctico
+
+> **Lab Avanzado: Microservicios Reactivos con Arka** — Simulación real de un ecosistema distribuido en producción. Tiempo estimado: 12+ horas (9 módulos).
+
+### Arquitectura del Lab
+
+![Arquitectura del Laboratorio](assets/clase-14-patrones-arquitectura-microservicios/lab-arquitectura.png)
+
+Topics de Kafka: `order-created` · `stock-reserved` · `stock-released` · `payment-processed` · `payment-failed`
+
+### Stack Tecnológico del Lab
+
+| Componente     | Tecnología               | Detalle                                       |
+| -------------- | ------------------------ | --------------------------------------------- |
+| Framework      | Java 17 + Spring WebFlux | Non-blocking, `Mono<T>` / `Flux<T>`           |
+| Driver BD      | R2DBC                    | **Sin JPA/Hibernate** — todo reactivo         |
+| Base de datos  | PostgreSQL × 3           | Database per Service                          |
+| Message broker | Apache Kafka + KafkaUI   | SAGA Coreografiada                            |
+| Seguridad      | AWS Secrets Manager      | Credenciales de BD inyectadas en runtime      |
+| Ingreso        | AWS API Gateway          | HTTP_PROXY hacia ms-orders                    |
+| IaC            | AWS CloudFormation       | Aprovisiona todos los recursos en LocalStack  |
+| Cloud local    | LocalStack               | Simula AWS sin costos                         |
+| Load Balancer  | Traefik                  | Balanceo dinámico de ms-inventory             |
+| Resiliencia    | Resilience4j             | Circuit Breaker en llamadas HTTP a ms-payment |
+
+> **Stack reactivo estricto:** Prohibido usar JDBC, JPA o Hibernate. Todo el I/O es `Mono<T>` y `Flux<T>`.
+
+### Flujo SAGA del Lab
+
+![Flujo SAGA del Laboratorio](assets/clase-14-patrones-arquitectura-microservicios/lab-saga-flujo.png)
+
+### Módulos del Lab
+
+| #   | Módulo                                         | Tiempo |
+| --- | ---------------------------------------------- | ------ |
+| 1   | Setup: Docker Compose Avanzado                 | ~1 h   |
+| 2   | Kafka: Prueba de Concepto                      | ~1 h   |
+| 3   | IaC: CloudFormation + LocalStack               | ~1 h   |
+| 4   | Seguridad: AWS Secrets Manager                 | ~1 h   |
+| 5   | ms-orders — Scaffold, Docker & API Gateway     | ~1 h   |
+| 6   | ms-orders — Implementación Completa            | ~2 h   |
+| 7   | ms-inventory — Reserva de Stock & Compensación | ~2 h   |
+| 8   | ms-payment — Simulador & Circuit Breaker       | ~1.5 h |
+| 9   | Pruebas E2E, Escalado y Demo Final             | ~1 h   |
