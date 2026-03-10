@@ -7,7 +7,7 @@ Asegúrate de llevar a cabo cada "PENDIENTE", NO OMITAS ninguno.
 
 Quiero que muevas las imágenes referenciadas en este md a su propia carpeta dentro de </assets> , también asegurándote de cambiar su nombre por uno más adecuado y actualizando la referencia a estas imágenes.
 
-Después de cumplir todo lo anterior, agrega un pequeño índice y resumen, muy concisos (si la cantidad de contenido lo amerita).
+Después de cumplir todo lo anterior, agrega un pequeño índice y resumen, muy concisos, si la cantidad de contenido lo amerita.
 
 PIENSA paso a paso.
 Tómate todo el tiempo que necesites.
