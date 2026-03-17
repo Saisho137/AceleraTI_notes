@@ -1,12 +1,15 @@
-# Clase 18 - Spring Boot (Parte 1)
+# Clase 16 - Spring Boot
 
-Diapositivas parte 1: <https://manulasker.github.io/enyoi_java_slides/clase_27_28_spring_boot_parte_1/#/title-slide>
+Diapositivas:
+
+- Parte 1: <https://manulasker.github.io/enyoi_java_slides/clase_27_28_spring_boot_parte_1/#/title-slide>
+- Parte 2: <https://manulasker.github.io/enyoi_java_slides/clase_27_28_spring_boot_parte_2/#/title-slide>
 
 ---
 
 ## Resumen
 
-Spring Boot simplifica el desarrollo de aplicaciones Java empresariales basadas en Spring. Elimina la configuración manual mediante **auto-configuración**, incluye un **servidor embebido** (Tomcat/Netty) y gestiona dependencias vía **Starters**. Su núcleo se apoya en **IoC/DI** para desacoplar componentes. Esta parte cubre: la arquitectura interna, estereotipos y scopes de beans, Lombok para eliminar boilerplate, configuración por perfiles, construcción de APIs REST con Spring MVC, y persistencia con Spring Data JPA.
+Spring Boot simplifica el desarrollo de aplicaciones Java empresariales basadas en Spring, eliminando la configuración manual mediante **auto-configuración**, un **servidor embebido** (Tomcat/Netty) y **Starters** de dependencias. Su núcleo es el contenedor **IoC/DI**. Este documento cubre: fundamentos (arquitectura interna, estereotipos y scopes de beans, Lombok, configuración por perfiles, REST con Spring MVC, persistencia con Spring Data JPA), **validación y manejo de errores** (Bean Validation, `ProblemDetail` RFC 7807), **seguridad** (Spring Security + JWT), **testing por capas** (unit, `@WebMvcTest`, `@DataJpaTest`, Testcontainers), **observabilidad** (Actuator), **programación reactiva** (Spring WebFlux, Project Reactor, R2DBC) y **buenas prácticas** (12-Factor App, estructura de paquetes, logging).
 
 ---
 
@@ -15,13 +18,18 @@ Spring Boot simplifica el desarrollo de aplicaciones Java empresariales basadas 
 1. [Introducción a Spring Boot](#introducción-a-spring-boot)
 2. [Primer Proyecto con Spring Boot](#primer-proyecto-con-spring-boot)
 3. [Arquitectura Interna de Spring Boot](#arquitectura-interna-de-spring-boot)
-4. [IoC & Inyección de Dependencias en Detalle](#ioc--dependency-injection-en-detalle)
+4. [IoC & Inyección de Dependencias](#ioc--dependency-injection-en-detalle)
 5. [Lombok: Adiós al Boilerplate](#lombok-adiós-al-boilerplate)
 6. [Configuración en Spring Boot](#configuración-en-spring-boot)
 7. [Spring MVC & REST Controllers](#spring-mvc--rest-controllers)
 8. [Spring Data JPA](#spring-data-jpa)
-9. [Cierre de la Parte 1](#cierre-de-la-parte-1)
-10. [Notas Complementarias](#notas-complementarias)
+9. [Validación & Manejo de Errores](#validación--manejo-de-errores)
+10. [Spring Security](#spring-security)
+11. [Testing en Spring Boot](#testing-en-spring-boot)
+12. [Spring Boot Actuator](#spring-boot-actuator)
+13. [Spring WebFlux & Project Reactor](#spring-webflux--project-reactor)
+14. [Buenas Prácticas en Spring Boot](#buenas-prácticas-en-spring-boot)
+15. [Resumen y Recursos](#resumen-y-recursos)
 
 ---
 
@@ -1524,43 +1532,1079 @@ public class OrderItem {
 
 ---
 
-## Cierre de la Parte 1
+## Validación & Manejo de Errores
 
-En esta sesión cubrimos:
+Validar datos de entrada y manejar errores de forma consistente.
 
-- Fundamentos de Spring Boot y auto-configuración
-- IoC/DI y estereotipos principales
-- Configuración por propiedades y perfiles
-- APIs REST con Spring MVC
-- Persistencia con Spring Data JPA
+### Bean Validation
 
-**En la Parte 2:** validación y errores, seguridad con Spring Security, testing por capas, actuator y WebFlux intermedio.
+```java
+// DTO con validaciones
+public record CreateProductRequest(
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 2, max = 100, message = "Nombre entre 2 y 100 caracteres")
+    String name,
+
+    @NotBlank(message = "El SKU es obligatorio")
+    @Pattern(regexp = "^[A-Z]{2,4}-\\d{3,6}$", message = "SKU inválido (ej: GPU-4090)")
+    String sku,
+
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser positivo")
+    @DecimalMax(value = "99999.99")
+    BigDecimal price,
+
+    @PositiveOrZero(message = "El stock no puede ser negativo")
+    int stock
+) {}
+```
+
+### Anotaciones Más Usadas
+
+| Anotación                       | Valida                              |
+| ------------------------------- | ----------------------------------- |
+| `@NotNull`                      | No sea null                         |
+| `@NotBlank`                     | No null, no vacío, no solo espacios |
+| `@Size(min, max)`               | Longitud de String/Collection       |
+| `@Positive` / `@PositiveOrZero` | Números positivos                   |
+| `@Email`                        | Formato de email                    |
+| `@Pattern(regexp)`              | Expresión regular personalizada     |
+| `@Valid`                        | Validar objeto anidado              |
+
+### @Valid y @ExceptionHandler
+
+```java
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController {
+
+    @PostMapping
+    public ResponseEntity<Product> create(
+            @Valid @RequestBody CreateProductRequest request) { // ← @Valid activa validación
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(productService.create(request));
+    }
+}
+```
+
+> Cuando la validación falla, Spring lanza `MethodArgumentNotValidException`.
+
+### Handler de Validación Global
+
+```java
+@RestControllerAdvice // Manejo global de excepciones
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult()
+            .getFieldErrors().stream()
+            .collect(Collectors.toMap(
+                FieldError::getField,
+                FieldError::getDefaultMessage,
+                (first, second) -> first,
+                LinkedHashMap::new
+            ));
+
+        return ResponseEntity.badRequest().body(Map.of(
+            "status", 400,
+            "error", "Validation Failed",
+            "details", errors
+        ));
+    }
+}
+```
+
+### @ControllerAdvice: Manejo Global
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+            HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Recurso no encontrado");
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleDuplicate(DataIntegrityViolationException ex) {
+        return ProblemDetail.forStatusAndDetail(
+            HttpStatus.CONFLICT, "El registro ya existe");
+    }
+}
+```
+
+> `ProblemDetail` (RFC 7807) es el estándar para errores en APIs REST y Spring Boot 3.x lo soporta nativamente.
+
+## Spring Security
+
+Autenticación y Autorización en Spring Boot.
+
+### Conceptos Fundamentales
+
+![Autenticación vs Autorización](assets/clase-16-spring-boot/security-autenticacion-autorizacion.png)
+
+| Concepto      | Pregunta           | Ejemplo                                          |
+| ------------- | ------------------ | ------------------------------------------------ |
+| Autenticación | ¿Quién eres?       | Login con usuario/contraseña, JWT                |
+| Autorización  | ¿Qué puedes hacer? | `ROLE_ADMIN` puede borrar, `ROLE_USER` solo leer |
+
+### SecurityFilterChain
+
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .csrf(csrf -> csrf.disable())  // Deshabilitar para APIs REST
+            .cors(Customizer.withDefaults())
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()       // Público
+                .requestMatchers("/actuator/health").permitAll()   // Health check
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Solo admins
+                .anyRequest().authenticated()                      // Todo lo demás requiere auth
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+
+### JWT (JSON Web Tokens)
+
+![Flujo de autenticación JWT](assets/clase-16-spring-boot/jwt-flujo-autenticacion.png)
+
+#### Estructura de un JWT
+
+```text
+// Estructura de un JWT
+// HEADER.PAYLOAD.SIGNATURE
+
+// Header:  {"alg": "HS256", "typ": "JWT"}
+// Payload: {"sub": "user@arka.com", "roles": ["ADMIN"], "exp": 1710000000}
+// Signature: HMACSHA256(header + "." + payload, secretKey)
+```
+
+> Nunca guardes datos sensibles en el payload del JWT — es decodificable (Base64). Solo guarda claims de identidad y roles.
+
+## Testing en Spring Boot
+
+Spring Boot facilita el testing con anotaciones especializadas para cada capa.
+
+### Pirámide de Testing
+
+![Pirámide de testing](assets/clase-16-spring-boot/piramide-testing.png)
+
+| Tipo             | Anotación                     | Qué carga        | Velocidad     |
+| ---------------- | ----------------------------- | ---------------- | ------------- |
+| Unit Test        | Ninguna (JUnit + Mockito)     | Nada de Spring   | ⚡ Muy rápido |
+| Slice Test       | `@WebMvcTest`, `@DataJpaTest` | Solo una capa    | 🔶 Rápido     |
+| Integration Test | `@SpringBootTest`             | Todo el contexto | 🐢 Lento      |
+
+### Qué tipo de Test Elegir
+
+| Si quieres validar…          | Usa                 | Qué mockear                  |
+| ---------------------------- | ------------------- | ---------------------------- |
+| Lógica de negocio pura       | Unit test (Mockito) | Repos/clients/dependencias   |
+| Contrato HTTP del controller | `@WebMvcTest`       | Service layer (`@MockBean`)  |
+| Queries, mapeos y repos JPA  | `@DataJpaTest`      | Casi nada (es foco de datos) |
+| Flujo completo real          | `@SpringBootTest`   | Solo externos costosos       |
+
+> Regla práctica: muchos unit, algunos slice, pocos de integración completa.
+
+### Unit Test con Mockito
+
+```java
+@ExtendWith(MockitoExtension.class) // Sin Spring, solo Mockito
+class OrderServiceTest {
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private InventoryService inventoryService;
+
+    @InjectMocks // Crea OrderService inyectando los mocks
+    private OrderService orderService;
+
+    @Test
+    void shouldCreateOrder() {
+        // Given
+        var request = new CreateOrderRequest("GPU-4090", 2);
+        var expected = new Order(1L, "GPU-4090", 2, OrderStatus.PENDING);
+        when(orderRepository.save(any())).thenReturn(expected);
+
+        // When
+        Order result = orderService.createOrder(request);
+
+        // Then
+        assertThat(result.getSku()).isEqualTo("GPU-4090");
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(inventoryService).reserveStock("GPU-4090", 2);
+        verify(orderRepository).save(any(Order.class));
+    }
+}
+```
+
+### @WebMvcTest (Slice Test de Controller)
+
+```java
+@WebMvcTest(ProductController.class) // Solo carga la capa web
+class ProductControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc; // Simula peticiones HTTP
+
+    @MockBean // Mock del servicio (reemplaza el real)
+    private ProductService productService;
+
+    @Test
+    void shouldReturnProduct() throws Exception {
+        var product = new Product(1L, "RTX 4090", "GPU-4090",
+            BigDecimal.valueOf(1599.99), 50);
+        when(productService.findById(1L)).thenReturn(Optional.of(product));
+
+        mockMvc.perform(get("/api/v1/products/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("RTX 4090"))
+            .andExpect(jsonPath("$.price").value(1599.99));
+    }
+
+    @Test
+    void shouldReturn404WhenNotFound() throws Exception {
+        when(productService.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/products/999"))
+            .andExpect(status().isNotFound());
+    }
+}
+```
+
+### @WebMvcTest vs @WebFluxTest
+
+`@WebMvcTest` es para Spring MVC (servlet/bloqueante). En WebFlux usa `@WebFluxTest`.
+
+| Stack   | Slice web      | Cliente de test |
+| ------- | -------------- | --------------- |
+| MVC     | `@WebMvcTest`  | `MockMvc`       |
+| WebFlux | `@WebFluxTest` | `WebTestClient` |
+
+```java
+@WebFluxTest(ProductReactiveController.class)
+class ProductReactiveControllerTest {
+
+    @Autowired
+    private WebTestClient webTestClient;
+}
+```
+
+### @DataJpaTest y @SpringBootTest
+
+@DataJpaTest — Solo capa de datos
+
+```java
+@DataJpaTest // Usa BD embebida si está disponible (ej: H2)
+class ProductRepositoryTest {
+
+    @Autowired
+    private ProductRepository repo;
+
+    @Test
+    void shouldFindBySku() {
+        repo.save(new Product(
+            "RTX 4090", "GPU-4090",
+            BigDecimal.valueOf(1599.99), 50
+        ));
+
+        Optional<Product> found =
+            repo.findBySku("GPU-4090");
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getName())
+            .isEqualTo("RTX 4090");
+    }
+}
+```
+
+@SpringBootTest — Todo el contexto
+
+```java
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class IntegrationTest {
+
+    @Autowired
+    private TestRestTemplate rest;
+
+    @Test
+    void fullFlow() {
+        var req = new CreateProductRequest(
+            "RTX 4090", "GPU-4090",
+            BigDecimal.valueOf(1599.99), 50
+        );
+
+        var response = rest.postForEntity(
+            "/api/v1/products",
+            req, Product.class);
+
+        assertThat(response.getStatusCode())
+            .isEqualTo(HttpStatus.CREATED);
+    }
+}
+```
+
+### @DataJpaTest en Detalle
+
+- Carga repositorios JPA, entidades, EntityManager y transacciones.
+- No carga controllers ni el contexto completo de la app.
+- Cada test suele hacer rollback al terminar (aislamiento).
+- Si hay BD embebida (H2), la usa por defecto.
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class ProductRepositoryTest {
+    // Con Testcontainers puedes usar PostgreSQL real para mayor fidelidad
+}
+```
+
+> Riesgo común: tests verdes en H2 pero fallos en PostgreSQL (dialecto/tipos/constraints).
+
+### PostgreSQL Real con Testcontainers
+
+Para mayor fidelidad, ejecuta los tests contra PostgreSQL real en contenedor.
+
+| Paso | Qué hacer                                                               |
+| ---- | ----------------------------------------------------------------------- |
+| 1    | Agrega `testcontainers`, `junit-jupiter` y `postgresql` en scope `test` |
+| 2    | Usa `@DataJpaTest` + `@AutoConfigureTestDatabase(replace = NONE)`       |
+| 3    | Declara `PostgreSQLContainer` y publica properties dinámicas            |
+| 4    | Mantén `schema.sql`/migrations iguales a producción                     |
+
+> Referencia: [Documentación oficial de Testcontainers](https://testcontainers.com/guides/testing-spring-boot-rest-api-using-testcontainers).
+
+#### Ejemplo: @DataJpaTest + PostgreSQL Real
+
+```java
+@DataJpaTest
+@Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class ProductRepositoryPgTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres =
+        new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("arka_test")
+            .withUsername("arka")
+            .withPassword("arka");
+
+    @DynamicPropertySource
+    static void databaseProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    @Autowired
+    private ProductRepository repo;
+
+    @Test
+    void shouldFindBySku() {
+        repo.save(new Product("RTX 4090", "GPU-4090", BigDecimal.valueOf(1599.99), 50));
+        assertThat(repo.findBySku("GPU-4090")).isPresent();
+    }
+}
+```
+
+### @SpringBootTest en Detalle
+
+- Levanta el contexto casi completo de Spring Boot.
+- Útil para validar wiring real entre capas y flujos end-to-end.
+- Más lento/costoso que unit y slice tests.
+
+| `webEnvironment` | Uso típico                            |
+| ---------------- | ------------------------------------- |
+| `MOCK`           | Sin servidor real, útil con `MockMvc` |
+| `RANDOM_PORT`    | Servidor real en puerto aleatorio     |
+| `DEFINED_PORT`   | Servidor real en puerto fijo          |
+
+> Recomendación: pocos `@SpringBootTest`, enfocados en casos críticos de negocio.
+
+## Spring Boot Actuator
+
+Monitoreo y observabilidad production-ready.
+
+### Endpoints de Actuator
+
+```yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+```
+
+### Endpoints Más Útiles
+
+| Endpoint                     | Descripción                       |
+| ---------------------------- | --------------------------------- |
+| `/actuator/health`           | Estado de salud de la aplicación  |
+| `/actuator/health/liveness`  | ¿Está viva? (Kubernetes)          |
+| `/actuator/health/readiness` | ¿Lista para tráfico? (Kubernetes) |
+| `/actuator/info`             | Información de la aplicación      |
+| `/actuator/metrics`          | Métricas (memoria, CPU, requests) |
+| `/actuator/env`              | Variables de entorno              |
+| `/actuator/beans`            | Todos los beans registrados       |
+| `/actuator/mappings`         | Todos los endpoints HTTP          |
+
+> En producción expón por defecto solo lo mínimo (health, info, metrics). Endpoints como env, beans y mappings déjalos para entornos internos/controlados.
+
+### Custom Health Indicator
+
+```java
+@Component
+public class DatabaseHealthIndicator implements HealthIndicator {
+
+    private final DataSource dataSource;
+
+    public DatabaseHealthIndicator(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Override
+    public Health health() {
+        try (Connection conn = dataSource.getConnection()) {
+            if (conn.isValid(2)) {
+                return Health.up()
+                    .withDetail("database", "PostgreSQL")
+                    .withDetail("status", "Conectada")
+                    .build();
+            }
+        } catch (SQLException e) {
+            return Health.down()
+                .withDetail("error", e.getMessage())
+                .build();
+        }
+        return Health.down().build();
+    }
+}
+```
+
+> Respuesta esperada: `status=UP` con detalle del componente `db`.
 
 ---
 
-## Notas Complementarias
+## Spring WebFlux & Project Reactor
 
-### Servidores Bloqueantes vs No-Bloqueantes (Servlet vs Reactive)
+Programación reactiva en Spring Boot: entendiendo el paradigma a fondo.
 
-**WSGI** (Web Server Gateway Interface) y **ASGI** (Asynchronous Server Gateway Interface) son estándares del ecosistema Python para la comunicación entre servidores web y aplicaciones. La analogía en Java es directa:
+### Bloqueante vs No-Bloqueante: El Contexto
+
+La analogía con el ecosistema Python ayuda a entender los dos modelos de servidor en Java:
 
 | Concepto Python | Equivalente Java                   | Modelo                         | Servidor                |
 | --------------- | ---------------------------------- | ------------------------------ | ----------------------- |
 | WSGI            | Servlet API (Jakarta Servlet)      | Bloqueante: thread-per-request | Tomcat, Jetty, Undertow |
 | ASGI            | Reactive Streams (Project Reactor) | No-bloqueante: event-loop      | Netty                   |
 
-**Modelo Bloqueante (Servlet / análogo a WSGI):**
+**Modelo Bloqueante (Servlet):**
 
 - Cada petición HTTP ocupa un thread del pool durante toda su vida.
 - Si el thread hace I/O (query a DB, llamada HTTP externa), se **bloquea** hasta recibir respuesta.
 - El tamaño del pool de threads limita la concurrencia máxima (ej.: 200 threads = 200 peticiones simultáneas).
 - **Stack en Spring:** Spring MVC + Tomcat (default).
 
-**Modelo No-Bloqueante (Reactive / análogo a ASGI):**
+**Modelo No-Bloqueante (Reactive):**
 
 - Un número reducido de threads (event-loop threads, típicamente = cantidad de CPU cores) manejan todas las peticiones.
 - Las operaciones I/O se delegan y se completan con callbacks/reactive streams, **liberando el thread inmediatamente**.
 - Puede manejar miles de conexiones concurrentes con pocos threads.
 - **Stack en Spring:** Spring WebFlux + Netty (default).
 
-> **Regla crítica:** dentro de un contexto reactivo, **todas** las operaciones deben ser no-bloqueantes. Una sola operación bloqueante (JDBC tradicional, `Thread.sleep()`, I/O síncrono) bloquea el event-loop y degrada el rendimiento de **todo** el microservicio reactivo — incluyendo DB, Controller y llamadas HTTP externas.
+> **Regla crítica:** dentro de un contexto reactivo, **todas** las operaciones deben ser no-bloqueantes. Una sola operación bloqueante (JDBC tradicional, `Thread.sleep()`, I/O síncrono) bloquea el event-loop y degrada el rendimiento de **todo** el microservicio reactivo.
+
+### Por qué Programación Reactiva
+
+| Modelo Tradicional (Bloqueante)                       | Modelo Reactivo (No-Bloqueante)                 |
+| ----------------------------------------------------- | ----------------------------------------------- |
+| Tomcat crea 1 thread por petición                     | Netty usa pocos threads (= cores del CPU)       |
+| Si el thread espera I/O, se bloquea                   | Los threads nunca se bloquean esperando I/O     |
+| El SO no sabe que el thread está ocioso → desperdicio | Datos llegan → se notifica al subscriber (push) |
+| Thread pool limitado (200 default) → se agotan        | Miles de conexiones concurrentes                |
+
+### Bloqueo de Threads: El Cuello de Botella
+
+![Bloqueo de threads en I/O](assets/clase-16-spring-boot/bloqueo-threads-io.png)
+
+75-90% del tiempo, los threads pueden estar bloqueados esperando I/O.
+
+### La Solución: Reactor & Event Loop
+
+![Reactor Event Loop](assets/clase-16-spring-boot/reactor-event-loop.png)
+
+En stacks reactivos se trabaja con pocos threads y scheduling no-bloqueante para I/O. Reactor evita el patrón bloqueante tradicional de thread-per-request.
+
+### Publish-Subscribe Pattern en Reactor
+
+Reactor implementa el patrón Publish/Subscribe de Reactive Streams:
+
+![Patrón Publish-Subscribe en Reactive Streams](assets/clase-16-spring-boot/reactive-streams-publish-subscribe.png)
+
+### Señales de Reactive Streams
+
+| Señal          | Descripción                            |
+| -------------- | -------------------------------------- |
+| `subscribe()`  | El subscriber se suscribe al publisher |
+| `request(n)`   | Backpressure: "dame n elementos"       |
+| `onNext(data)` | Publisher entrega un dato              |
+| `onComplete()` | No hay más datos                       |
+| `onError(e)`   | Ocurrió un error                       |
+
+**Backpressure:** el subscriber controla la velocidad de emisión con `request(n)`.
+
+### Mono y Flux: Los Publishers de Reactor
+
+| Tipo      | Emite           | Analogía           | Ejemplo                    |
+| --------- | --------------- | ------------------ | -------------------------- |
+| `Mono<T>` | 0 o 1 elemento  | `Optional<T>`      | Buscar un producto por ID  |
+| `Flux<T>` | 0 a N elementos | `List<T>` (stream) | Listar todos los productos |
+
+```java
+// Mono: 0 o 1 resultado
+Mono<Product> product = productRepository.findById(id);
+
+// Flux: 0 a N resultados
+Flux<Product> products = productRepository.findAll();
+
+// Crear Mono/Flux manualmente
+Mono<String> mono = Mono.just("Hello");
+Mono<String> empty = Mono.empty();
+Mono<String> error = Mono.error(new RuntimeException("Fallo"));
+
+Flux<Integer> flux = Flux.just(1, 2, 3, 4, 5);
+Flux<Integer> range = Flux.range(1, 100);
+Flux<Long> interval = Flux.interval(Duration.ofSeconds(1)); // cada segundo
+```
+
+> **Regla fundamental:** nada ocurre hasta `subscribe()`.
+
+### Alegorías Visuales: Tubería y Gotas
+
+**Mono\<T\>** — tubería cuya válvula puede liberar una sola gota (o ninguna):
+
+![Mono como tubería de una gota](assets/clase-16-spring-boot/reactor-mono-tuberia.png)
+
+**Flux\<T\>** — tubería cuya válvula puede liberar muchas gotas en secuencia:
+
+![Flux como tubería de múltiples gotas](assets/clase-16-spring-boot/reactor-flux-tuberia.png)
+
+`subscribe()` es abrir la llave: si nadie se suscribe, no fluye ninguna gota.
+
+> Para profundizar en operadores reactivos con ejemplos visuales tipo marbles: [Project Reactor - How to read marbles](https://projectreactor.io/docs/core/release/reference/#howtoReadMarbles).
+
+### Operadores Esenciales
+
+```java
+// Transformación
+flux.map(s -> s.toUpperCase())          // sync: 1 → 1
+flux.flatMap(s -> fetchAsync(s))         // async: 1 → Mono/Flux (paralelo)
+flux.concatMap(s -> fetchAsync(s))       // async: 1 → Mono/Flux (secuencial)
+flux.flatMapSequential(s -> fetchAsync(s)) // async: orden preservado
+
+// Filtrado
+flux.filter(s -> s.startsWith("A"))
+flux.distinct()
+flux.take(5)                             // primeros 5 elementos
+flux.skip(3)                             // saltar primeros 3
+
+// Combinación
+Flux.merge(flux1, flux2)                 // intercalar
+Flux.concat(flux1, flux2)               // secuencial
+Mono.zip(mono1, mono2)                  // combinar resultados
+    .map(tuple -> tuple.getT1() + tuple.getT2())
+
+// Error handling
+mono.onErrorResume(e -> fallbackMono())  // fallback
+mono.onErrorReturn("default value")      // valor por defecto
+mono.retry(3)                            // reintentar 3 veces
+mono.timeout(Duration.ofSeconds(5))      // timeout
+```
+
+> **map vs flatMap:** Usa `map` para operaciones síncronas (String → Integer). Usa `flatMap` cuando la transformación retorna un `Mono`/`Flux` (operación async).
+
+#### map: Cambiar la gota
+
+La gota pasa por un adaptador que cambia su forma, pero sigue siendo una gota (1 a 1).
+
+![Operador map](assets/clase-16-spring-boot/reactor-operador-map.png)
+
+```java
+Flux<String> names = Flux.just("ana", "luis");
+Flux<String> upper = names.map(String::toUpperCase);
+// ana -> ANA, luis -> LUIS
+```
+
+#### filter: Dejar pasar o no
+
+Un colador en la tubería deja pasar solo las gotas que cumplen condición.
+
+![Operador filter](assets/clase-16-spring-boot/reactor-operador-filter.png)
+
+```java
+Flux<Integer> numbers = Flux.just(1, 2, 3, 4, 5);
+Flux<Integer> even = numbers.filter(n -> n % 2 == 0);
+// salen: 2, 4
+```
+
+#### flatMap: Ramificar la tubería
+
+Cada gota entra a una mini-tubería asíncrona y vuelve al flujo principal.
+
+![Operador flatMap](assets/clase-16-spring-boot/reactor-operador-flatmap.png)
+
+```java
+Flux<String> ids = Flux.just("p1", "p2");
+Flux<Product> products = ids.flatMap(productClient::findById);
+// cada id dispara una llamada async
+```
+
+#### concatMap: Ramificar con orden
+
+Similar a `flatMap`, pero se abre una mini-tubería por vez, respetando el orden.
+
+![Operador concatMap](assets/clase-16-spring-boot/reactor-operador-concatmap.png)
+
+```java
+Flux<String> ids = Flux.just("p1", "p2");
+Flux<Product> ordered = ids.concatMap(productClient::findById);
+// conserva el orden de entrada
+```
+
+#### onErrorResume: Plan B de la tubería
+
+Si la tubería principal se rompe, una válvula redirige el flujo por una ruta de respaldo.
+
+![Operador onErrorResume](assets/clase-16-spring-boot/reactor-operador-onerrorresume.png)
+
+```java
+Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
+    .onErrorResume(e -> Mono.just(StockResponse.unavailable()));
+```
+
+#### merge: Unir dos tuberías
+
+Dos tuberías sueltan gotas al mismo canal; se intercalan según van llegando.
+
+![Operador merge](assets/clase-16-spring-boot/reactor-operador-merge.png)
+
+```java
+Flux<String> a = Flux.just("A1", "A2");
+Flux<String> b = Flux.just("B1", "B2");
+Flux<String> merged = Flux.merge(a, b);
+// posible salida: A1, B1, A2, B2
+```
+
+#### zip: Emparejar gotas
+
+Una gota de cada tubería se empareja para formar una sola gota compuesta.
+
+![Operador zip](assets/clase-16-spring-boot/reactor-operador-zip.png)
+
+```java
+Mono<String> name = Mono.just("Laptop");
+Mono<Double> price = Mono.just(1299.0);
+
+Mono<String> card = Mono.zip(name, price)
+    .map(t -> t.getT1() + " - $" + t.getT2());
+```
+
+#### take: Cerrar la válvula temprano
+
+La válvula deja pasar solo las primeras N gotas y luego se cierra.
+
+![Operador take](assets/clase-16-spring-boot/reactor-operador-take.png)
+
+```java
+Flux<Integer> limited = Flux.range(1, 100).take(3);
+// salen: 1, 2, 3
+```
+
+#### retry: Reabrir la tubería
+
+Si falla por una obstrucción temporal, se vuelve a abrir la tubería un número limitado de veces.
+
+![Operador retry](assets/clase-16-spring-boot/reactor-operador-retry.png)
+
+```java
+Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
+    .retry(2);
+// hasta 3 intentos totales: 1 original + 2 reintentos
+```
+
+### Ciclo de Vida del Publisher
+
+Un publisher pasa por 3 fases:
+
+![Ciclo de vida del Publisher](assets/clase-16-spring-boot/reactor-ciclo-vida-publisher.png)
+
+```java
+// FASE 1: Assembly (solo define, NO ejecuta nada)
+Mono<String> pipeline = webClient.get()
+    .uri("/api/products/1")
+    .retrieve()
+    .bodyToMono(String.class)    // → MonoFlatMap.class
+    .map(String::toUpperCase)     // → MonoMap.class
+    .filter(s -> s.length() > 5); // → MonoFilter.class
+
+// FASE 2: Subscription (aquí empieza todo)
+pipeline.subscribe(
+    data -> log.info("Recibido: {}", data),   // onNext
+    error -> log.error("Error: {}", error),    // onError
+    () -> log.info("Completado")               // onComplete
+);
+// FASE 3: Execution (datos fluyen por la cadena)
+```
+
+> Internamente, cada operador crea un nuevo publisher inmutable que se suscribe al anterior, formando una cadena de publishers/subscribers.
+
+### Hot vs Cold Publishers
+
+**Cold Publisher (por defecto)** — Cada subscriber inicia una nueva ejecución. Como una máquina expendedora.
+
+```java
+// Cada subscribe() hace UN request HTTP
+Mono<String> cold = webClient.get()
+    .uri("/api/data")
+    .retrieve()
+    .bodyToMono(String.class);
+
+cold.subscribe(d -> log.info("Sub1: {}", d));
+cold.subscribe(d -> log.info("Sub2: {}", d));
+// → 2 HTTP requests separados!
+```
+
+**Hot Publisher (compartido)** — Los datos se emiten una vez y se comparten. Como una radio.
+
+```java
+// share() convierte cold → hot
+Mono<String> hot = webClient.get()
+    .uri("/api/data")
+    .retrieve()
+    .bodyToMono(String.class)
+    .cache(); // o .share()
+
+hot.subscribe(d -> log.info("Sub1: {}", d));
+hot.subscribe(d -> log.info("Sub2: {}", d));
+// → 1 HTTP request, resultado compartido
+```
+
+> Usa `share()` o `cache()` cuando múltiples subscribers necesiten el mismo dato sin repetir la operación costosa.
+
+### Errores Comunes en Reactor
+
+**Bloquear un thread reactivo:**
+
+```java
+// MAL: block() en thread reactivo
+Mono<User> user = userRepo.findById(id);
+User result = user.block(); // Evítalo en flujo reactivo
+
+// MAL: Usar driver bloqueante — JDBC es bloqueante → usar R2DBC
+```
+
+**Usar flatMap para operaciones sync:**
+
+```java
+// MAL: overhead innecesario
+.flatMap(r -> Mono.just(mapper.toInt(r)))
+
+// BIEN: map para sync
+.map(mapper::toInt)
+```
+
+**Lógica en side-effects:**
+
+```java
+// MAL: lógica en doOnNext
+flux.doOnNext(user -> storeUser(user))
+
+// BIEN: usar flatMap
+flux.flatMap(user -> storeUser(user))
+```
+
+**No compartir subscriptions:**
+
+```java
+// MAL: 2 HTTP requests
+var req = webClient.get()...;
+req.subscribe(a -> ...);
+req.subscribe(b -> ...);
+
+// BIEN: compartir
+var req = webClient.get()...share();
+```
+
+> **Regla de oro Reactor:** evita `block()` dentro del pipeline reactivo, evita lógica de negocio en operadores de side-effect (`doOnNext`) y usa `map` para transformaciones síncronas.
+
+### Controller Reactivo (WebFlux)
+
+```java
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController {
+
+    private final ProductRepository productRepository; // R2DBC (reactivo)
+
+    @GetMapping
+    public Flux<Product> findAll() {
+        return productRepository.findAll(); // Stream reactivo
+    }
+
+    @GetMapping("/{id}")
+    public Mono<ResponseEntity<Product>> findById(@PathVariable Long id) {
+        return productRepository.findById(id)
+            .map(ResponseEntity::ok)
+            .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Product> create(@Valid @RequestBody Mono<CreateProductRequest> request) {
+        return request
+            .map(req -> new Product(req.name(), req.sku(), req.price(), req.stock()))
+            .flatMap(productRepository::save);
+    }
+}
+```
+
+En WebFlux retornas `Mono<T>` y `Flux<T>` en vez de `T` y `List<T>`.
+
+### WebClient: Cliente HTTP Reactivo
+
+```java
+@Service
+public class InventoryClient {
+
+    private final WebClient webClient;
+
+    public InventoryClient(WebClient.Builder builder) {
+        this.webClient = builder
+            .baseUrl("http://ms-inventory:8080")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build();
+    }
+
+    public Mono<StockResponse> checkStock(String sku) {
+        return webClient.get()
+            .uri("/api/inventory/{sku}", sku)
+            .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError,
+                response -> Mono.error(new ProductNotFoundException(sku)))
+            .bodyToMono(StockResponse.class)
+            .timeout(Duration.ofSeconds(5))
+            .retry(2)
+            .onErrorResume(e -> Mono.just(StockResponse.unavailable()));
+    }
+}
+```
+
+> `WebClient` reemplaza a `RestTemplate` en stacks reactivos. Es no-bloqueante y soporta streaming.
+
+### R2DBC: Persistencia Reactiva
+
+```java
+// Repository reactivo (R2DBC, NO JPA)
+public interface ProductRepository
+    extends ReactiveCrudRepository<Product, Long> {
+
+    Mono<Product> findBySku(String sku);
+    Flux<Product> findByStockLessThan(int threshold);
+
+    @Query("SELECT * FROM products WHERE price BETWEEN :min AND :max")
+    Flux<Product> findByPriceRange(BigDecimal min, BigDecimal max);
+}
+```
+
+```yaml
+# application.yml para R2DBC
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/arka
+    username: arka
+    password: secret
+```
+
+| JPA (Bloqueante) | R2DBC (Reactivo)         |
+| ---------------- | ------------------------ |
+| `JpaRepository`  | `ReactiveCrudRepository` |
+| `Optional<T>`    | `Mono<T>`                |
+| `List<T>`        | `Flux<T>`                |
+| JDBC Driver      | R2DBC Driver             |
+| Hibernate        | Spring Data R2DBC        |
+
+### Spring MVC vs Spring WebFlux
+
+| Aspecto      | Spring MVC                       | Spring WebFlux                               |
+| ------------ | -------------------------------- | -------------------------------------------- |
+| Modelo       | Thread-per-request (bloqueante)  | Event Loop (no-bloqueante)                   |
+| Servidor     | Tomcat, Jetty                    | Netty, Undertow                              |
+| Retorno      | `T`, `List<T>`, `ResponseEntity` | `Mono<T>`, `Flux<T>`                         |
+| BD           | JPA/JDBC (bloqueante)            | R2DBC (reactivo)                             |
+| Cliente HTTP | `RestTemplate`                   | `WebClient`                                  |
+| Concurrencia | ~200 threads simultáneos         | Miles de conexiones                          |
+| Complejidad  | Menor, más familiar              | Mayor, paradigma diferente                   |
+| Cuándo usar  | Apps CRUD, baja concurrencia     | Alta concurrencia, streaming, microservicios |
+
+> **No todo debe ser reactivo.** Si tu app es CRUD simple con baja concurrencia, Spring MVC es más simple y suficiente. WebFlux brilla con alta concurrencia y comunicación entre microservicios.
+
+---
+
+## Buenas Prácticas en Spring Boot
+
+Patrones y recomendaciones para aplicaciones profesionales.
+
+### Estructura de Paquetes
+
+| Enfoque             | Organización                          | Ventaja                        | Riesgo                         |
+| ------------------- | ------------------------------------- | ------------------------------ | ------------------------------ |
+| Por capa técnica    | `controller`, `service`, `repository` | Fácil para iniciar             | Alta dependencia transversal   |
+| Por feature/dominio | `product`, `order`, `shared`          | Mejor cohesión por caso de uso | Requiere disciplina de límites |
+
+Ejemplo recomendado: `product/{controller,service,repository,dto,model}` y `order/{...}`.
+
+> Package by feature facilita la modularización futura hacia microservicios — cada paquete es un candidato a servicio independiente.
+
+### 12-Factor App con Spring Boot
+
+| Factor                 | Descripción                    | En Spring Boot                  |
+| ---------------------- | ------------------------------ | ------------------------------- |
+| I. Codebase            | Un repo, múltiples deploys     | Git + CI/CD                     |
+| II. Dependencies       | Declarar explícitamente        | `build.gradle` + Starters       |
+| III. Config            | Separar config del código      | `application.yml` + env vars    |
+| IV. Backing Services   | Tratar como recursos externos  | DataSource configurable         |
+| V. Build, Release, Run | Separar etapas                 | `bootJar` → Docker → Deploy     |
+| VI. Processes          | Stateless                      | No guardar estado en memoria    |
+| VII. Port Binding      | Exportar servicio vía puerto   | `server.port` / Embedded server |
+| VIII. Concurrency      | Escalar vía procesos           | Docker replicas                 |
+| IX. Disposability      | Inicio rápido, cierre graceful | Graceful shutdown               |
+| X. Dev/Prod Parity     | Ambientes similares            | Docker + Profiles               |
+| XI. Logs               | Tratar como streams            | stdout + agregadores            |
+| XII. Admin Processes   | Tareas admin como procesos     | `CommandLineRunner`             |
+
+### Logging y Observabilidad
+
+```java
+@Service
+public class OrderService {
+    // Usar SLF4J (ya incluido en Spring Boot)
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
+    public Order createOrder(CreateOrderRequest request) {
+        log.info("Creando orden: sku={}, qty={}", request.getSku(), request.getQty());
+
+        try {
+            Order order = processOrder(request);
+            log.info("Orden creada exitosamente: id={}", order.getId());
+            return order;
+        } catch (Exception e) {
+            log.error("Error creando orden: sku={}", request.getSku(), e);
+            throw e;
+        }
+    }
+}
+```
+
+```yaml
+# application.yml
+logging:
+  level:
+    root: INFO
+    com.ejemplo.arka: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG # Ver SQL generado
+```
+
+> Nunca uses `System.out.println()` en producción; usa SLF4J Logger.
+
+---
+
+## Resumen y Recursos
+
+### Mapa Conceptual Spring Boot
+
+![Mapa conceptual de Spring Boot](assets/clase-16-spring-boot/spring-boot-mapa-conceptual.png)
+
+### Resumen de Anotaciones
+
+| Anotación                             | Capa       | Propósito                                        |
+| ------------------------------------- | ---------- | ------------------------------------------------ |
+| `@SpringBootApplication`              | App        | Punto de entrada de la aplicación                |
+| `@Component`                          | Cualquiera | Bean genérico detectado por ComponentScan        |
+| `@Service`                            | Negocio    | Lógica de negocio (semántico)                    |
+| `@Repository`                         | Datos      | Acceso a datos + traducción de excepciones       |
+| `@Controller` / `@RestController`     | Web        | Manejo de peticiones HTTP                        |
+| `@Configuration` + `@Bean`            | Config     | Definición manual de beans                       |
+| `@Autowired`                          | DI         | Inyección de dependencias (preferir constructor) |
+| `@Qualifier` / `@Primary`             | DI         | Resolver ambigüedades entre beans                |
+| `@Value` / `@ConfigurationProperties` | Config     | Leer propiedades de configuración                |
+| `@Transactional`                      | Datos      | Gestión declarativa de transacciones             |
+| `@Valid`                              | Validación | Activar Bean Validation                          |
+| `@ExceptionHandler`                   | Web        | Manejar excepciones específicas                  |
+| `@Profile`                            | Config     | Activar beans por perfil (dev/prod)              |
+
+### MVC vs WebFlux: ¿Cuál elegir?
+
+| Pregunta                                       | Si la respuesta es "Sí" |
+| ---------------------------------------------- | ----------------------- |
+| ¿Necesitas miles de conexiones concurrentes?   | Elige WebFlux           |
+| ¿Tienes streaming continuo (SSE/WebSocket)?    | Elige WebFlux           |
+| ¿Tu app es CRUD simple y de baja concurrencia? | Elige MVC               |
+
+Si no hay una necesidad clara de no-bloqueo, prioriza MVC por simplicidad.
+
+### Recursos
+
+- [Documentación oficial Spring Boot](https://docs.spring.io/spring-boot/reference/)
+- [Spring Initializr](https://start.spring.io/)
+- [Spring Guides](https://spring.io/guides)
+- [Baeldung - Spring Boot](https://www.baeldung.com/spring-boot)
+- [Project Reactor - Referencia](https://projectreactor.io/docs/core/release/reference/aboutDoc.html)
+- [Curso Project Reactor](https://eherrera.net/project-reactor-course/01-intro-reactive-programming/)
+- [Spring Data JPA - Referencia](https://docs.spring.io/spring-data/jpa/reference/)
+- [Spring Security - Referencia](https://docs.spring.io/spring-security/reference/)
+- [12-Factor App](https://12factor.net)
+- [Git Cheat Sheet Markdown](https://gist.github.com/Lukas-Krickl/50f1daebebaa72c7e944b7c319e3c073)
