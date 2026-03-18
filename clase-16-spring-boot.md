@@ -2608,3 +2608,4 @@ Si no hay una necesidad clara de no-bloqueo, prioriza MVC por simplicidad.
 - [Spring Security - Referencia](https://docs.spring.io/spring-security/reference/)
 - [12-Factor App](https://12factor.net)
 - [Git Cheat Sheet Markdown](https://gist.github.com/Lukas-Krickl/50f1daebebaa72c7e944b7c319e3c073)
+- [Práctica Reactor](https://www.codingame.com/playgrounds/929/reactive-programming-with-reactor-3/Intro)
