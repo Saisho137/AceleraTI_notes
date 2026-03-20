@@ -10,15 +10,24 @@ Diseñando Sistemas Distribuidos Resilientes - Arka
 
 1. [De Monolito a Microservicios](#de-monolito-a-microservicios)
 2. [Patrones de Comunicación](#patrones-de-comunicación)
-3. [API Gateway Pattern](#api-gateway-pattern)
+3. [Api Gateway Pattern](#api-gateway-pattern)
 4. [Service Discovery](#service-discovery)
 5. [Circuit Breaker Pattern](#circuit-breaker-pattern)
 6. [Database per Service](#database-per-service)
 7. [Event Driven Architecture (EDA)](#event-driven-architecture-eda)
 8. [Patrón Saga](#patrón-saga)
-9. [Patrón Outbox](#outbox-pattern)
+9. [Outbox Pattern](#outbox-pattern)
 10. [Resumen Final](#resumen-final)
-11. [Laboratorio Práctico](#laboratorio-práctico)
+11. [Notas Adicionales](#notas-adicionales)
+12. [Preguntas de Reflexión](#preguntas-de-reflexión)
+13. [Próximo paso: Lab práctico](#próximo-paso-lab-práctico)
+14. [Laboratorio Práctico](#laboratorio-práctico)
+
+## Resumen
+
+Patrones esenciales para diseñar sistemas distribuidos resilientes: **API Gateway** como punto de entrada único, **Service Discovery** para localizar servicios dinámicamente, **Circuit Breaker** para tolerancia a fallos, **Event-Driven Architecture (EDA)** para comunicación asíncrona, y los patrones **Saga** y **Outbox** para manejar transacciones distribuidas.
+
+---
 
 ## De Monolito a Microservicios
 

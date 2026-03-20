@@ -1,6 +1,4 @@
-# Clase AWS - CloudFormation & LocalStack
-
-> **Nota:** Este archivo contiene notas preliminares de AWS CloudFormation tomadas durante el laboratorio de Docker & LocalStack. Eventualmente será integrado en una clase completa de AWS con su número de clase correspondiente.
+# Clase Extra - AWS CloudFormation & LocalStack
 
 **Recursos:**
 
@@ -199,7 +197,7 @@ sqsExtended.sendMessage(queueUrl, largeMessage);
 
 ### Diagrama de Flujo
 
-```
+```text
 ┌─────────────┐
 │  Productor  │
 └──────┬──────┘
@@ -303,7 +301,7 @@ En arquitecturas monolíticas, las transacciones ACID (Atomicidad, Consistencia,
 
 **Ejemplo del problema:**
 
-```
+```text
 Orden de Compra:
 1. Servicio de Órdenes: Crear orden
 2. Servicio de Inventario: Reservar productos
@@ -317,7 +315,7 @@ Orden de Compra:
 
 Una Saga divide la transacción en pasos locales, cada uno con una **transacción compensatoria** para deshacer cambios previos.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    SAGA EXITOSA                         │
 └─────────────────────────────────────────────────────────┘
@@ -373,7 +371,7 @@ Una de las características más poderosas de Secrets Manager es la **rotación 
 
 ### Cómo Funciona la Rotación
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │              FLUJO DE ROTACIÓN AUTOMÁTICA                │
 └──────────────────────────────────────────────────────────┘

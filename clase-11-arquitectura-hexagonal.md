@@ -1,21 +1,29 @@
 # Clase 11 - Arquitectura Hexagonal
 
-> Diapositivas: https://manulasker.github.io/enyoi_java_slides/clase_15_16_17_arquitectura_hexagonal/#/title-slide
-> Repositorio: https://github.com/Saisho137/arka-hexagonal-simple-enyoi
+Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_15_16_17_arquitectura_hexagonal/#/title-slide>
+
+Repositorio: <https://github.com/Saisho137/arka-hexagonal-simple-enyoi>
 
 ## Índice
 
 1. [Introducción](#introducción)
-2. [El Dominio](#1-el-dominio)
-3. [Los Puertos](#2-los-puertos)
-4. [Los Adaptadores](#3-los-adaptadores)
-5. [Composición y Estructura](#composición-conectando-todo)
+2. [1. El Dominio](#1-el-dominio)
+3. [2. Los Puertos](#2-los-puertos)
+4. [3. Los Adaptadores](#3-los-adaptadores)
+5. [Composición: Conectando Todo](#composición-conectando-todo)
 6. [Regla de Dependencia](#regla-de-dependencia)
-7. [Testing](#testing-la-gran-ventaja)
+7. [Testing: La Gran Ventaja](#testing-la-gran-ventaja)
 8. [Ejemplo: Sistema de Pedidos](#ejemplo-sistema-de-pedidos)
-9. [Beneficios y Errores Comunes](#beneficios)
-10. [Cuándo Usar](#cuándo-usar-arquitectura-hexagonal)
-11. [Resumen](#resumen-de-conceptos)
+9. [Beneficios](#beneficios)
+10. [Errores Comunes a Evitar](#errores-comunes-a-evitar)
+11. [Cuándo Usar Arquitectura Hexagonal](#cuándo-usar-arquitectura-hexagonal)
+12. [Resumen de Conceptos](#resumen-de-conceptos)
+13. [Conclusión](#conclusión)
+14. [Extra](#extra)
+
+## Resumen
+
+La **Arquitectura Hexagonal** (Ports and Adapters) de Alistair Cockburn organiza la aplicación en tres componentes: **Dominio** (lógica de negocio pura), **Puertos** (interfaces de comunicación) y **Adaptadores** (implementaciones concretas). La regla de dependencia garantiza que el dominio no conoce el mundo exterior, facilitando el testing y la sustitución de tecnologías.
 
 ---
 

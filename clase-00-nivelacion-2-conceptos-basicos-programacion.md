@@ -1,4 +1,17 @@
-# Clase Nivelación 2: Conceptos Básicos de Programación
+# Clase 0 (Nivelación 2) - Conceptos Básicos de Programación
+
+## Índice
+
+1. [Pensamiento Lógico y Estructuras de Control](#pensamiento-lógico-y-estructuras-de-control)
+2. [Algoritmos y Complejidad](#algoritmos-y-complejidad)
+3. [Ejercicios Prácticos](#ejercicios-prácticos)
+4. [POO Esencial y Excepciones](#poo-esencial-y-excepciones)
+
+## Resumen
+
+Sesión de nivelación que cubre los fundamentos de la programación: pensamiento lógico, estructuras de control, algoritmos y notación Big O. Incluye ejercicios prácticos en Java sobre condicionales y autoboxing/unboxing, además de un repaso de los pilares de POO y el manejo de excepciones.
+
+---
 
 ## Pensamiento Lógico y Estructuras de Control
 
@@ -47,15 +60,15 @@ Es una notación matemática estándar utilizada para describir la complejidad a
 
 **Complejidades más comunes (de mejor a peor):**
 
-| Notación | Nombre | Ejemplo |
-|----------|--------|---------|
-| O(1) | Constante | Acceder a un elemento de un array por índice |
-| O(log n) | Logarítmica | Búsqueda binaria |
-| O(n) | Lineal | Recorrer un array |
-| O(n log n) | Lineal-logarítmica | Merge sort, Quick sort |
-| O(n²) | Cuadrática | Bubble sort, dos bucles anidados |
-| O(2ⁿ) | Exponencial | Recursión sin optimizar (Fibonacci) |
-| O(n!) | Factorial | Problema del viajante (fuerza bruta) |
+| Notación   | Nombre             | Ejemplo                                      |
+| ---------- | ------------------ | -------------------------------------------- |
+| O(1)       | Constante          | Acceder a un elemento de un array por índice |
+| O(log n)   | Logarítmica        | Búsqueda binaria                             |
+| O(n)       | Lineal             | Recorrer un array                            |
+| O(n log n) | Lineal-logarítmica | Merge sort, Quick sort                       |
+| O(n²)      | Cuadrática         | Bubble sort, dos bucles anidados             |
+| O(2ⁿ)      | Exponencial        | Recursión sin optimizar (Fibonacci)          |
+| O(n!)      | Factorial          | Problema del viajante (fuerza bruta)         |
 
 ## Ejercicios Prácticos
 
@@ -80,7 +93,7 @@ public class Main {
     } else {
       System.out.println("El número es cero");
     }
-    
+
     // Verificar si es par o impar
     if (num % 2 == 0) {
       System.out.println("El número es par");
@@ -97,13 +110,13 @@ public class Main {
 
 #### Tipos primitivos vs Clases envoltorio
 
-| Primitivo | Clase envoltorio | Descripción |
-|-----------|------------------|-------------|
-| `int` | `Integer` | Número entero |
-| `double` | `Double` | Número decimal |
-| `boolean` | `Boolean` | Valor verdadero/falso |
-| `char` | `Character` | Carácter |
-| `long` | `Long` | Número entero largo |
+| Primitivo | Clase envoltorio | Descripción           |
+| --------- | ---------------- | --------------------- |
+| `int`     | `Integer`        | Número entero         |
+| `double`  | `Double`         | Número decimal        |
+| `boolean` | `Boolean`        | Valor verdadero/falso |
+| `char`    | `Character`      | Carácter              |
+| `long`    | `Long`           | Número entero largo   |
 
 #### Conceptos clave
 
@@ -128,7 +141,7 @@ public class AutoboxingDemo {
   public static void main(String[] args) {
     int a = 5;
     Integer b = a; // autoboxing
-    
+
     System.out.println("Comparación con == : " + (a == b));
     System.out.println("Comparación con equals : " + b.equals(a));
   }
@@ -156,13 +169,13 @@ public class AutoboxingDemo {
 
 ### Pilares de la Programación Orientada a Objetos (POO)
 
-| Concepto | Explicación |
-| :--- | :--- |
-| **Clase** | Plantilla o molde que define los atributos (estado) y métodos (comportamiento) comunes a un tipo de objeto. |
-| **Objeto** | Instancia concreta de una clase. Tiene su propio estado y puede ejecutar los comportamientos definidos en su clase. |
-| **Encapsulación** | Oculta los detalles internos de un objeto y expone solo lo necesario a través de una interfaz pública (getters y setters). Protege la integridad de los datos. |
-| **Herencia** | Permite que una clase (subclase) herede atributos y métodos de otra (superclase), fomentando la reutilización de código. |
-| **Polimorfismo** | Capacidad de los objetos de diferentes clases para responder al mismo mensaje (método) de maneras específicas. Se manifiesta a través de la sobrecarga y la anulación de métodos. |
+| Concepto          | Explicación                                                                                                                                                                       |
+| :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clase**         | Plantilla o molde que define los atributos (estado) y métodos (comportamiento) comunes a un tipo de objeto.                                                                       |
+| **Objeto**        | Instancia concreta de una clase. Tiene su propio estado y puede ejecutar los comportamientos definidos en su clase.                                                               |
+| **Encapsulación** | Oculta los detalles internos de un objeto y expone solo lo necesario a través de una interfaz pública (getters y setters). Protege la integridad de los datos.                    |
+| **Herencia**      | Permite que una clase (subclase) herede atributos y métodos de otra (superclase), fomentando la reutilización de código.                                                          |
+| **Polimorfismo**  | Capacidad de los objetos de diferentes clases para responder al mismo mensaje (método) de maneras específicas. Se manifiesta a través de la sobrecarga y la anulación de métodos. |
 
 ### Manejo de Excepciones
 
@@ -194,16 +207,10 @@ public class ExcepcionesDemo {
 }
 ```
 
-### Temas Adicionales Vistos en Clase
+### Temas Complementarios
 
-Durante la sesión, se abordaron de manera extensa los siguientes temas complementarios:
+Durante esta sesión también se abordaron los siguientes temas adicionales:
 
-- **Repaso de POO:** Se dedicó una parte considerable de la clase (~1h 20m) a profundizar en los conceptos de la programación orientada a objetos.
-- **Pruebas Unitarias:** Se introdujo el concepto y la importancia de las pruebas unitarias para verificar el correcto funcionamiento de pequeñas unidades de código.
-- **TDD (Test-Driven Development):** Se mencionó el Desarrollo Guiado por Pruebas como una metodología donde las pruebas se escriben antes que el código de producción.
-- **Herramientas y Buenas Prácticas:**
-  - **GitHub:** Se destacó su rol en el versionado de código y en la integración de flujos de trabajo.
-  - **Code Smells:** Se introdujo la idea de "olores de código" como indicadores de posibles problemas en el diseño del software.
-  - Se dijo que "las pruebas unitarias tienen sentido cuando las configuramos en GitHub o una herramienta que nos diga si pasaron".
-
-Google Doc con lo visto en esta clase: <https://docs.google.com/document/d/1nQ1fGeUnOv6WV4-QNfjaMuG9R7RnrhiWA0-sd27PqQ0/edit?pli=1&tab=t.0>
+- **Pruebas Unitarias:** Verifican el correcto funcionamiento de pequeñas unidades de código de forma aislada. Cobran mayor valor al integrarse con herramientas de CI/CD (como GitHub Actions) que validen automáticamente si las pruebas pasan.
+- **TDD (Test-Driven Development):** Metodología donde las pruebas se escriben antes que el código de producción.
+- **Code Smells:** Indicadores de posibles problemas en el diseño del software que sugieren la necesidad de refactorización.

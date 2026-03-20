@@ -18,7 +18,7 @@ Spring Boot simplifica el desarrollo de aplicaciones Java empresariales basadas 
 1. [Introducción a Spring Boot](#introducción-a-spring-boot)
 2. [Primer Proyecto con Spring Boot](#primer-proyecto-con-spring-boot)
 3. [Arquitectura Interna de Spring Boot](#arquitectura-interna-de-spring-boot)
-4. [IoC & Inyección de Dependencias](#ioc--dependency-injection-en-detalle)
+4. [IoC & Dependency Injection en Detalle](#ioc--dependency-injection-en-detalle)
 5. [Lombok: Adiós al Boilerplate](#lombok-adiós-al-boilerplate)
 6. [Configuración en Spring Boot](#configuración-en-spring-boot)
 7. [Spring MVC & REST Controllers](#spring-mvc--rest-controllers)

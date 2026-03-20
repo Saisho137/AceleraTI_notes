@@ -18,13 +18,13 @@
 
 Los **principios SOLID** (Robert C. Martin) guían el diseño orientado a objetos para crear código mantenible, extensible y testeable:
 
-| Principio | Definición |
-|-----------|------------|
-| **S**ingle Responsibility | Una clase, una razón para cambiar |
-| **O**pen/Closed | Abierto a extensión, cerrado a modificación |
-| **L**iskov Substitution | Subclases sustituibles por sus clases base |
-| **I**nterface Segregation | Interfaces pequeñas y específicas |
-| **D**ependency Inversion | Depender de abstracciones, no de implementaciones |
+| Principio                 | Definición                                        |
+| ------------------------- | ------------------------------------------------- |
+| **S**ingle Responsibility | Una clase, una razón para cambiar                 |
+| **O**pen/Closed           | Abierto a extensión, cerrado a modificación       |
+| **L**iskov Substitution   | Subclases sustituibles por sus clases base        |
+| **I**nterface Segregation | Interfaces pequeñas y específicas                 |
+| **D**ependency Inversion  | Depender de abstracciones, no de implementaciones |
 
 ---
 
@@ -33,6 +33,7 @@ Los **principios SOLID** (Robert C. Martin) guían el diseño orientado a objeto
 Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 **Beneficios:**
+
 - ✅ Código robusto y fácil de testar
 - ✅ Cambios no rompen el sistema
 - ✅ Bajo acoplamiento entre componentes
@@ -44,7 +45,7 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 > **Una clase debe tener una y solo una razón para cambiar.**
 
-### Violación vs Aplicación
+### Violación vs Aplicación srp
 
 ![Violando SRP](assets/clase-09-solid-patrones-diseno/srp_violacion.png)
 
@@ -58,7 +59,7 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 > **Las entidades de software deben estar abiertas para extensión, pero cerradas para modificación.**
 
-### Violación vs Aplicación
+### Violación vs Aplicación ocp
 
 ![Violando OCP](assets/clase-09-solid-patrones-diseno/ocp_violacion.png)
 
@@ -96,7 +97,7 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 > **Los clientes no deben ser forzados a depender de interfaces que no utilizan.**
 
-### Violación vs Aplicación
+### Violación vs Aplicación isp
 
 ![Violando ISP](assets/clase-09-solid-patrones-diseno/isp_violacion.png)
 
@@ -112,7 +113,7 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 
 > **Los módulos de alto nivel no deben depender de módulos de bajo nivel. Ambos deben depender de abstracciones.**
 
-### Violación vs Aplicación
+### Violación vs Aplicación dip
 
 ![Violando DIP](assets/clase-09-solid-patrones-diseno/dip_violacion.png)
 
@@ -127,6 +128,7 @@ Son 5 principios de diseño OOP formulados por **Robert C. Martin (Uncle Bob)**.
 ### DIP sin Framework (Inyección Manual)
 
 Cuando no hay framework de inyección de dependencias (como era el caso de Python hasta febrero 2025), se necesita una **"clase contenedora" ("clase sucia")** que:
+
 - Reúne todas las implementaciones concretas
 - Las instancia manualmente
 - Las pasa a los casos de uso
@@ -179,11 +181,11 @@ public class PayPalPayment implements PaymentStrategy {
 // Uso
 public class ShoppingCart {
     private PaymentStrategy strategy;
-    
+
     public void setPaymentStrategy(PaymentStrategy strategy) {
         this.strategy = strategy;
     }
-    
+
     public void checkout(double total) {
         strategy.pay(total);
     }
@@ -245,7 +247,7 @@ public interface UserRepository {
 public class JpaUserRepository implements UserRepository {
     @Autowired
     private EntityManager em;
-    
+
     public User findById(Long id) {
         return em.find(User.class, id);
     }
@@ -280,6 +282,7 @@ public void addItem() {
 ```
 
 **Reglas de `final`:**
+
 - Se puede asignar **una sola vez**: en la declaración, en un bloque inicializador, o en el constructor
 - Después de esa asignación inicial, **no se puede reasignar** a otro objeto
 - El **contenido del objeto sí puede modificarse** (agregar/eliminar elementos, cambiar propiedades)
@@ -315,6 +318,7 @@ NotificationSender sender = map.get("EMAIL").get();
 ```
 
 **Ventajas:**
+
 - **Lazy instantiation:** El objeto se crea solo cuando se llama `.get()`
 - **Sintaxis concisa:** `ClassName::new` es equivalente a `() -> new ClassName()`
 - **Extensibilidad:** Permite registrar nuevas implementaciones sin modificar la factory
@@ -334,6 +338,7 @@ public BigDecimal getSubTotal() {
 ```
 
 **Equivalente imperativo (más verboso):**
+
 ```java
 public BigDecimal getSubTotal() {
     BigDecimal total = BigDecimal.ZERO;
@@ -345,12 +350,13 @@ public BigDecimal getSubTotal() {
 ```
 
 **Operaciones clave:**
-| Operación | Propósito | Ejemplo |
-|-----------|-----------|---------|
-| `map()` | Transformar elementos | `item -> item.getTotal()` |
-| `filter()` | Filtrar elementos | `item -> item.getPrice() > 100` |
-| `reduce()` | Acumular a un solo valor | `(a, b) -> a.add(b)` |
-| `collect()` | Convertir a colección | `Collectors.toList()` |
+
+| Operación   | Propósito                | Ejemplo                         |
+| ----------- | ------------------------ | ------------------------------- |
+| `map()`     | Transformar elementos    | `item -> item.getTotal()`       |
+| `filter()`  | Filtrar elementos        | `item -> item.getPrice() > 100` |
+| `reduce()`  | Acumular a un solo valor | `(a, b) -> a.add(b)`            |
+| `collect()` | Convertir a colección    | `Collectors.toList()`           |
 
 ---
 
@@ -358,11 +364,11 @@ public BigDecimal getSubTotal() {
 
 Ambos permiten trabajar con tipos genéricos, pero tienen usos distintos:
 
-| Característica | `<T>` (Tipo parametrizado) | `<?>` (Wildcard) |
-|----------------|---------------------------|------------------|
-| **Declaración** | En clases, interfaces y métodos | Solo en uso (parámetros, variables) |
-| **Referencia** | Puedes usar `T` en el código | No puedes referenciar el tipo |
-| **Propósito** | Definir un tipo reutilizable | Aceptar cualquier tipo sin nombrarlo |
+| Característica  | `<T>` (Tipo parametrizado)      | `<?>` (Wildcard)                     |
+| --------------- | ------------------------------- | ------------------------------------ |
+| **Declaración** | En clases, interfaces y métodos | Solo en uso (parámetros, variables)  |
+| **Referencia**  | Puedes usar `T` en el código    | No puedes referenciar el tipo        |
+| **Propósito**   | Definir un tipo reutilizable    | Aceptar cualquier tipo sin nombrarlo |
 
 **Ejemplo con `<T>`:** Puedes usar el tipo en múltiples lugares
 
@@ -381,6 +387,7 @@ boolean supports(Class<? extends Event> eventClass);
 ```
 
 **Bounded Wildcards:**
+
 ```java
 List<?>                    // Cualquier tipo
 List<? extends Number>     // Number o cualquier subclase (Integer, Double...)
@@ -388,6 +395,7 @@ List<? super Integer>      // Integer o cualquier superclase (Number, Object)
 ```
 
 **Cuándo usar cada uno:**
+
 - `<T>`: Cuando necesitas **referenciar el tipo** en múltiples lugares o retornarlo
 - `<?>`: Cuando solo necesitas **aceptar cualquier tipo** sin manipularlo específicamente
 
@@ -407,9 +415,9 @@ List<? super Integer>      // Integer o cualquier superclase (Number, Object)
 
 ### Herramientas mencionadas
 
-| Herramienta | Descripción |
-|-------------|-------------|
-| **SQLite** | BD embebida en un archivo, sin motor adicional. Solo requiere dependencia del cliente en Java. |
+| Herramienta  | Descripción                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| **SQLite**   | BD embebida en un archivo, sin motor adicional. Solo requiere dependencia del cliente en Java.     |
 | **Retrofit** | Cliente HTTP para Java con parseo automático de JSON. Más simple que FeignClient en algunos casos. |
 
 ### Material de estudio

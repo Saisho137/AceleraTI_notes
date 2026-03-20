@@ -1,4 +1,17 @@
-# Clase Nivelación - Metodologías Ágiles
+# Clase 0 (Nivelación) - Metodologías Ágiles
+
+## Índice
+
+1. [¿Qué son las metodologías ágiles?](#qué-son-las-metodologías-ágiles)
+2. [Contexto Histórico](#contexto-histórico)
+3. [Scrum](#scrum)
+4. [Otras metodologías ágiles](#otras-metodologías-ágiles)
+
+## Resumen
+
+Introducción a las **metodologías ágiles** de gestión de proyectos. Se cubre el contexto histórico desde el Manifiesto Ágil (2001), con énfasis en **Scrum** (roles, artefactos, eventos, historias de usuario) y una vista general de otras metodologías: Kanban, XP, Lean, FDD y Crystal.
+
+---
 
 ## ¿Qué son las metodologías ágiles?
 
@@ -80,7 +93,7 @@ Como usuario cliente
 Quiero iniciar sesión
 Para poder acceder a la plataforma
 
-Criterios de aceptación: 
+Criterios de aceptación:
 - Cuando se digite la contraseña, los caracteres deben ser reemplazados por '*'
 - Debe validarse que tanto correo como contraseña sean digitados para iniciar sesión
 - El sistema debe mostrar un mensaje de error claro si las credenciales son incorrectas

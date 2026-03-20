@@ -3,22 +3,15 @@
 ## Índice
 
 1. [Generalidades del lenguaje](#generalidades-del-lenguaje)
-   - [Lenguajes Compilados vs Interpretados](#lenguajes-compilados-vs-interpretados)
-   - [JVM - Java Virtual Machine](#jvm---java-virtual-machine)
-   - [JRE - Java Runtime Environment](#jre---java-runtime-environment)
-   - [JDK - Java Development Kit](#jdk---java-development-kit)
-   - [Licencias en Java](#licencias-en-java)
 2. [Paradigma POO](#paradigma-poo)
-   - [Pilares POO](#pilares-poo)
-     - [Abstracción](#abstracción)
-     - [Encapsulamiento](#encapsulamiento)
-     - [Herencia](#herencia)
-     - [Polimorfismo](#polimorfismo)
 3. [Utilidades de String](#utilidades-de-string)
-   - [isEmpty() vs isBlank()](#isempty-vs-isblank)
 4. [Modificador Static](#modificador-static)
 5. [Pattern Matching en Java](#pattern-matching-en-java)
 6. [Excepciones](#excepciones)
+
+## Resumen
+
+Clase enfocada en los fundamentos de **Java**: generalidades del lenguaje (compilado vs interpretado, JVM, JRE, JDK, licencias), el paradigma de **Programación Orientada a Objetos** (abstracción, encapsulamiento, herencia, polimorfismo), utilidades de `String`, el modificador `static`, **Pattern Matching** moderno (Java 14+), y el manejo de **excepciones**.
 
 ---
 
@@ -76,7 +69,7 @@ Esto le da a Java:
 
 Es un componente diseñado en cada sistema operativo para interpretar el compilado de Java, lo que lo hace portable:
 
-![alt text](assets/clase-02-java/JVM.png)
+![Diagrama de la JVM](assets/clase-02-java/JVM.png)
 
 ### JRE - Java Runtime Environment
 
@@ -87,7 +80,7 @@ Es un componente diseñado en cada sistema operativo para interpretar el compila
 - El JRE ya incluye la JVM
 - Con la JRE podemos EJECUTAR cualquier programa Java
 
-![alt text](assets/clase-02-java/JRE.png)
+![Componentes del JRE](assets/clase-02-java/JRE.png)
 
 > JAR: Java Archive = es la extensión del compilado de Java
 
@@ -103,11 +96,11 @@ Incluye:
 - Incluye JRE y por consiguiente la JVM
 - Podemos CREAR y EJECUTAR cualquier programa
 
-![alt text](assets/clase-02-java/JDK.png)
+![Componentes del JDK](assets/clase-02-java/JDK.png)
 
 #### ¿En qué se diferencia el JDK con un JRE?
 
-![alt text](assets/clase-02-java/JDKvsJRE.jpg)
+![Diferencias entre JDK y JRE](assets/clase-02-java/JDKvsJRE.jpg)
 
 #### Licencias en Java
 
@@ -139,15 +132,15 @@ Hay versiones pagas del JDK como Oracle JDK, y otras abiertas como OpenJDK o Ama
 
 ##### Diferencias: Oracle JDK vs Amazon Corretto vs OpenJDK
 
-| Característica | Oracle JDK | Amazon Corretto | OpenJDK |
-|----------------|------------|-----------------|----------|
-| **Licencia** | NFTC (pago para producción) | GPL v2 + CPE (100% gratuito) | GPL v2 (gratuito) |
-| **Soporte** | Pago (Oracle Support) | Gratuito por Amazon | Comunidad |
-| **Actualizaciones de seguridad** | Solo con suscripción | Gratis, largo plazo | Variables según distribución |
-| **Optimizaciones** | Incluye Java Flight Recorder | Optimizado para AWS | Estándar |
-| **Rendimiento** | Alto | Alto (optimizaciones AWS) | Alto |
-| **Uso recomendado** | Empresas con contrato Oracle | Producción general, especialmente en AWS | Desarrollo, proyectos open source |
-| **Certificación TCK** | Sí | Sí | Sí (base de referencia) |
+| Característica                   | Oracle JDK                   | Amazon Corretto                          | OpenJDK                           |
+| -------------------------------- | ---------------------------- | ---------------------------------------- | --------------------------------- |
+| **Licencia**                     | NFTC (pago para producción)  | GPL v2 + CPE (100% gratuito)             | GPL v2 (gratuito)                 |
+| **Soporte**                      | Pago (Oracle Support)        | Gratuito por Amazon                      | Comunidad                         |
+| **Actualizaciones de seguridad** | Solo con suscripción         | Gratis, largo plazo                      | Variables según distribución      |
+| **Optimizaciones**               | Incluye Java Flight Recorder | Optimizado para AWS                      | Estándar                          |
+| **Rendimiento**                  | Alto                         | Alto (optimizaciones AWS)                | Alto                              |
+| **Uso recomendado**              | Empresas con contrato Oracle | Producción general, especialmente en AWS | Desarrollo, proyectos open source |
+| **Certificación TCK**            | Sí                           | Sí                                       | Sí (base de referencia)           |
 
 **¿Por qué usar Amazon Corretto?**
 
@@ -178,7 +171,7 @@ La Programación Orientada a Objetos se sustenta en cuatro pilares fundamentales
 #### Abstracción
 
 Oculta los detalles internos y solo muestra lo necesario. Permite definir el qué pero no el cómo
-![alt text](assets/clase-02-java/Abstracción.png)￼
+![Ejemplo de Abstracción en Java](assets/clase-02-java/Abstracción.png)
 
 ##### Extends vs Implements en Java
 
@@ -193,7 +186,7 @@ Oculta los detalles internos y solo muestra lo necesario. Permite definir el qu�
 ```java
 public class Animal {
     protected String nombre;
-    
+
     public void comer() {
         System.out.println("El animal está comiendo");
     }
@@ -201,12 +194,12 @@ public class Animal {
 
 public class Perro extends Animal {
     // Hereda 'nombre' y 'comer()'
-    
+
     @Override
     public void comer() {
         System.out.println("El perro está comiendo croquetas");
     }
-    
+
     public void ladrar() {
         System.out.println("Guau guau!");
     }
@@ -238,17 +231,17 @@ public interface Nadador {
 public class Pato extends Animal implements Volador, Nadador {
     // Hereda de Animal
     // Debe implementar todos los métodos de Volador y Nadador
-    
+
     @Override
     public void volar() {
         System.out.println("El pato vuela");
     }
-    
+
     @Override
     public void aterrizar() {
         System.out.println("El pato aterriza");
     }
-    
+
     @Override
     public void nadar() {
         System.out.println("El pato nada en el lago");
@@ -258,38 +251,38 @@ public class Pato extends Animal implements Volador, Nadador {
 
 **Comparativa:**
 
-| Aspecto | EXTENDS | IMPLEMENTS |
-|---------|---------|------------|
-| **Tipo de relación** | "es un" (is-a) | "puede hacer" (can-do) |
-| **Qué hereda** | Implementación completa | Solo la definición (contrato) |
-| **Cantidad** | Solo una clase | Múltiples interfaces |
-| **Métodos** | Pueden estar implementados | Deben implementarse (abstractos) |
-| **Atributos** | Hereda atributos del padre | Solo constantes (static final) |
-| **Obligación** | Opcional sobrescribir métodos | Obligatorio implementar todos |
-| **Uso típico** | Reutilización de código | Definir capacidades/comportamientos |
-| **Ejemplo** | `Perro extends Animal` | `List implements Collection` |
+| Aspecto              | EXTENDS                       | IMPLEMENTS                          |
+| -------------------- | ----------------------------- | ----------------------------------- |
+| **Tipo de relación** | "es un" (is-a)                | "puede hacer" (can-do)              |
+| **Qué hereda**       | Implementación completa       | Solo la definición (contrato)       |
+| **Cantidad**         | Solo una clase                | Múltiples interfaces                |
+| **Métodos**          | Pueden estar implementados    | Deben implementarse (abstractos)    |
+| **Atributos**        | Hereda atributos del padre    | Solo constantes (static final)      |
+| **Obligación**       | Opcional sobrescribir métodos | Obligatorio implementar todos       |
+| **Uso típico**       | Reutilización de código       | Definir capacidades/comportamientos |
+| **Ejemplo**          | `Perro extends Animal`        | `List implements Collection`        |
 
 ###### Interfaz vs Clase Abstracta
 
-![alt text](assets/clase-02-java/caracteristica.png)
+![Interfaz vs Clase Abstracta](assets/clase-02-java/caracteristica.png)
 
 #### Encapsulamiento
 
 Protege los datos internos de una clase y los expone solo mediante métodos controlados
 
-![alt text](assets/clase-02-java/Encapsulamiento.png)
+![Ejemplo de Encapsulamiento](assets/clase-02-java/Encapsulamiento.png)
 
 #### Herencia
 
 Permite la reutilización de código, al extender atributos o métodos a clases hijas
 
-![alt text](assets/clase-02-java/Herencia.png)
+![Ejemplo de Herencia](assets/clase-02-java/Herencia.png)
 
 #### Polimorfismo
 
 Un mismo método puede comportarse de forma diferente según el objeto que lo invoque.
 
-![alt text](assets/clase-02-java/Polimorfismo.png)
+![Ejemplo de Polimorfismo](assets/clase-02-java/Polimorfismo.png)
 
 Existen dos tipos principales de polimorfismo en Java:
 
@@ -312,21 +305,21 @@ public class Calculadora {
     public int sumar(int a, int b) {
         return a + b;
     }
-    
+
     public int sumar(int a, int b, int c) {
         return a + b + c;
     }
-    
+
     // Sobrecarga por tipo de parámetros
     public double sumar(double a, double b) {
         return a + b;
     }
-    
+
     // Sobrecarga por orden de parámetros
     public String sumar(String a, int b) {
         return a + b;
     }
-    
+
     public String sumar(int a, String b) {
         return a + b;
     }
@@ -390,15 +383,15 @@ miAnimal2.hacerSonido(); // Imprime: "El gato maúlla: Miau!"
 
 ###### Comparativa: Sobrecarga vs Sobrescritura
 
-| Aspecto | Sobrecarga (Overloading) | Sobrescritura (Overriding) |
-|---------|--------------------------|----------------------------|
-| **Ocurre en** | Misma clase | Clase padre e hija |
-| **Nombre del método** | Igual | Igual |
-| **Parámetros** | Diferentes | Iguales |
-| **Tipo de retorno** | Puede variar | Debe ser igual o covariante |
-| **Momento de resolución** | Compilación (estático) | Ejecución (dinámico) |
-| **Anotación** | No tiene | @Override |
-| **Propósito** | Flexibilidad de uso | Especialización del comportamiento |
+| Aspecto                   | Sobrecarga (Overloading) | Sobrescritura (Overriding)         |
+| ------------------------- | ------------------------ | ---------------------------------- |
+| **Ocurre en**             | Misma clase              | Clase padre e hija                 |
+| **Nombre del método**     | Igual                    | Igual                              |
+| **Parámetros**            | Diferentes               | Iguales                            |
+| **Tipo de retorno**       | Puede variar             | Debe ser igual o covariante        |
+| **Momento de resolución** | Compilación (estático)   | Ejecución (dinámico)               |
+| **Anotación**             | No tiene                 | @Override                          |
+| **Propósito**             | Flexibilidad de uso      | Especialización del comportamiento |
 
 ## Utilidades de String
 
@@ -406,9 +399,9 @@ miAnimal2.hacerSonido(); // Imprime: "El gato maúlla: Miau!"
 
 Java proporciona dos métodos para verificar si un String está vacío, pero con diferencias importantes:
 
-| Método | Descripción | Ejemplo |
-|--------|-------------|---------|
-| `isEmpty()` | Verifica si `length() == 0` | `"".isEmpty()` → `true` |
+| Método      | Descripción                                               | Ejemplo                    |
+| ----------- | --------------------------------------------------------- | -------------------------- |
+| `isEmpty()` | Verifica si `length() == 0`                               | `"".isEmpty()` → `true`    |
 | `isBlank()` | Verifica si está vacío O solo contiene espacios en blanco | `"   ".isBlank()` → `true` |
 
 **Ejemplos:**
@@ -457,15 +450,15 @@ Las **variables estáticas** (también llamadas variables de clase) se comparten
 public class Contador {
     // Variable static compartida por todas las instancias
     public static int totalObjetos = 0;
-    
+
     // Variable de instancia (única por objeto)
     private int id;
-    
+
     public Contador() {
         totalObjetos++;  // Se incrementa para todos los objetos
         this.id = totalObjetos;
     }
-    
+
     public void mostrarInfo() {
         System.out.println("ID: " + id + ", Total objetos: " + totalObjetos);
     }
@@ -502,12 +495,12 @@ Los **métodos estáticos** pertenecen a la clase y pueden ser llamados sin crea
 
 ```java
 public class Utilidades {
-    
+
     // Método static - no necesita instancia
     public static int sumar(int a, int b) {
         return a + b;
     }
-    
+
     public static double calcularIVA(double precio) {
         return precio * 0.19;
     }
@@ -541,13 +534,13 @@ Los **bloques de inicialización estáticos** se ejecutan una sola vez cuando la
 ```java
 public class BaseDatos {
     private static Connection conexion;
-    
+
     // Bloque static - se ejecuta al cargar la clase
     static {
         System.out.println("Inicializando conexión a BD...");
         conexion = crearConexion();
     }
-    
+
     private static Connection crearConexion() {
         // Lógica de conexión
         return null;
@@ -557,12 +550,12 @@ public class BaseDatos {
 
 ### Cuándo Usar Static
 
-| Usar Static | No Usar Static |
-|-------------|----------------|
-| Métodos utilitarios (Math.sqrt()) | Métodos que dependen del estado del objeto |
-| Constantes globales (Math.PI) | Atributos únicos por instancia |
-| Contadores compartidos | Cuando necesitas polimorfismo |
-| Factory methods | Cuando necesitas herencia de comportamiento |
+| Usar Static                       | No Usar Static                              |
+| --------------------------------- | ------------------------------------------- |
+| Métodos utilitarios (Math.sqrt()) | Métodos que dependen del estado del objeto  |
+| Constantes globales (Math.PI)     | Atributos únicos por instancia              |
+| Contadores compartidos            | Cuando necesitas polimorfismo               |
+| Factory methods                   | Cuando necesitas herencia de comportamiento |
 
 ### Ventajas y Desventajas
 
@@ -659,6 +652,7 @@ String resultado = switch (obj) {
 ![Código con Pattern Matching](assets/clase-02-java/pattern-matching-after.png)
 
 El código refactorizado:
+
 - Usa `switch` con pattern matching
 - Detecta el tipo de evento con `instanceof`
 - Llama a métodos privados especializados para cada tipo
@@ -675,7 +669,7 @@ El código refactorizado:
 
 ## Excepciones
 
-![alt text](assets/clase-02-java/Excepciones.png)
+![Jerarquía de Excepciones en Java](assets/clase-02-java/Excepciones.png)
 
 Las excepciones en Java son eventos que interrumpen el flujo normal de ejecución de un programa. Java proporciona un mecanismo robusto para manejar errores y situaciones excepcionales.
 
@@ -717,11 +711,3 @@ try (FileReader fr = new FileReader("archivo.txt")) {
     e.printStackTrace();
 }
 ```
-
----
-
-## Notas de Clase
-
-> Estando en la 5ta clase (+ Onboarding), aún no hemos salido de introducción a Java y POO
-
-> "Que porquería Java, los que saben de C# saben que esto sí deja hacerlo" - 2:30:00

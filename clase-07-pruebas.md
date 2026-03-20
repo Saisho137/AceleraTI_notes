@@ -13,7 +13,7 @@
 9. [MockMvc - Simulación de Peticiones HTTP](#mockmvc---simulación-de-peticiones-http)
 10. [Test Driven Development (TDD)](#test-driven-development-tdd)
 11. [Configuración de Gradle y Cobertura](#configuración-de-gradle-y-cobertura)
-12. [Ejercicio Práctico](#ejercicio-práctico)
+12. [Conclusión](#conclusión)
 13. [Recursos Adicionales](#recursos-adicionales)
 
 ## Resumen
@@ -37,19 +37,19 @@ Las pruebas de software son esenciales para garantizar la calidad y confiabilida
 
 ### Razones principales para escribir pruebas
 
-**1. Validan el comportamiento de nuestras clases**
+**1. Validan el comportamiento de nuestras clases:**
 
 - Verifican que el código hace lo que se espera
 - Confirman que los métodos retornan los valores correctos
 - Aseguran que las clases se comportan según las especificaciones
 
-**2. Previenen errores al hacer cambios**
+**2. Previenen errores al hacer cambios:**
 
 - Detectan bugs introducidos por modificaciones (regresiones)
 - Alertan cuando un cambio rompe funcionalidad existente
 - Proporcionan una red de seguridad al refactorizar
 
-**3. Facilitan el mantenimiento y refactorización**
+**3. Facilitan el mantenimiento y refactorización:**
 
 - Permiten hacer cambios con confianza
 - Documentan cómo se debe usar el código
@@ -89,7 +89,7 @@ void deberiaCalcularElTotalDelCarrito() {
     // Prueba un solo método de la clase Carrito
     Carrito carrito = new Carrito();
     carrito.agregarProducto(new Producto("Laptop", 1000));
-    
+
     assertEquals(1000, carrito.calcularTotal());
 }
 ```
@@ -116,18 +116,18 @@ void deberiaCalcularElTotalDelCarrito() {
 ```java
 @SpringBootTest
 class UsuarioServiceIntegrationTest {
-    
+
     @Autowired
     private UsuarioService service;
-    
+
     @Autowired
     private UsuarioRepository repository;
-    
+
     @Test
     void deberiCrearUsuarioEnBaseDeDatos() {
         // Prueba la integración entre Service y Repository
         Usuario usuario = service.crearUsuario("Juan", "juan@test.com");
-        
+
         assertTrue(repository.findById(usuario.getId()).isPresent());
     }
 }
@@ -142,13 +142,13 @@ class UsuarioServiceIntegrationTest {
 
 ### Comparación
 
-| Aspecto | Pruebas Unitarias | Pruebas de Integración |
-|---------|-------------------|------------------------|
-| **Alcance** | Una clase o método | Varias clases colaborando |
-| **Velocidad** | Muy rápidas (ms) | Más lentas (segundos) |
-| **Aislamiento** | Completamente aisladas | Usan componentes reales |
-| **Dependencias** | Mocks/Stubs | Beans reales de Spring |
-| **Cantidad** | Muchas (70-80%) | Moderadas (20-30%) |
+| Aspecto          | Pruebas Unitarias      | Pruebas de Integración    |
+| ---------------- | ---------------------- | ------------------------- |
+| **Alcance**      | Una clase o método     | Varias clases colaborando |
+| **Velocidad**    | Muy rápidas (ms)       | Más lentas (segundos)     |
+| **Aislamiento**  | Completamente aisladas | Usan componentes reales   |
+| **Dependencias** | Mocks/Stubs            | Beans reales de Spring    |
+| **Cantidad**     | Muchas (70-80%)        | Moderadas (20-30%)        |
 
 ---
 
@@ -171,13 +171,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CalculadoraTest {
-    
+
     @Test
     void deberiaSumarDosNumeros() {
         Calculadora calc = new Calculadora();
-        
+
         int resultado = calc.sumar(2, 3);
-        
+
         assertEquals(5, resultado);
     }
 }
@@ -242,16 +242,16 @@ JUnit proporciona varias anotaciones para controlar el ciclo de vida de los test
 
 ### Tabla de Anotaciones
 
-| Anotación | Propósito |
-|-----------|-----------|
-| `@Test` | Define un método de prueba. Deberían ser métodos `void`. |
-| `@BeforeEach` | Ejecutado **antes de cada prueba** (preparar instancias, estado) |
-| `@AfterEach` | Ejecutado **después de cada prueba** (limpiar recursos) |
-| `@BeforeAll` | Ejecutado **una vez antes de todas las pruebas** (debe ser `static`) |
-| `@AfterAll` | Ejecutado **una vez después de todas las pruebas** (debe ser `static`) |
-| `@DisplayName` | Agrega una descripción legible a la prueba |
-| `@Tag` | Etiqueta para categorizar y filtrar pruebas |
-| `@Disabled` | Deshabilita temporalmente una prueba |
+| Anotación      | Propósito                                                              |
+| -------------- | ---------------------------------------------------------------------- |
+| `@Test`        | Define un método de prueba. Deberían ser métodos `void`.               |
+| `@BeforeEach`  | Ejecutado **antes de cada prueba** (preparar instancias, estado)       |
+| `@AfterEach`   | Ejecutado **después de cada prueba** (limpiar recursos)                |
+| `@BeforeAll`   | Ejecutado **una vez antes de todas las pruebas** (debe ser `static`)   |
+| `@AfterAll`    | Ejecutado **una vez después de todas las pruebas** (debe ser `static`) |
+| `@DisplayName` | Agrega una descripción legible a la prueba                             |
+| `@Tag`         | Etiqueta para categorizar y filtrar pruebas                            |
+| `@Disabled`    | Deshabilita temporalmente una prueba                                   |
 
 > 📝 **Convención de nombrado:** Por convención, el nombre del método de test debe describir lo que se está probando (ej: `deberiaCalcularTotalConDescuento`).
 
@@ -260,12 +260,12 @@ JUnit proporciona varias anotaciones para controlar el ciclo de vida de los test
 ```java
 class UsuarioServiceTest {
     private UsuarioService service;
-    
+
     @BeforeEach
     void setUp() {
         service = new UsuarioService();
     }
-    
+
     @Test
     void deberiaCrearUsuario() {
         Usuario usuario = new Usuario("Juan", "juan@test.com");
@@ -277,7 +277,7 @@ class UsuarioServiceTest {
 
 ### Orden de ejecución
 
-```
+```text
 1. @BeforeAll (una vez)
 2. @BeforeEach
 3. @Test (primer test)
@@ -322,11 +322,11 @@ class UsuarioServiceTest {
 
 ### Fuentes de Datos
 
-| Anotación | Uso |
-|-----------|-----|
-| `@ValueSource` | Valores simples de un solo tipo |
-| `@CsvSource` | Múltiples valores separados por coma |
-| `@MethodSource` | Valores generados por un método |
+| Anotación          | Uso                                                 |
+| ------------------ | --------------------------------------------------- |
+| `@ValueSource`     | Valores simples de un solo tipo                     |
+| `@CsvSource`       | Múltiples valores separados por coma                |
+| `@MethodSource`    | Valores generados por un método                     |
 | `@ArgumentsSource` | Valores generados mediante Streams (clase Provider) |
 
 ### Ejemplo con @CsvSource
@@ -407,10 +407,10 @@ void deberiaAplicarDescuentoDelDiezPorciento() {
     // Arrange: Preparar
     Producto producto = new Producto("Laptop", 1000.0);
     ServicioDescuento servicio = new ServicioDescuento();
-    
+
     // Act: Ejecutar
     double precioFinal = servicio.aplicarDescuento(producto, 10.0);
-    
+
     // Assert: Verificar
     assertEquals(900.0, precioFinal);
 }
@@ -456,7 +456,7 @@ void testUsuarioService() {
     UsuarioRepository repo = new UsuarioRepository();
     // ❌ Necesito configurar conexión, crear tablas, etc.
     repo.conectar("jdbc:mysql://localhost:3306/testdb");
-    
+
     UsuarioService service = new UsuarioService(repo);
     // ... test muy complejo y lento
 }
@@ -469,10 +469,10 @@ void testUsuarioService() {
 void testUsuarioService() {
     // ✅ Creo un mock del repository
     UsuarioRepository mockRepo = mock(UsuarioRepository.class);
-    
+
     // ✅ Defino qué debe retornar
     when(mockRepo.findById(1L)).thenReturn(Optional.of(new Usuario()));
-    
+
     // ✅ Test simple y rápido
     UsuarioService service = new UsuarioService(mockRepo);
     // ...
@@ -492,13 +492,13 @@ UsuarioRepository mockRepo = mock(UsuarioRepository.class);
 ```java
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
-    
+
     @Mock
     private UsuarioRepository mockRepo;
-    
+
     @InjectMocks  // Inyecta los mocks en el servicio
     private UsuarioService service;
-    
+
     @Test
     void test() {
         // mockRepo ya está creado e inyectado
@@ -507,7 +507,7 @@ class UsuarioServiceTest {
 ```
 
 > 💡 **`@ExtendWith(MockitoExtension.class)`:** Esta anotación es **esencial** para usar `@Mock` y `@InjectMocks` en JUnit 5. Evita tener que abrir y cerrar manualmente los mocks con `MockitoAnnotations.openMocks(this)` y `closeable.close()`. La extensión se encarga automáticamente del ciclo de vida de los mocks.
-
+>
 > ✅ **`@Mock` vs `mock()`:** Ambas opciones son **funcionalmente equivalentes**. La anotación `@Mock` es preferida porque:
 >
 > - Código más corto y legible
@@ -590,23 +590,23 @@ verify(mockRepo, atLeast(2)).findAll();
 
 ### verify() vs assert(): Cuándo usar cada uno
 
-| Método | Propósito | Cuándo usar |
-|--------|-----------|-------------|
-| `assert*()` (JUnit) | Verificar **valores/estado** | Validar que un resultado tiene el valor esperado |
-| `verify()` (Mockito) | Verificar **interacciones** | Validar que un método fue llamado en un mock |
+| Método               | Propósito                    | Cuándo usar                                      |
+| -------------------- | ---------------------------- | ------------------------------------------------ |
+| `assert*()` (JUnit)  | Verificar **valores/estado** | Validar que un resultado tiene el valor esperado |
+| `verify()` (Mockito) | Verificar **interacciones**  | Validar que un método fue llamado en un mock     |
 
 ```java
 @Test
 void deberiaGuardarYRetornarUsuario() {
     Usuario usuario = new Usuario("Ana");
     when(mockRepo.save(any())).thenReturn(usuario);
-    
+
     Usuario resultado = service.crear(usuario);
-    
+
     // assert: verifica el VALOR retornado
     assertNotNull(resultado);
     assertEquals("Ana", resultado.getNombre());
-    
+
     // verify: verifica que el método fue LLAMADO
     verify(mockRepo).save(usuario);
     verify(mockRepo, never()).delete(any());
@@ -614,27 +614,28 @@ void deberiaGuardarYRetornarUsuario() {
 ```
 
 **Regla general:**
+
 - Usa `assert*()` para validar **qué** retorna el código (estado)
 - Usa `verify()` para validar **cómo** interactúa con sus dependencias (comportamiento)
 
-### Ejemplo
+### Ejemplo mockito
 
 ```java
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
     @Mock
     private UsuarioRepository mockRepo;
-    
+
     @InjectMocks
     private UsuarioService service;
-    
+
     @Test
     void deberiaCrearUsuario() {
         Usuario usuario = new Usuario("Ana", "ana@test.com");
         when(mockRepo.save(any(Usuario.class))).thenReturn(usuario);
-        
+
         Usuario resultado = service.crearUsuario("Ana", "ana@test.com");
-        
+
         assertNotNull(resultado);
         verify(mockRepo).save(any(Usuario.class));
     }
@@ -683,26 +684,26 @@ La anotación `@SpringBootTest` levanta el contexto completo de Spring, permitie
 ```java
 @SpringBootTest
 class UsuarioServiceIntegrationTest {
-    
+
     @Autowired
     private UsuarioService service;  // Bean real de Spring
-    
+
     @Autowired
     private UsuarioRepository repository;  // Bean real de Spring
-    
+
     @Test
     void deberiaGuardarUsuarioEnBaseDeDatos() {
         // Arrange
         Usuario usuario = new Usuario("Pedro", "pedro@test.com");
-        
+
         // Act
         Usuario guardado = service.crearUsuario(usuario);
-        
+
         // Assert
         assertNotNull(guardado.getId());
         assertTrue(repository.findById(guardado.getId()).isPresent());
     }
-    
+
     @AfterEach
     void limpiarBaseDeDatos() {
         repository.deleteAll();  // Limpiar después de cada test
@@ -717,25 +718,25 @@ Cuando usas `@SpringBootTest` pero quieres mockear algunas dependencias:
 ```java
 @SpringBootTest
 class PedidoServiceIntegrationTest {
-    
+
     @Autowired
     private PedidoService pedidoService;  // Bean real
-    
+
     @MockBean  // Mock dentro del contexto de Spring
     private ServicioPago servicioPago;
-    
+
     @MockBean
     private ServicioEmail servicioEmail;
-    
+
     @Test
     void deberiaCrearPedidoYEnviarEmail() {
         // Arrange
         Pedido pedido = new Pedido();
         when(servicioPago.procesar(any())).thenReturn(true);
-        
+
         // Act
         Pedido resultado = pedidoService.crearPedido(pedido);
-        
+
         // Assert
         assertNotNull(resultado);
         verify(servicioEmail).enviarConfirmacion(any());
@@ -761,17 +762,17 @@ spring.jpa.hibernate.ddl-auto=create-drop
 ```java
 @DataJpaTest
 class UsuarioRepositoryTest {
-    
+
     @Autowired
     private UsuarioRepository repository;
-    
+
     @Test
     void deberiaEncontrarUsuarioPorEmail() {
         Usuario usuario = new Usuario("Luis", "luis@test.com");
         repository.save(usuario);
-        
+
         Optional<Usuario> encontrado = repository.findByEmail("luis@test.com");
-        
+
         assertTrue(encontrado.isPresent());
     }
 }
@@ -782,18 +783,18 @@ class UsuarioRepositoryTest {
 ```java
 @WebMvcTest(UsuarioController.class)
 class UsuarioControllerTest {
-    
+
     @Autowired
     private MockMvc mockMvc;
-    
+
     @MockBean
     private UsuarioService service;
-    
+
     @Test
     void deberiaRetornarUsuarioPorId() throws Exception {
         Usuario usuario = new Usuario("Maria", "maria@test.com");
         when(service.obtenerPorId(1L)).thenReturn(Optional.of(usuario));
-        
+
         mockMvc.perform(get("/api/usuarios/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Maria"));
@@ -822,10 +823,10 @@ class UsuarioControllerTest {
 @SpringBootTest
 @AutoConfigureMockMvc
 class UsuarioControllerIntegrationTest {
-    
+
     @Autowired
     private MockMvc mockMvc;
-    
+
     // Tests aquí
 }
 ```
@@ -835,13 +836,13 @@ class UsuarioControllerIntegrationTest {
 ```java
 @WebMvcTest(UsuarioController.class)
 class UsuarioControllerTest {
-    
+
     @Autowired
     private MockMvc mockMvc;
-    
+
     @MockBean
     private UsuarioService service;
-    
+
     // Tests aquí
 }
 ```
@@ -880,7 +881,7 @@ void deberiaCrearNuevoUsuario() throws Exception {
             "email": "ana@test.com"
         }
         """;
-    
+
     mockMvc.perform(post("/api/usuarios")
             .contentType(MediaType.APPLICATION_JSON)
             .content(usuarioJson))
@@ -900,7 +901,7 @@ void deberiaActualizarUsuario() throws Exception {
             "email": "juan.nuevo@test.com"
         }
         """;
-    
+
     mockMvc.perform(put("/api/usuarios/1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(usuarioJson))
@@ -958,7 +959,7 @@ TDD propone:
 
 El ciclo de TDD tiene 3 pasos que se repiten continuamente:
 
-```
+```text
 ┌──────────────────────────────────┐
 │  1. 🔴 RED                       │
 │  Escribir una prueba que falla   │
@@ -1040,22 +1041,22 @@ public int sumar(int a, int b) {
 ```groovy
 test {
     useJUnitPlatform()  // Habilita JUnit 5
-    
+
     testLogging {
         events "passed", "skipped", "failed"
     }
-    
+
     finalizedBy jacocoTestReport  // Genera reporte después de tests
 }
 
 jacocoTestReport {
     dependsOn test  // Requiere que los tests se ejecuten primero
-    
+
     reports {
         xml.required = true
         html.required = true
     }
-    
+
     finalizedBy jacocoTestCoverageVerification  // Verifica cobertura mínima
 }
 
@@ -1072,10 +1073,10 @@ jacocoTestCoverageVerification {
 
 ### Ubicación de Reportes
 
-| Reporte | Ubicación |
-|---------|-----------|
+| Reporte           | Ubicación                                    |
+| ----------------- | -------------------------------------------- |
 | **Coverage HTML** | `/build/reports/jacoco/test/html/index.html` |
-| **Test Results** | `/build/reports/tests/test/index.html` |
+| **Test Results**  | `/build/reports/tests/test/index.html`       |
 
 ### Principios Importantes
 
@@ -1113,11 +1114,11 @@ Recuerda: **Código sin tests es código legacy desde el día 1.**
 
 ### Documentación y Tutoriales
 
-| Recurso | Enlace |
-|---------|--------|
-| **Pruebas Parametrizadas JUnit 5** | [Baeldung](https://www.baeldung.com/parameterized-tests-junit-5) |
-| **Mockito Documentation** | [site.mockito.org](https://site.mockito.org/) |
-| **Spring Boot Testing** | [Spring Docs](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing) |
+| Recurso                            | Enlace                                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Pruebas Parametrizadas JUnit 5** | [Baeldung](https://www.baeldung.com/parameterized-tests-junit-5)                                             |
+| **Mockito Documentation**          | [site.mockito.org](https://site.mockito.org/)                                                                |
+| **Spring Boot Testing**            | [Spring Docs](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing) |
 
 ### Repositorio de Ejemplos
 

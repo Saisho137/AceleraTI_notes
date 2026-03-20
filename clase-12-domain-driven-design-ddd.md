@@ -6,18 +6,12 @@
 
 1. [Introducción](#introducción)
 2. [Pilares de DDD](#pilares-de-ddd)
-   - Lenguaje Ubicuo
-   - Patrones Estratégicos (Bounded Contexts, Context Maps)
-   - Patrones Tácticos (Building Blocks, Servicios de Dominio, Eventos de Dominio)
 3. [Modelo de Dominio](#modelo-de-dominio)
-   - Entidades
-   - Value Objects
-   - Agregados
-4. [Casos de Uso](#integrando-todo-use-case)
+4. [Integrando Todo: Use Case](#integrando-todo-use-case)
 5. [Estructura de Paquetes DDD](#estructura-de-paquetes-ddd)
-6. [Conceptos Adicionales](#extra)
-   - Idempotencia
-   - 4 Señales Doradas de SRE
+6. [Flujo Completo del Sistema Arka](#flujo-completo-del-sistema-arka)
+7. [Resumen y Conclusiones](#resumen-y-conclusiones)
+8. [Extra](#extra)
 
 ## Resumen
 
@@ -363,7 +357,7 @@ Todo ocurre en una sola transacción. Si algo falla, todo se revierte.
 
 > Problema: Si el servidor de email está caído, ¡no puedo confirmar ninguna orden!
 
-**Consistencia Fuerte - Características**
+**Consistencia Fuerte - Características:**
 
 **Ventajas:**
 
@@ -385,7 +379,7 @@ La operación principal se completa inmediatamente. Los efectos secundarios ocur
 
 ![Consistencia Eventual - Diagrama](assets/clase-12-domain-driven-design-ddd/consistencia-eventual-diagrama.png)
 
-**Consistencia Eventual - Línea de Tiempo**
+**Consistencia Eventual - Línea de Tiempo:**
 
 ![Línea de Tiempo - Consistencia Eventual](assets/clase-12-domain-driven-design-ddd/linea-tiempo-consistencia-eventual.png)
 
@@ -393,7 +387,7 @@ Durante ese tiempo el sistema está "eventualmente" llegando a consistencia tota
 
 > Si el email falla, la orden ya está confirmada. El email puede reintentarse después.
 
-**Consistencia Eventual - Características**
+**Consistencia Eventual - Características:**
 
 **Ventajas:**
 
@@ -1557,25 +1551,25 @@ if (database_connection_pool_usage > 70% for 10 minutes) {
 
 Monitorear las cuatro señales revela el panorama completo de la salud del sistema:
 
-**Escenario 1: Alta latencia + pocos errores + alta saturación**
+**Escenario 1: Alta latencia + pocos errores + alta saturación:**
 
 - Sistema sobrecargado pero aún procesando solicitudes
 - Usuarios experimentan respuestas lentas, pero las solicitudes eventualmente tienen éxito
 - **Solución:** Agregar recursos u optimizar rendimiento
 
-**Escenario 2: Baja latencia + muchos errores + baja saturación**
+**Escenario 2: Baja latencia + muchos errores + baja saturación:**
 
 - Las solicitudes fallan rápidamente sin estrés de recursos
 - Sugiere bugs de aplicación, problemas de configuración o fallos de dependencias externas
 - **Solución:** Revisar logs de aplicación y estado de servicios externos
 
-**Escenario 3: Pico de tráfico + alta saturación + latencia estable + errores estables**
+**Escenario 3: Pico de tráfico + alta saturación + latencia estable + errores estables:**
 
 - Sistema maneja carga aumentada exitosamente
 - Recursos utilizados pero dentro de límites
 - **Acción:** Monitorear crecimiento continuo y planear aumentos de capacidad
 
-**Escenario 4: Caída de tráfico + pocos errores + baja latencia + baja saturación**
+**Escenario 4: Caída de tráfico + pocos errores + baja latencia + baja saturación:**
 
 - Todo se ve saludable desde la perspectiva del servicio, pero el tráfico desapareció
 - Indica problemas upstream
@@ -1595,7 +1589,3 @@ Monitorear las cuatro señales revela el panorama completo de la salud del siste
 
 - [Google SRE Book - The Four Golden Signals](https://sre.google/sre-book/monitoring-distributed-systems/)
 - [The Site Reliability Workbook](https://sre.google/workbook/table-of-contents/) - Beyer, Murphy, Rensin, Kawahara, Thorne, O'Reilly Media, 2018
-
----
-
-**Fin del documento**

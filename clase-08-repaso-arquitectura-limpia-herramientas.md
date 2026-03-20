@@ -132,17 +132,17 @@ Las **Dead Letter Queues** son colas especiales donde se redirigen los mensajes 
 
 ### Comparativa: ¿Cuál Broker Usar?
 
-| Criterio | Kafka | RabbitMQ | AWS SNS/SQS |
-| -------- | ----- | -------- | ----------- |
-| **Licencia** | Código abierto (Apache 2.0) | Código abierto (Mozilla Public License) | Propietario/Administrado por AWS |
-| **Modelo** | Streaming de eventos (log distribuido) | Mensajería tradicional (colas) | Pub/Sub (SNS) + Colas (SQS) |
-| **Throughput** | Muy alto (millones msg/seg) | Medio-Alto (decenas de miles msg/seg) | Alto, escalado automático |
-| **Latencia** | Baja (milisegundos) | Muy baja (microsegundos) | Media (depende de polling) |
-| **Persistencia** | Sí, configurable (días/semanas) | Opcional (en disco o RAM) | Sí, hasta 14 días |
-| **Orden de mensajes** | Garantizado por partición | No garantizado (excepto con configuración especial) | Solo en SQS FIFO |
-| **Replay de eventos** | Sí, consumidores pueden retroceder | No | No |
-| **Complejidad** | Alta (requiere gestión de clúster) | Media | Baja (servicio administrado) |
-| **Costos** | Infraestructura propia | Infraestructura propia | Pay-per-use (por mensajes procesados) |
+| Criterio              | Kafka                                  | RabbitMQ                                            | AWS SNS/SQS                           |
+| --------------------- | -------------------------------------- | --------------------------------------------------- | ------------------------------------- |
+| **Licencia**          | Código abierto (Apache 2.0)            | Código abierto (Mozilla Public License)             | Propietario/Administrado por AWS      |
+| **Modelo**            | Streaming de eventos (log distribuido) | Mensajería tradicional (colas)                      | Pub/Sub (SNS) + Colas (SQS)           |
+| **Throughput**        | Muy alto (millones msg/seg)            | Medio-Alto (decenas de miles msg/seg)               | Alto, escalado automático             |
+| **Latencia**          | Baja (milisegundos)                    | Muy baja (microsegundos)                            | Media (depende de polling)            |
+| **Persistencia**      | Sí, configurable (días/semanas)        | Opcional (en disco o RAM)                           | Sí, hasta 14 días                     |
+| **Orden de mensajes** | Garantizado por partición              | No garantizado (excepto con configuración especial) | Solo en SQS FIFO                      |
+| **Replay de eventos** | Sí, consumidores pueden retroceder     | No                                                  | No                                    |
+| **Complejidad**       | Alta (requiere gestión de clúster)     | Media                                               | Baja (servicio administrado)          |
+| **Costos**            | Infraestructura propia                 | Infraestructura propia                              | Pay-per-use (por mensajes procesados) |
 
 ### ¿Cuándo usar Kafka?
 
@@ -285,14 +285,14 @@ En arquitecturas complejas, es común usar **múltiples brokers** para diferente
 
 #### Programación Funcional vs Reactiva
 
-| Aspecto | Streams (Funcional) | WebFlux (Reactiva) |
-|---------|---------------------|-------------------|
-| **Paradigma** | Programación funcional | Programación funcional + reactiva |
-| **Ejecución** | Síncrona, bloqueante | Asíncrona, no bloqueante |
-| **Hilos** | Hilos tradicionales del OS | Green threads (hilos virtuales) |
-| **Performance** | Buena para operaciones en memoria | Mejor para I/O y alta concurrencia |
-| **Backpressure** | No maneja | Maneja presión de datos |
-| **Uso típico** | Transformaciones de colecciones | APIs reactivas, streaming de datos |
+| Aspecto          | Streams (Funcional)               | WebFlux (Reactiva)                 |
+| ---------------- | --------------------------------- | ---------------------------------- |
+| **Paradigma**    | Programación funcional            | Programación funcional + reactiva  |
+| **Ejecución**    | Síncrona, bloqueante              | Asíncrona, no bloqueante           |
+| **Hilos**        | Hilos tradicionales del OS        | Green threads (hilos virtuales)    |
+| **Performance**  | Buena para operaciones en memoria | Mejor para I/O y alta concurrencia |
+| **Backpressure** | No maneja                         | Maneja presión de datos            |
+| **Uso típico**   | Transformaciones de colecciones   | APIs reactivas, streaming de datos |
 
 **Diferencia clave:**
 

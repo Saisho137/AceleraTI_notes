@@ -2,14 +2,18 @@
 
 ---
 
-## 📑 Índice
+## Índice
 
-1. [Arquitecturas Clásicas](#1-arquitecturas-clásicas)
-2. [Arquitectura Limpia](#2-arquitectura-limpia)
-3. [Capas de la Arquitectura Limpia](#3-capas-de-la-arquitectura-limpia)
-4. [Regla de Dependencia](#4-regla-de-dependencia)
-5. [Implementación Práctica](#5-implementación-práctica)
-6. [Resumen](#6-resumen)
+1. [1. Arquitecturas Clásicas](#1-arquitecturas-clásicas)
+2. [2. Arquitectura Limpia](#2-arquitectura-limpia)
+3. [3. Capas de la Arquitectura Limpia](#3-capas-de-la-arquitectura-limpia)
+4. [4. Regla de Dependencia](#4-regla-de-dependencia)
+5. [5. Implementación Práctica](#5-implementación-práctica)
+6. [6. Puntos Clave](#6-puntos-clave)
+
+## Resumen
+
+La **Arquitectura Limpia** (Clean Architecture) de Robert C. Martin propone organizar el código en capas concéntricas: **Dominio** (entidades y reglas de negocio), **Casos de Uso** (lógica de aplicación), **Adaptadores** (traducción entre formatos) y **Frameworks** (detalles técnicos). La regla de oro: las dependencias solo apuntan hacia adentro, logrando independencia de frameworks, bases de datos y UI.
 
 ---
 
@@ -97,7 +101,7 @@ El diagrama se lee de **afuera hacia adentro**
 
 ## 3. Capas de la Arquitectura Limpia
 
-### 🟡 Capa de Dominio (Enterprise Business Rules)
+### Capa de Dominio (Enterprise Business Rules)
 
 Es el **núcleo de la aplicación**. Contiene todo lo relacionado con la **lógica de negocio pura**.
 
@@ -144,7 +148,7 @@ public class CuentaBancaria {
 }
 ```
 
-### 🟠 Capa de Casos de Uso (Application Business Rules)
+### Capa de Casos de Uso (Application Business Rules)
 
 Define **cómo se usa el sistema**. Orquesta las entidades para cumplir objetivos del negocio.
 
@@ -181,7 +185,7 @@ public class RealizarTransferenciaUseCase {
 }
 ```
 
-### 🟢 Capa de Adaptadores de Interfaz (Interface Adapters)
+### Capa de Adaptadores de Interfaz (Interface Adapters)
 
 **Traduce** datos entre el formato del dominio y el formato externo.
 
@@ -221,7 +225,7 @@ public class CuentaRepositoryJPA implements CuentaRepository {
 }
 ```
 
-### 🔵 Capa de Frameworks y Drivers (Frameworks & Drivers)
+### Capa de Frameworks y Drivers (Frameworks & Drivers)
 
 La capa más **externa**. Contiene detalles técnicos y configuraciones.
 
@@ -236,7 +240,7 @@ La capa más **externa**. Contiene detalles técnicos y configuraciones.
 
 ## 4. Regla de Dependencia
 
-### La Regla de Oro 🏆
+### La Regla de Oro
 
 > **Las dependencias del código fuente solo pueden apuntar hacia ADENTRO.**
 
@@ -353,9 +357,9 @@ public class CuentaRepositoryJPA implements CuentaRepository {
 
 ---
 
-## 6. Resumen
+## 6. Puntos Clave
 
-### 🎯 Puntos Clave
+### Conceptos Principales
 
 | Concepto                  | Descripción                                    |
 | ------------------------- | ---------------------------------------------- |
@@ -367,7 +371,7 @@ public class CuentaRepositoryJPA implements CuentaRepository {
 | **Frameworks**            | Detalles técnicos (BD, Web, etc.)              |
 | **Regla de Dependencia**  | Las dependencias apuntan hacia adentro         |
 
-### 📊 Comparativa Rápida
+### Comparativa Rápida
 
 | Aspecto                  | Arq. en Capas      | Clean Architecture         |
 | ------------------------ | ------------------ | -------------------------- |

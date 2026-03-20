@@ -7,22 +7,14 @@
 ## Índice
 
 1. [Programación Funcional en Java](#programación-funcional-en-java)
-   - Interfaces Funcionales
-   - Expresiones Lambda y Method References
-   - Stream API
-   - Optional
 2. [Backend for Frontend (BFF)](#backend-for-frontend-bff)
-   - API Gateway
-   - Qué es BFF
-   - API Gateway vs BFF
-   - Cuándo usar BFF
 3. [Docker](#docker)
-   - Dockerfile
-   - Multi-Stage Build
-   - Docker Compose
-   - Volúmenes y Networking
-   - Comandos Esenciales
-4. [Resumen](#resumen)
+4. [Resumen Final](#resumen-final)
+5. [Extra](#extra)
+
+## Resumen
+
+Sesión de repaso que integra tres temas clave: **Programación Funcional en Java** (interfaces funcionales, lambdas, Stream API, Optional), el patrón **Backend for Frontend (BFF)** y su diferencia con API Gateway, y conceptos esenciales de **Docker** (Dockerfile, multi-stage builds, Docker Compose, volúmenes y networking).
 
 ---
 
@@ -320,7 +312,7 @@ docker compose up -d --scale app=3        # Escalar un servicio a 3 réplicas
 
 ---
 
-## Resumen
+## Resumen Final
 
 | Tema                | Conceptos clave                                                                                                                                       |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

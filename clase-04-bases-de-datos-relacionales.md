@@ -1,39 +1,16 @@
 # Clase 4 - Bases de datos relacionales
 
-**Ejercicio de clase:** En 15 minutos hacer 2 endpoints de tienda Arca, GET de productos y POST de producto; con Mocks.
-
 ## Índice
 
 1. [Bases de datos relacionales](#bases-de-datos-relacionales)
-   - [Modelo basado en tablas](#modelo-basado-en-tablas)
-   - [Claves y relaciones](#claves-y-relaciones)
-   - [Integridad referencial](#integridad-referencial)
-   - [Lenguaje SQL](#lenguaje-sql)
-   - [Consultas con JOINs](#consultas-con-joins)
-   - [Tipos de datos](#tipos-de-datos)
-   - [Estrategias para Analítica](#estrategias-para-analítica)
-   - [Propiedades ACID](#propiedades-acid)
 2. [Modelo Entidad-Relación (MER)](#modelo-entidad-relación-mer)
-   - [Representación conceptual](#representación-conceptual)
-   - [Tipos de Modelos MER](#tipos-de-modelos-mer)
-   - [Elementos clave](#elementos-clave)
-   - [Tipos de relaciones](#tipos-de-relaciones)
-   - [Producto Cartesiano y Tablas Asociativas](#producto-cartesiano-y-tablas-asociativas)
-   - [Cardinalidad](#cardinalidad)
-   - [Independencia de implementación](#independencia-de-implementación)
-   - [Base para normalización](#base-para-normalización)
 3. [Normalización](#normalización)
-   - [Primera Forma Normal (1FN)](#primera-forma-normal-1fn)
-   - [Segunda Forma Normal (2FN)](#segunda-forma-normal-2fn)
-   - [Tercera Forma Normal (3FN)](#tercera-forma-normal-3fn)
-   - [Forma Normal de Boyce-Codd (FNBC)](#forma-normal-de-boyce-codd-fnbc)
-   - [Resumen de Formas Normales](#resumen-de-formas-normales)
 4. [Ejercicio Práctico: Sistema de Arrendamiento de Inmuebles](#ejercicio-práctico-sistema-de-arrendamiento-de-inmuebles)
-   - [Solución](#solución)
-   - [Diagrama MER Lógico Detallado](#diagrama-mer-lógico-detallado)
-   - [Implementación en PostgreSQL](#implementación-en-postgresql)
-   - [Consultas SQL Prácticas](#consultas-sql-prácticas)
-5. [Resumen final](#resumen-final)
+5. [Resumen Final](#resumen-final)
+
+## Resumen
+
+Clase completa sobre **bases de datos relacionales**: modelo basado en tablas, claves (PK, FK, candidata, única), integridad referencial, SQL (DDL, DML, DCL, TCL), JOINs, tipos de datos y propiedades **ACID**. Incluye el **Modelo Entidad-Relación** (conceptual, lógico, físico), **normalización** (1FN a FNBC), y un ejercicio práctico completo con implementación en PostgreSQL.
 
 ---
 
@@ -63,11 +40,11 @@ Las bases de datos relacionales organizan la información en **tablas** (tambié
 
 Tabla `Estudiantes`:
 
-| id_estudiante | nombre | apellido | fecha_nacimiento | email |
-|---------------|--------|----------|------------------|-------|
-| 1 | Juan | Pérez | 2000-05-15 | <juan@email.com> |
-| 2 | María | García | 1999-08-22 | <maria@email.com> |
-| 3 | Carlos | López | 2001-01-10 | <carlos@email.com> |
+| id_estudiante | nombre | apellido | fecha_nacimiento | email              |
+| ------------- | ------ | -------- | ---------------- | ------------------ |
+| 1             | Juan   | Pérez    | 2000-05-15       | <juan@email.com>   |
+| 2             | María  | García   | 1999-08-22       | <maria@email.com>  |
+| 3             | Carlos | López    | 2001-01-10       | <carlos@email.com> |
 
 ### Claves y relaciones
 
@@ -130,6 +107,7 @@ Similar a la clave primaria pero con diferencias importantes:
 La **integridad referencial** es una regla de consistencia que garantiza que las relaciones entre tablas permanezcan válidas y coherentes.
 
 **Definición:**
+
 > Asegura que toda clave foránea en una tabla hija debe corresponder a una clave primaria existente en la tabla padre, o ser NULL (si se permite).
 
 **Reglas:**
@@ -155,12 +133,12 @@ La **integridad referencial** es una regla de consistencia que garantiza que las
 
 Define y modifica la **estructura** de la base de datos (esquema).
 
-| Comando | ¿Qué hace? | Ejemplo | Notas |
-|---------|------------|---------|-------|
-| **CREATE** | Crea objetos (tablas, vistas, índices, esquemas) | `CREATE TABLE clientes (...);` | Define estructura inicial |
-| **ALTER** | Modifica estructura de un objeto existente | `ALTER TABLE clientes ADD telefono VARCHAR(15);` | Agrega, elimina o cambia columnas |
-| **DROP** | Elimina un objeto permanentemente | `DROP TABLE clientes;` | ⚠️ Borra datos y estructura; irreversible |
-| **TRUNCATE** | Borra todos los datos sin eliminar estructura | `TRUNCATE TABLE clientes;` | ⚡ Rápido pero ⚠️ sin ROLLBACK |
+| Comando      | ¿Qué hace?                                       | Ejemplo                                          | Notas                                     |
+| ------------ | ------------------------------------------------ | ------------------------------------------------ | ----------------------------------------- |
+| **CREATE**   | Crea objetos (tablas, vistas, índices, esquemas) | `CREATE TABLE clientes (...);`                   | Define estructura inicial                 |
+| **ALTER**    | Modifica estructura de un objeto existente       | `ALTER TABLE clientes ADD telefono VARCHAR(15);` | Agrega, elimina o cambia columnas         |
+| **DROP**     | Elimina un objeto permanentemente                | `DROP TABLE clientes;`                           | ⚠️ Borra datos y estructura; irreversible |
+| **TRUNCATE** | Borra todos los datos sin eliminar estructura    | `TRUNCATE TABLE clientes;`                       | ⚡ Rápido pero ⚠️ sin ROLLBACK            |
 
 > ⚠️ **TRUNCATE:** No genera log de transacciones, **no se puede revertir**. Usar solo cuando se esté seguro.
 
@@ -168,12 +146,12 @@ Define y modifica la **estructura** de la base de datos (esquema).
 
 Manipula los **datos** dentro de las tablas.
 
-| Comando | ¿Qué hace? | Ejemplo | Notas |
-|---------|------------|---------|-------|
-| **SELECT** | Consulta y recupera datos | `SELECT * FROM clientes WHERE activo = TRUE;` | Solo lectura |
-| **INSERT** | Inserta nuevos registros | `INSERT INTO clientes (nombre) VALUES ('Juan');` | Validado por constraints |
+| Comando    | ¿Qué hace?                     | Ejemplo                                                  | Notas                       |
+| ---------- | ------------------------------ | -------------------------------------------------------- | --------------------------- |
+| **SELECT** | Consulta y recupera datos      | `SELECT * FROM clientes WHERE activo = TRUE;`            | Solo lectura                |
+| **INSERT** | Inserta nuevos registros       | `INSERT INTO clientes (nombre) VALUES ('Juan');`         | Validado por constraints    |
 | **UPDATE** | Actualiza registros existentes | `UPDATE clientes SET email = 'x@mail.com' WHERE id = 1;` | ⚠️ Sin WHERE actualiza TODO |
-| **DELETE** | Elimina registros | `DELETE FROM clientes WHERE id = 1;` | ⚠️ Sin WHERE elimina TODO |
+| **DELETE** | Elimina registros              | `DELETE FROM clientes WHERE id = 1;`                     | ⚠️ Sin WHERE elimina TODO   |
 
 > ⚠️ **UPDATE/DELETE sin WHERE:** Siempre incluir cláusula WHERE para evitar modificar/eliminar todos los registros.
 
@@ -183,10 +161,10 @@ Manipula los **datos** dentro de las tablas.
 
 Controla **permisos y accesos** a la base de datos.
 
-| Comando | ¿Qué hace? | Ejemplo |
-|---------|------------|---------|
-| **GRANT** | Otorga permisos a usuarios o roles | `GRANT SELECT, INSERT ON clientes TO usuario_app;` |
-| **REVOKE** | Revoca permisos previamente otorgados | `REVOKE INSERT ON clientes FROM usuario_app;` |
+| Comando    | ¿Qué hace?                            | Ejemplo                                            |
+| ---------- | ------------------------------------- | -------------------------------------------------- |
+| **GRANT**  | Otorga permisos a usuarios o roles    | `GRANT SELECT, INSERT ON clientes TO usuario_app;` |
+| **REVOKE** | Revoca permisos previamente otorgados | `REVOKE INSERT ON clientes FROM usuario_app;`      |
 
 > 🔐 Aplicar principio de **mínimo privilegio** - solo permisos estrictamente necesarios.
 
@@ -194,20 +172,20 @@ Controla **permisos y accesos** a la base de datos.
 
 Controla las **transacciones** para garantizar ACID.
 
-| Comando | ¿Qué hace? | Ejemplo |
-|---------|------------|---------|
-| **BEGIN** | Inicia una transacción | `BEGIN;` o `START TRANSACTION;` |
-| **COMMIT** | Confirma cambios permanentemente | `COMMIT;` |
-| **ROLLBACK** | Deshace cambios desde BEGIN | `ROLLBACK;` |
-| **SAVEPOINT** | Crea punto de guardado para rollback parcial | `SAVEPOINT antes_de_borrar;` |
+| Comando       | ¿Qué hace?                                   | Ejemplo                         |
+| ------------- | -------------------------------------------- | ------------------------------- |
+| **BEGIN**     | Inicia una transacción                       | `BEGIN;` o `START TRANSACTION;` |
+| **COMMIT**    | Confirma cambios permanentemente             | `COMMIT;`                       |
+| **ROLLBACK**  | Deshace cambios desde BEGIN                  | `ROLLBACK;`                     |
+| **SAVEPOINT** | Crea punto de guardado para rollback parcial | `SAVEPOINT antes_de_borrar;`    |
 
 #### Resumen de Riesgos
 
-| Comando | Riesgo | ¿Reversible? |
-|---------|--------|--------------|
-| SELECT | 🟢 Bajo | N/A |
-| INSERT/UPDATE/DELETE | 🟠 Alto | ✅ Con ROLLBACK |
-| TRUNCATE/DROP | 🔴 Crítico | ❌ No |
+| Comando              | Riesgo     | ¿Reversible?    |
+| -------------------- | ---------- | --------------- |
+| SELECT               | 🟢 Bajo    | N/A             |
+| INSERT/UPDATE/DELETE | 🟠 Alto    | ✅ Con ROLLBACK |
+| TRUNCATE/DROP        | 🔴 Crítico | ❌ No           |
 
 ### Consultas con JOINs
 
@@ -215,12 +193,12 @@ Los **JOINs** materializan la teoría de conjuntos en SQL, permitiendo combinar 
 
 ![Diagrama visual de JOINs](assets/clase-04-bases-de-datos-relacionales/Joins-Diagrama.png)
 
-| Tipo de JOIN | ¿Qué hace? | Sintaxis | ¿Qué devuelve? |
-|--------------|------------|----------|----------------|
-| **INNER JOIN** | Une filas que coinciden en ambas tablas | `SELECT * FROM A INNER JOIN B ON A.id = B.a_id;` | Solo registros con coincidencia en ambas |
-| **LEFT JOIN** | Devuelve todas las filas de la tabla izquierda y las coincidentes de la derecha | `SELECT * FROM A LEFT JOIN B ON A.id = B.a_id;` | Si no hay coincidencia, columnas de B quedan NULL |
-| **RIGHT JOIN** | Igual que LEFT, pero prioriza la tabla derecha | `SELECT * FROM A RIGHT JOIN B ON A.id = B.a_id;` | Devuelve todo de B, y de A solo si hay match |
-| **FULL JOIN** | Une todos los registros de ambas tablas, coincidan o no | `SELECT * FROM A FULL JOIN B ON A.id = B.a_id;` | Coincidencias + filas sin match de ambos lados (con NULL) |
+| Tipo de JOIN   | ¿Qué hace?                                                                      | Sintaxis                                         | ¿Qué devuelve?                                            |
+| -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------- |
+| **INNER JOIN** | Une filas que coinciden en ambas tablas                                         | `SELECT * FROM A INNER JOIN B ON A.id = B.a_id;` | Solo registros con coincidencia en ambas                  |
+| **LEFT JOIN**  | Devuelve todas las filas de la tabla izquierda y las coincidentes de la derecha | `SELECT * FROM A LEFT JOIN B ON A.id = B.a_id;`  | Si no hay coincidencia, columnas de B quedan NULL         |
+| **RIGHT JOIN** | Igual que LEFT, pero prioriza la tabla derecha                                  | `SELECT * FROM A RIGHT JOIN B ON A.id = B.a_id;` | Devuelve todo de B, y de A solo si hay match              |
+| **FULL JOIN**  | Une todos los registros de ambas tablas, coincidan o no                         | `SELECT * FROM A FULL JOIN B ON A.id = B.a_id;`  | Coincidencias + filas sin match de ambos lados (con NULL) |
 
 **Buenas prácticas:**
 
@@ -248,8 +226,8 @@ SELECT * FROM parqueadero WHERE documento_propiet = '123';  -- 0, 1 o N resultad
 
 ```sql
 -- Encontrar parqueaderos SIN propietario asignado
-SELECT p.* 
-FROM parqueadero p 
+SELECT p.*
+FROM parqueadero p
 LEFT JOIN propietario prop ON p.documento_propiet = prop.documento_persona
 WHERE prop.documento_persona IS NULL;
 ```
@@ -262,19 +240,19 @@ WHERE prop.documento_persona IS NULL;
 
 Los **tipos de datos** definen qué clase de información puede almacenarse en cada columna de una tabla y cómo se representa internamente.
 
-| Tipo de dato | Propósito | Ejemplo de uso |
-|--------------|-----------|----------------|
-| **INT** | Almacena números enteros | `edad INT → edad = 25` |
-| **DECIMAL(p,s)** | Almacena números decimales con precisión (p) y escala (s) | `precio DECIMAL(6,2) → precio = 1234.56` |
-| **BOOLEAN** | Almacena valores TRUE o FALSE | `es_activo BOOLEAN → TRUE` |
-| **VARCHAR(n)** | Cadena de texto variable, hasta n caracteres | `nombre VARCHAR(50) → 'Carlos'` |
-| **CHAR(n)** | Cadena de texto de longitud fija | `sexo CHAR(1) → 'M' o 'F'` |
-| **TEXT** | Texto largo sin límite fijo | `comentario TEXT → 'Este producto es excelente'` |
-| **DATE** | Almacena solo una fecha (YYYY-MM-DD) | `fecha_nacimiento DATE → '1990-10-15'` |
-| **TIME** | Almacena solo la hora (HH:MM:SS) | `hora_entrada TIME → '14:30:00'` |
-| **TIMESTAMP** | Almacena fecha y hora (YYYY-MM-DD HH:MM:SS) | `creado_en TIMESTAMP → '2024-06-25 18:23:59'` |
-| **UUID** | Identificador único universal | `id UUID → '550e8400-e29b-41d4-a716-446655440000'` |
-| **BLOB** | Almacena datos binarios (imágenes, archivos, etc.) | `foto BLOB →` imagen en bytes |
+| Tipo de dato     | Propósito                                                 | Ejemplo de uso                                     |
+| ---------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| **INT**          | Almacena números enteros                                  | `edad INT → edad = 25`                             |
+| **DECIMAL(p,s)** | Almacena números decimales con precisión (p) y escala (s) | `precio DECIMAL(6,2) → precio = 1234.56`           |
+| **BOOLEAN**      | Almacena valores TRUE o FALSE                             | `es_activo BOOLEAN → TRUE`                         |
+| **VARCHAR(n)**   | Cadena de texto variable, hasta n caracteres              | `nombre VARCHAR(50) → 'Carlos'`                    |
+| **CHAR(n)**      | Cadena de texto de longitud fija                          | `sexo CHAR(1) → 'M' o 'F'`                         |
+| **TEXT**         | Texto largo sin límite fijo                               | `comentario TEXT → 'Este producto es excelente'`   |
+| **DATE**         | Almacena solo una fecha (YYYY-MM-DD)                      | `fecha_nacimiento DATE → '1990-10-15'`             |
+| **TIME**         | Almacena solo la hora (HH:MM:SS)                          | `hora_entrada TIME → '14:30:00'`                   |
+| **TIMESTAMP**    | Almacena fecha y hora (YYYY-MM-DD HH:MM:SS)               | `creado_en TIMESTAMP → '2024-06-25 18:23:59'`      |
+| **UUID**         | Identificador único universal                             | `id UUID → '550e8400-e29b-41d4-a716-446655440000'` |
+| **BLOB**         | Almacena datos binarios (imágenes, archivos, etc.)        | `foto BLOB →` imagen en bytes                      |
 
 #### Consideraciones importantes
 
@@ -329,11 +307,11 @@ INSERT INTO Usuarios (nombre) VALUES ('José');  -- Funciona correctamente
 
 Cuando las consultas analíticas afectan el rendimiento de la base de datos principal, existen estrategias para separar cargas de trabajo:
 
-| Estrategia | Descripción | Ventaja | Desventaja |
-|------------|-------------|---------|------------|
-| **Read Replica** | Instancia de solo lectura sincronizada con la principal | Datos casi en tiempo real | Costo de infraestructura |
-| **ETL** (Extract, Transform, Load) | Job que extrae, transforma y carga datos a otra DB | Transformaciones complejas | Datos con retraso (T-X) |
-| **Data Warehouse / Cubo** | Almacenamiento multidimensional con datos pre-calculados | Consultas analíticas muy rápidas | Complejidad de implementación |
+| Estrategia                         | Descripción                                              | Ventaja                          | Desventaja                    |
+| ---------------------------------- | -------------------------------------------------------- | -------------------------------- | ----------------------------- |
+| **Read Replica**                   | Instancia de solo lectura sincronizada con la principal  | Datos casi en tiempo real        | Costo de infraestructura      |
+| **ETL** (Extract, Transform, Load) | Job que extrae, transforma y carga datos a otra DB       | Transformaciones complejas       | Datos con retraso (T-X)       |
+| **Data Warehouse / Cubo**          | Almacenamiento multidimensional con datos pre-calculados | Consultas analíticas muy rápidas | Complejidad de implementación |
 
 **ETL y el concepto T-X:**
 
@@ -372,12 +350,12 @@ Las propiedades **ACID** garantizan que las transacciones en bases de datos rela
 
 **Niveles de aislamiento:**
 
-| Nivel | Dirty Read | Non-Repeatable Read | Phantom Read | Uso |
-|-------|------------|---------------------|--------------|-----|
-| **READ UNCOMMITTED** | ✅ | ✅ | ✅ | Reportes no críticos |
-| **READ COMMITTED** | ❌ | ✅ | ✅ | Default PostgreSQL |
-| **REPEATABLE READ** | ❌ | ❌ | ✅ | Default MySQL, transacciones financieras |
-| **SERIALIZABLE** | ❌ | ❌ | ❌ | Sistemas críticos (bancos) |
+| Nivel                | Dirty Read | Non-Repeatable Read | Phantom Read | Uso                                      |
+| -------------------- | ---------- | ------------------- | ------------ | ---------------------------------------- |
+| **READ UNCOMMITTED** | ✅         | ✅                  | ✅           | Reportes no críticos                     |
+| **READ COMMITTED**   | ❌         | ✅                  | ✅           | Default PostgreSQL                       |
+| **REPEATABLE READ**  | ❌         | ❌                  | ✅           | Default MySQL, transacciones financieras |
+| **SERIALIZABLE**     | ❌         | ❌                  | ❌           | Sistemas críticos (bancos)               |
 
 **Problemas de concurrencia:**
 
@@ -423,11 +401,11 @@ Es un vocabulario común y preciso que comparten todos los miembros del proyecto
 
 ### Tipos de Modelos MER
 
-| Modelo | Descripción | Elementos | Dependencia DBMS | Audiencia |
-|--------|-------------|-----------|------------------|----------|
-| **Conceptual** | Representación abstracta del dominio de negocio | Entidades, relaciones, atributos genéricos | Independiente | Stakeholders, analistas |
-| **Lógico** | Estructura de datos relacional | Tablas, PK, FK, tipos de datos genéricos, normalización | Independiente | Arquitectos de datos |
-| **Físico** | Implementación específica del DBMS | DDL SQL, índices, constraints, triggers, optimizaciones | Dependiente (PostgreSQL, MySQL, etc.) | DBAs, desarrolladores |
+| Modelo         | Descripción                                     | Elementos                                               | Dependencia DBMS                      | Audiencia               |
+| -------------- | ----------------------------------------------- | ------------------------------------------------------- | ------------------------------------- | ----------------------- |
+| **Conceptual** | Representación abstracta del dominio de negocio | Entidades, relaciones, atributos genéricos              | Independiente                         | Stakeholders, analistas |
+| **Lógico**     | Estructura de datos relacional                  | Tablas, PK, FK, tipos de datos genéricos, normalización | Independiente                         | Arquitectos de datos    |
+| **Físico**     | Implementación específica del DBMS              | DDL SQL, índices, constraints, triggers, optimizaciones | Dependiente (PostgreSQL, MySQL, etc.) | DBAs, desarrolladores   |
 
 ### Elementos clave
 
@@ -439,10 +417,10 @@ Es un vocabulario común y preciso que comparten todos los miembros del proyecto
 
 **Tipos:**
 
-| Tipo | Características | Representación | Ejemplos |
-|------|----------------|----------------|----------|
-| **Fuerte** | Existe independientemente, PK propia | Rectángulo simple | Cliente, Producto, Empleado |
-| **Débil** | Depende de otra entidad, PK compuesta (incluye FK) | Rectángulo doble ║ ║ | Dependiente, Habitación, Línea de Pedido |
+| Tipo           | Características                                              | Representación                | Ejemplos                                                |
+| -------------- | ------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------- |
+| **Fuerte**     | Existe independientemente, PK propia                         | Rectángulo simple             | Cliente, Producto, Empleado                             |
+| **Débil**      | Depende de otra entidad, PK compuesta (incluye FK)           | Rectángulo doble ║ ║          | Dependiente, Habitación, Línea de Pedido                |
 | **Asociativa** | Conecta entidades en relaciones N:M, tiene atributos propios | Rombo dentro de rectángulo ◇▭ | Inscripción (Estudiante-Curso), Venta (Producto-Pedido) |
 
 **Ejemplo de entidad débil:**
@@ -460,13 +438,13 @@ Empleado (Fuerte) ═══ tiene ═══ Dependiente (Débil)
 
 **Tipos:**
 
-| Tipo | Descripción | Ejemplo | Representación |
-|------|-------------|---------|----------------|
-| **Simple** | Indivisible | edad, precio | Óvalo simple |
-| **Compuesto** | Descomponible | nombre_completo, dirección | Óvalo con sub-óvalos |
-| **Multi-valuado** | Múltiples valores | teléfonos, emails | Óvalo doble {◯◯} |
-| **Derivado** | Se calcula | edad, precio_con_iva | Óvalo punteado ··◯·· |
-| **Clave** | Identifica registro | id_cliente | Óvalo subrayado |
+| Tipo              | Descripción         | Ejemplo                    | Representación       |
+| ----------------- | ------------------- | -------------------------- | -------------------- |
+| **Simple**        | Indivisible         | edad, precio               | Óvalo simple         |
+| **Compuesto**     | Descomponible       | nombre_completo, dirección | Óvalo con sub-óvalos |
+| **Multi-valuado** | Múltiples valores   | teléfonos, emails          | Óvalo doble {◯◯}     |
+| **Derivado**      | Se calcula          | edad, precio_con_iva       | Óvalo punteado ··◯·· |
+| **Clave**         | Identifica registro | id_cliente                 | Óvalo subrayado      |
 
 **Manejo de atributos multi-valuados:**
 
@@ -493,11 +471,11 @@ Empleado (Fuerte) ═══ tiene ═══ Dependiente (Débil)
 
 Las relaciones se clasifican según su **cardinalidad** (número de instancias que pueden asociarse).
 
-| Tipo | Cardinalidad | Descripción | Ejemplo | Implementación |
-|------|--------------|-------------|---------|----------------|
-| **Uno a Uno (1:1)** | Una instancia A ↔ Una instancia B | Cada registro de A se relaciona con exactamente uno de B | Persona ↔ Pasaporte | FK con constraint UNIQUE |
-| **Uno a Muchos (1:N)** | Una instancia A ↔ Múltiples instancias B | Un registro de A se relaciona con varios de B | Cliente → Pedidos | FK en tabla del lado "muchos" |
-| **Muchos a Muchos (N:M)** | Múltiples instancias A ↔ Múltiples instancias B | Varios registros de A con varios de B | Estudiantes ↔ Cursos | Tabla intermedia con PK compuesta |
+| Tipo                      | Cardinalidad                                    | Descripción                                              | Ejemplo              | Implementación                    |
+| ------------------------- | ----------------------------------------------- | -------------------------------------------------------- | -------------------- | --------------------------------- |
+| **Uno a Uno (1:1)**       | Una instancia A ↔ Una instancia B               | Cada registro de A se relaciona con exactamente uno de B | Persona ↔ Pasaporte  | FK con constraint UNIQUE          |
+| **Uno a Muchos (1:N)**    | Una instancia A ↔ Múltiples instancias B        | Un registro de A se relaciona con varios de B            | Cliente → Pedidos    | FK en tabla del lado "muchos"     |
+| **Muchos a Muchos (N:M)** | Múltiples instancias A ↔ Múltiples instancias B | Varios registros de A con varios de B                    | Estudiantes ↔ Cursos | Tabla intermedia con PK compuesta |
 
 #### Producto Cartesiano y Tablas Asociativas
 
@@ -542,12 +520,12 @@ Empleado ────pertenece──── Departamento
 
 **Cardinalidades comunes:**
 
-| Cardinalidad | Significado | Ejemplo |
-|--------------|-------------|---------|
-| **(0,1)** | Opcional, máximo uno | Persona → Licencia de conducir |
-| **(1,1)** | Obligatorio, exactamente uno | Pedido → Cliente |
-| **(0,N)** | Opcional, sin límite | Cliente → Pedidos |
-| **(1,N)** | Al menos uno, sin límite | Curso → Estudiantes |
+| Cardinalidad | Significado                  | Ejemplo                        |
+| ------------ | ---------------------------- | ------------------------------ |
+| **(0,1)**    | Opcional, máximo uno         | Persona → Licencia de conducir |
+| **(1,1)**    | Obligatorio, exactamente uno | Pedido → Cliente               |
+| **(0,N)**    | Opcional, sin límite         | Cliente → Pedidos              |
+| **(1,N)**    | Al menos uno, sin límite     | Curso → Estudiantes            |
 
 ### Independencia de implementación
 
@@ -592,9 +570,9 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 **Ejemplo: ❌ No está en 1FN:**
 
-| id | nombre | telefonos | cursos |
-|----|--------|-----------|--------|
-| 1 | Juan | 555-1234, 555-5678 | Math, Physics |
+| id  | nombre | telefonos          | cursos        |
+| --- | ------ | ------------------ | ------------- |
+| 1   | Juan   | 555-1234, 555-5678 | Math, Physics |
 
 **Problema:** `telefonos` y `cursos` tienen múltiples valores.
 
@@ -609,8 +587,8 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 **Ejemplo: ❌ No está en 2FN:**
 
 | id_estudiante | id_curso | nombre_estudiante | nombre_curso | calificacion |
-|---------------|----------|-------------------|--------------|--------------|
-| 1 | 101 | Juan | Matemáticas | 9.5 |
+| ------------- | -------- | ----------------- | ------------ | ------------ |
+| 1             | 101      | Juan              | Matemáticas  | 9.5          |
 
 **PK:** (id_estudiante, id_curso)
 
@@ -627,9 +605,9 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 **Ejemplo: ❌ No está en 3FN:**
 
 | id_empleado | nombre | id_departamento | nombre_departamento | ubicacion_departamento |
-|-------------|--------|-----------------|---------------------|------------------------|
-| 1 | Juan | 10 | Ventas | Edificio A |
-| 2 | Ana | 20 | IT | Edificio B |
+| ----------- | ------ | --------------- | ------------------- | ---------------------- |
+| 1           | Juan   | 10              | Ventas              | Edificio A             |
+| 2           | Ana    | 20              | IT                  | Edificio B             |
 
 **PK:** id_empleado
 
@@ -646,9 +624,9 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 **Ejemplo: ❌ Está en 3FN pero NO en FNBC:**
 
 | id_estudiante | id_curso | instructor |
-|---------------|----------|------------|
-| 1 | Math101 | Dr. Smith |
-| 2 | Math101 | Dr. Smith |
+| ------------- | -------- | ---------- |
+| 1             | Math101  | Dr. Smith  |
+| 2             | Math101  | Dr. Smith  |
 
 **Regla de negocio:** Un instructor solo enseña un curso específico.
 
@@ -658,12 +636,12 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 ### Resumen de Formas Normales
 
-| Forma Normal | Requisito | Qué elimina |
-|--------------|-----------|-------------|
-| **1FN** | Base | Valores no atómicos, grupos repetitivos |
-| **2FN** | En 1FN | Dependencias parciales (en claves compuestas) |
-| **3FN** | En 2FN | Dependencias transitivas (no-clave → no-clave) |
-| **FNBC** | En 3FN | Dependencias de no-superclave |
+| Forma Normal | Requisito | Qué elimina                                    |
+| ------------ | --------- | ---------------------------------------------- |
+| **1FN**      | Base      | Valores no atómicos, grupos repetitivos        |
+| **2FN**      | En 1FN    | Dependencias parciales (en claves compuestas)  |
+| **3FN**      | En 2FN    | Dependencias transitivas (no-clave → no-clave) |
+| **FNBC**     | En 3FN    | Dependencias de no-superclave                  |
 
 **Guía:** 1FN es obligatorio, 3FN suficiente para la mayoría, FNBC para sistemas críticos.
 
@@ -697,7 +675,7 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 
 ---
 
-## Resumen final
+## Resumen Final
 
 ### Conceptos clave
 
@@ -764,7 +742,6 @@ La **normalización** es el proceso de organizar datos en una base de datos para
 - **Performance:** Crear índices en FKs y columnas de búsqueda frecuente
 
 ---
-
 
 ### Diagrama MER Lógico Detallado
 
@@ -1167,11 +1144,11 @@ WHERE par.documento_propiet IS NULL;
 
 -- Personas que son propietarios y arrendatarios Y tienen más de 1 parqueadero --
 SELECT prop.documento_persona, COUNT(1) FROM ejercicio_parqueaderos.propietario as prop
-INNER JOIN ejercicio_parqueaderos.arrendatario as arr ON prop.documento_persona = arr.documento_persona 
+INNER JOIN ejercicio_parqueaderos.arrendatario as arr ON prop.documento_persona = arr.documento_persona
 -- Hasta aquí PERSONAS propietarias y arrendatarias --
 INNER JOIN ejercicio_parqueaderos.parqueadero as par ON par.documento_propiet = arr.documento_persona
 -- Hasta aquí son PERSONAS propietarias y arrendatarias Y tienen 1+ PARQUEADERO --
-GROUP BY prop.documento_persona 
+GROUP BY prop.documento_persona
 -- TENIENDO un recuento de Parqueaderos > 1 --
 HAVING COUNT(1) > 1;
 ```

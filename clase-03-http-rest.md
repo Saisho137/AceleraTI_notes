@@ -3,19 +3,13 @@
 ## Índice
 
 1. [HTTP](#http)
-   - [Verbos](#verbos)
-   - [Códigos de respuesta](#códigos-de-respuesta)
-   - [Idempotencia](#idempotencia)
-   - [CORS](#cors)
-   - [HealthCheck](#healthcheck)
 2. [REST](#rest)
-   - [Principios REST](#principios-rest)
-   - [Gateway](#gateway)
-   - [Proxy](#proxy)
-   - [REST vs SOAP](#rest-vs-soap)
 3. [Adicional](#adicional)
-   - [Swagger](#swagger)
-   - [Modelo OSI](#modelo-osi)
+4. [Resumen Final](#resumen-final)
+
+## Resumen
+
+Fundamentos del protocolo **HTTP** (verbos, códigos de respuesta, idempotencia, CORS, health checks) y los principios de **REST** (stateless, cacheable, interfaz uniforme). Incluye conceptos de **API Gateway**, **Proxy**, la comparativa **REST vs SOAP**, documentación con **Swagger/OpenAPI** y el **Modelo OSI** de 7 capas.
 
 ---
 
@@ -33,19 +27,19 @@ Se puede pasar información por Headers, Body, Query Params, Path params…
 
 Los verbos HTTP (también llamados métodos) definen la acción que se desea realizar sobre un recurso identificado por una URL.
 
-| Verbo | Propósito | Idempotente | Seguro | Uso típico |
-|-------|-----------|-------------|--------|-----------|
-| **GET** | Obtener/Leer datos | Sí | Sí | Obtener información de un recurso |
-| **POST** | Crear/Enviar datos | No | No | Crear nuevos recursos, enviar formularios |
-| **PUT** | Crear/Actualizar completamente | Sí | No | Reemplazar un recurso completo |
-| **PATCH** | Actualizar parcialmente | No* | No | Modificar partes específicas de un recurso |
-| **DELETE** | Eliminar | Sí | No | Eliminar un recurso |
-| **HEAD** | Obtener metadatos | Sí | Sí | Verificar existencia, obtener headers |
-| **OPTIONS** | Obtener opciones permitidas | Sí | Sí | CORS preflight, capacidades del servidor |
-| **TRACE** | Diagnóstico de ruta | Sí | Sí | Debugging (raramente usado) |
-| **CONNECT** | Establecer túnel | No | No | Proxy HTTP/HTTPS |
+| Verbo       | Propósito                      | Idempotente | Seguro | Uso típico                                 |
+| ----------- | ------------------------------ | ----------- | ------ | ------------------------------------------ |
+| **GET**     | Obtener/Leer datos             | Sí          | Sí     | Obtener información de un recurso          |
+| **POST**    | Crear/Enviar datos             | No          | No     | Crear nuevos recursos, enviar formularios  |
+| **PUT**     | Crear/Actualizar completamente | Sí          | No     | Reemplazar un recurso completo             |
+| **PATCH**   | Actualizar parcialmente        | No\*        | No     | Modificar partes específicas de un recurso |
+| **DELETE**  | Eliminar                       | Sí          | No     | Eliminar un recurso                        |
+| **HEAD**    | Obtener metadatos              | Sí          | Sí     | Verificar existencia, obtener headers      |
+| **OPTIONS** | Obtener opciones permitidas    | Sí          | Sí     | CORS preflight, capacidades del servidor   |
+| **TRACE**   | Diagnóstico de ruta            | Sí          | Sí     | Debugging (raramente usado)                |
+| **CONNECT** | Establecer túnel               | No          | No     | Proxy HTTP/HTTPS                           |
 
-*PATCH puede ser idempotente dependiendo de la implementación
+\*PATCH puede ser idempotente dependiendo de la implementación
 
 **Ejemplos prácticos:**
 
@@ -119,15 +113,15 @@ Si ejecuto la misma operación 1 vez o 100 veces, el resultado final en el servi
 
 **Verbos y su idempotencia:**
 
-| Verbo | ¿Idempotente? | Explicación |
-|-------|---------------|-------------|
-| **GET** | ✅ Sí | Solo lee datos, no modifica el estado |
-| **HEAD** | ✅ Sí | Solo obtiene metadatos, no modifica |
-| **OPTIONS** | ✅ Sí | Solo obtiene capacidades, no modifica |
-| **PUT** | ✅ Sí | Reemplaza completamente el recurso |
-| **DELETE** | ✅ Sí | Eliminar algo ya eliminado no cambia el estado |
-| **POST** | ❌ No | Cada ejecución puede crear nuevos recursos |
-| **PATCH** | ⚠️ Depende | Puede ser idempotente según implementación |
+| Verbo       | ¿Idempotente? | Explicación                                    |
+| ----------- | ------------- | ---------------------------------------------- |
+| **GET**     | ✅ Sí         | Solo lee datos, no modifica el estado          |
+| **HEAD**    | ✅ Sí         | Solo obtiene metadatos, no modifica            |
+| **OPTIONS** | ✅ Sí         | Solo obtiene capacidades, no modifica          |
+| **PUT**     | ✅ Sí         | Reemplaza completamente el recurso             |
+| **DELETE**  | ✅ Sí         | Eliminar algo ya eliminado no cambia el estado |
+| **POST**    | ❌ No         | Cada ejecución puede crear nuevos recursos     |
+| **PATCH**   | ⚠️ Depende    | Puede ser idempotente según implementación     |
 
 **¿Por qué es importante?**
 
@@ -182,22 +176,22 @@ Content-Type: application/json
 public ResponseEntity<Usuario> crearUsuario(
     @RequestHeader("Idempotency-Key") String idempotencyKey,
     @RequestBody Usuario usuario) {
-    
+
     // Verificar si ya se procesó esta clave
-    Optional<OperacionIdempotente> operacionExistente = 
+    Optional<OperacionIdempotente> operacionExistente =
         idempotencyService.buscarPorClave(idempotencyKey);
-    
+
     if (operacionExistente.isPresent()) {
         // Retornar resultado anterior
         return ResponseEntity.ok(operacionExistente.get().getResultado());
     }
-    
+
     // Procesar nueva operación
     Usuario nuevoUsuario = usuarioService.crear(usuario);
-    
+
     // Guardar operación para futuras consultas
     idempotencyService.guardar(idempotencyKey, nuevoUsuario);
-    
+
     return ResponseEntity.status(201).body(nuevoUsuario);
 }
 ```
@@ -231,8 +225,8 @@ Un origen está compuesto por: `protocolo + dominio + puerto`
 ```javascript
 // AJAX tradicional (XMLHttpRequest)
 const xhr = new XMLHttpRequest();
-xhr.open('GET', 'https://api.ejemplo.com/datos');
-xhr.onload = function() {
+xhr.open("GET", "https://api.ejemplo.com/datos");
+xhr.onload = function () {
   if (xhr.status === 200) {
     console.log(xhr.responseText);
   }
@@ -240,9 +234,9 @@ xhr.onload = function() {
 xhr.send();
 
 // AJAX moderno (fetch API)
-fetch('https://api.ejemplo.com/datos')
-  .then(response => response.json())
-  .then(data => console.log(data));
+fetch("https://api.ejemplo.com/datos")
+  .then((response) => response.json())
+  .then((data) => console.log(data));
 ```
 
 Sin CORS, una página maliciosa en `evil.com` no podría leer datos de tu cuenta bancaria en `banco.com`.
@@ -259,8 +253,7 @@ Peticiones que cumplen:
 
 ```javascript
 // Página en https://miapp.com
-fetch('https://api.otrodominio.com/datos')
-  .then(response => response.json())
+fetch("https://api.otrodominio.com/datos").then((response) => response.json());
 ```
 
 El navegador envía:
@@ -285,13 +278,13 @@ Peticiones "complejas" requieren una petición preflight para verificar permisos
 
 ```javascript
 // Petición que requiere preflight
-fetch('https://api.otrodominio.com/usuarios', {
-  method: 'POST',
+fetch("https://api.otrodominio.com/usuarios", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer token123'
+    "Content-Type": "application/json",
+    Authorization: "Bearer token123",
   },
-  body: JSON.stringify({nombre: 'Juan'})
+  body: JSON.stringify({ nombre: "Juan" }),
 });
 ```
 
@@ -327,14 +320,14 @@ Authorization: Bearer token123
 
 ##### **Headers CORS más importantes:**
 
-| Header | Descripción | Ejemplo |
-|--------|-------------|----------|
-| `Access-Control-Allow-Origin` | Orígenes permitidos | `*` o `https://miapp.com` |
-| `Access-Control-Allow-Methods` | Métodos HTTP permitidos | `GET, POST, PUT, DELETE` |
-| `Access-Control-Allow-Headers` | Headers personalizados permitidos | `Content-Type, Authorization` |
-| `Access-Control-Allow-Credentials` | Permite envío de cookies/auth | `true` |
-| `Access-Control-Max-Age` | Cache del preflight (segundos) | `86400` |
-| `Access-Control-Expose-Headers` | Headers disponibles en JS | `X-Total-Count` |
+| Header                             | Descripción                       | Ejemplo                       |
+| ---------------------------------- | --------------------------------- | ----------------------------- |
+| `Access-Control-Allow-Origin`      | Orígenes permitidos               | `*` o `https://miapp.com`     |
+| `Access-Control-Allow-Methods`     | Métodos HTTP permitidos           | `GET, POST, PUT, DELETE`      |
+| `Access-Control-Allow-Headers`     | Headers personalizados permitidos | `Content-Type, Authorization` |
+| `Access-Control-Allow-Credentials` | Permite envío de cookies/auth     | `true`                        |
+| `Access-Control-Max-Age`           | Cache del preflight (segundos)    | `86400`                       |
+| `Access-Control-Expose-Headers`    | Headers disponibles en JS         | `X-Total-Count`               |
 
 ##### **¿Cómo solucionar problemas de CORS?**
 
@@ -421,7 +414,7 @@ Content-Type: application/json
 
 ```http
 GET    /api/usuarios          # Listar usuarios
-GET    /api/usuarios/123      # Obtener usuario específico  
+GET    /api/usuarios/123      # Obtener usuario específico
 POST   /api/usuarios          # Crear nuevo usuario
 PUT    /api/usuarios/123      # Actualizar usuario completo
 PATCH  /api/usuarios/123      # Actualizar parcialmente
@@ -432,14 +425,14 @@ DELETE /api/usuarios/123      # Eliminar usuario
 
 REST define 6 principios fundamentales para el diseño de APIs web:
 
-| Principio | Descripción | Ejemplo | Beneficio |
-|-----------|-------------|---------|----------|
-| **Cliente-Servidor** | Separación de responsabilidades entre interfaz de usuario y almacenamiento de datos | Frontend (React) se comunica con Backend (Spring Boot) vía HTTP | Escalabilidad independiente, equipos especializados |
-| **Sin Estado (Stateless)** | Cada petición debe contener toda la información necesaria | Incluir JWT token en cada petición en lugar de sesiones | Escalabilidad horizontal, simplicidad |
-| **Cacheable** | Las respuestas deben indicar si pueden ser almacenadas en cache | Headers: `Cache-Control: max-age=3600` | Mejor performance, menor carga del servidor |
-| **Interfaz Uniforme** | Uso consistente de HTTP y URIs para acceder a recursos | Todos los recursos usan GET/POST/PUT/DELETE de forma estándar | Simplicidad, interoperabilidad |
-| **Sistema en Capas** | Arquitectura puede tener intermediarios (proxies, gateways) | Cliente → Load Balancer → API Gateway → Microservicio | Seguridad, escalabilidad, flexibilidad |
-| **Código bajo Demanda** | El servidor puede enviar código ejecutable (opcional) | JavaScript enviado desde el servidor | Extensibilidad dinámica |
+| Principio                  | Descripción                                                                         | Ejemplo                                                         | Beneficio                                           |
+| -------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
+| **Cliente-Servidor**       | Separación de responsabilidades entre interfaz de usuario y almacenamiento de datos | Frontend (React) se comunica con Backend (Spring Boot) vía HTTP | Escalabilidad independiente, equipos especializados |
+| **Sin Estado (Stateless)** | Cada petición debe contener toda la información necesaria                           | Incluir JWT token en cada petición en lugar de sesiones         | Escalabilidad horizontal, simplicidad               |
+| **Cacheable**              | Las respuestas deben indicar si pueden ser almacenadas en cache                     | Headers: `Cache-Control: max-age=3600`                          | Mejor performance, menor carga del servidor         |
+| **Interfaz Uniforme**      | Uso consistente de HTTP y URIs para acceder a recursos                              | Todos los recursos usan GET/POST/PUT/DELETE de forma estándar   | Simplicidad, interoperabilidad                      |
+| **Sistema en Capas**       | Arquitectura puede tener intermediarios (proxies, gateways)                         | Cliente → Load Balancer → API Gateway → Microservicio           | Seguridad, escalabilidad, flexibilidad              |
+| **Código bajo Demanda**    | El servidor puede enviar código ejecutable (opcional)                               | JavaScript enviado desde el servidor                            | Extensibilidad dinámica                             |
 
 **Detalles de cada principio:**
 
@@ -674,21 +667,21 @@ gzip_types text/plain application/json application/javascript text/css;
 
 **SOAP (Simple Object Access Protocol)** y **REST (Representational State Transfer)** son dos enfoques diferentes para crear APIs web.
 
-| Aspecto | REST | SOAP |
-|---------|------|------|
-| **Tipo** | Estilo arquitectónico | Protocolo |
-| **Formato** | JSON, XML, HTML, texto | Solo XML |
-| **Transporte** | HTTP, HTTPS | HTTP, HTTPS, SMTP, TCP, UDP |
-| **Métodos** | HTTP verbs (GET, POST, PUT, DELETE) | Solo POST |
-| **Definición de contrato** | OpenAPI/Swagger (opcional) | WSDL (obligatorio) |
-| **Complejidad** | Simple, lightweight | Complejo, heavyweight |
-| **Performance** | Rápido, menor overhead | Más lento, mayor overhead |
-| **Caching** | Sí (HTTP caching) | No (siempre POST) |
-| **Seguridad** | HTTPS, OAuth, JWT | WS-Security, SAML |
-| **Estandarización** | Menos rígido | Altamente estandarizado |
-| **Tolerancia a errores** | Manejo HTTP estándar | SOAP Faults detallados |
-| **Tamaño del mensaje** | Pequeño | Grande (XML verbose) |
-| **Facilidad de uso** | Fácil | Difícil, curva de aprendizaje |
+| Aspecto                    | REST                                | SOAP                          |
+| -------------------------- | ----------------------------------- | ----------------------------- |
+| **Tipo**                   | Estilo arquitectónico               | Protocolo                     |
+| **Formato**                | JSON, XML, HTML, texto              | Solo XML                      |
+| **Transporte**             | HTTP, HTTPS                         | HTTP, HTTPS, SMTP, TCP, UDP   |
+| **Métodos**                | HTTP verbs (GET, POST, PUT, DELETE) | Solo POST                     |
+| **Definición de contrato** | OpenAPI/Swagger (opcional)          | WSDL (obligatorio)            |
+| **Complejidad**            | Simple, lightweight                 | Complejo, heavyweight         |
+| **Performance**            | Rápido, menor overhead              | Más lento, mayor overhead     |
+| **Caching**                | Sí (HTTP caching)                   | No (siempre POST)             |
+| **Seguridad**              | HTTPS, OAuth, JWT                   | WS-Security, SAML             |
+| **Estandarización**        | Menos rígido                        | Altamente estandarizado       |
+| **Tolerancia a errores**   | Manejo HTTP estándar                | SOAP Faults detallados        |
+| **Tamaño del mensaje**     | Pequeño                             | Grande (XML verbose)          |
+| **Facilidad de uso**       | Fácil                               | Difícil, curva de aprendizaje |
 
 **WSDL (Web Services Description Language):**
 
@@ -698,7 +691,7 @@ WSDL es un documento XML que describe completamente un servicio SOAP:
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
              targetNamespace="http://miservicio.com/usuarios">
-             
+
   <!-- Tipos de datos -->
   <types>
     <xsd:schema targetNamespace="http://miservicio.com/usuarios">
@@ -709,7 +702,7 @@ WSDL es un documento XML que describe completamente un servicio SOAP:
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
-      
+
       <xsd:element name="GetUsuarioResponse">
         <xsd:complexType>
           <xsd:sequence>
@@ -719,16 +712,16 @@ WSDL es un documento XML que describe completamente un servicio SOAP:
       </xsd:element>
     </xsd:schema>
   </types>
-  
+
   <!-- Mensajes -->
   <message name="GetUsuarioRequestMessage">
     <part name="parameters" element="tns:GetUsuarioRequest"/>
   </message>
-  
+
   <message name="GetUsuarioResponseMessage">
     <part name="parameters" element="tns:GetUsuarioResponse"/>
   </message>
-  
+
   <!-- PortType (interfaz) -->
   <portType name="UsuarioPortType">
     <operation name="GetUsuario">
@@ -736,7 +729,7 @@ WSDL es un documento XML que describe completamente un servicio SOAP:
       <output message="tns:GetUsuarioResponseMessage"/>
     </operation>
   </portType>
-  
+
   <!-- Binding (cómo se envían los mensajes) -->
   <binding name="UsuarioSoapBinding" type="tns:UsuarioPortType">
     <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -750,7 +743,7 @@ WSDL es un documento XML que describe completamente un servicio SOAP:
       </output>
     </operation>
   </binding>
-  
+
   <!-- Service (endpoint) -->
   <service name="UsuarioService">
     <port name="UsuarioPort" binding="tns:UsuarioSoapBinding">
@@ -868,14 +861,14 @@ El **Modelo OSI** describe cómo los datos viajan por una red en 7 capas. Para d
 
 ![Diagrama del modelo OSI de 7 capas para comunicación en red](assets/clase-03-http-rest/modelo-osi-capas.png)
 
-| Capa | Nombre | Protocolos Web | Ejemplo en Desarrollo |
-|------|--------|----------------|---------------------|
-| **7** | **Aplicación** | HTTP, HTTPS, WebSocket | APIs REST, GraphQL |
-| **6** | **Presentación** | TLS/SSL, JSON, XML | Cifrado, serialización |
-| **5** | **Sesión** | JWT, Cookies | Autenticación, estado |
-| **4** | **Transporte** | **TCP**, **UDP** | Conexiones confiables/rápidas |
-| **3** | **Red** | IP | Enrutamiento entre servidores |
-| **2-1** | **Enlace/Física** | Ethernet, Wi-Fi | Infraestructura de red |
+| Capa    | Nombre            | Protocolos Web         | Ejemplo en Desarrollo         |
+| ------- | ----------------- | ---------------------- | ----------------------------- |
+| **7**   | **Aplicación**    | HTTP, HTTPS, WebSocket | APIs REST, GraphQL            |
+| **6**   | **Presentación**  | TLS/SSL, JSON, XML     | Cifrado, serialización        |
+| **5**   | **Sesión**        | JWT, Cookies           | Autenticación, estado         |
+| **4**   | **Transporte**    | **TCP**, **UDP**       | Conexiones confiables/rápidas |
+| **3**   | **Red**           | IP                     | Enrutamiento entre servidores |
+| **2-1** | **Enlace/Física** | Ethernet, Wi-Fi        | Infraestructura de red        |
 
 ### TCP vs UDP en Desarrollo Web
 
@@ -896,7 +889,7 @@ El **Modelo OSI** describe cómo los datos viajan por una red en 7 capas. Para d
 ```text
 [Aplicación]    fetch('/api/users') - JavaScript
 [Presentación]  HTTPS/TLS - Cifrado
-[Sesión]        Bearer Token - Autenticación  
+[Sesión]        Bearer Token - Autenticación
 [Transporte]    TCP - Conexión confiable
 [Red]           IP - Enrutamiento
 [Enlace/Física] Ethernet/WiFi - Hardware
@@ -908,7 +901,7 @@ El **Modelo OSI** describe cómo los datos viajan por una red en 7 capas. Para d
 # Capa 3 (Red)
 ping api.miservicio.com
 
-# Capa 4 (Transporte)  
+# Capa 4 (Transporte)
 telnet api.miservicio.com 80
 
 # Capa 7 (Aplicación)
@@ -945,4 +938,4 @@ curl -v https://api.miservicio.com/health
 
 ---
 
-> **Tarea**: Hacer un programa sencillo en Java, compilarlo a mano y ejecutarlo
+> **Ejercicio:** Hacer un programa sencillo en Java, compilarlo a mano y ejecutarlo
