@@ -1,4 +1,4 @@
-# Clase 6 - Spring Data / JPA
+# Clase 7 - Spring Data / JPA
 
 ---
 
@@ -56,7 +56,7 @@ La forma **tradicional** de establecer conexión entre Java y una base de datos.
 
 ### Flujo de conexión
 
-![Flujo de conexión JPA](assets/clase-06-spring-data-jpa/flujo-conexion-jpa.png)
+![Flujo de conexión JPA](assets/clase-07-spring-data-jpa/flujo-conexion-jpa.png)
 
 **Capas de la arquitectura:**
 
@@ -110,7 +110,7 @@ public class Estudiante {
 
 Las anotaciones de relación definen cómo se conectan las entidades entre sí.
 
-![Anotaciones de relación JPA](assets/clase-06-spring-data-jpa/anotaciones-relacion-jpa.png)
+![Anotaciones de relación JPA](assets/clase-07-spring-data-jpa/anotaciones-relacion-jpa.png)
 
 | Anotación     | Cardinalidad | Descripción                                          |
 | ------------- | ------------ | ---------------------------------------------------- |
@@ -155,4 +155,4 @@ public class Empleado {
 
 ## Ejercicio Práctico: Sistema de Gestión de Colegio
 
-![Ejercicio: Sistema de gestión de colegio](assets/clase-06-spring-data-jpa/tarea-sistema-gestion-colegio.png)
+![Ejercicio: Sistema de gestión de colegio](assets/clase-07-spring-data-jpa/tarea-sistema-gestion-colegio.png)

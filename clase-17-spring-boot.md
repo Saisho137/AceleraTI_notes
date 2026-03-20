@@ -1,4 +1,4 @@
-# Clase 16 - Spring Boot
+# Clase 17 - Spring Boot
 
 Diapositivas:
 
@@ -50,7 +50,7 @@ Spring Framework es un framework de desarrollo Java empresarial creado por Rod J
 
 ### El problema que Spring resuelve
 
-![Diagrama - Problema que Spring resuelve con IoC](assets/clase-16-spring-boot/spring-ioc-problema-que-resuelve.png)
+![Diagrama - Problema que Spring resuelve con IoC](assets/clase-17-spring-boot/spring-ioc-problema-que-resuelve.png)
 
 ### Spring vs Spring Boot
 
@@ -99,7 +99,7 @@ spring:
 
 ### Filosofía de Spring Boot
 
-![Filosofía Spring Boot - Cero XML](assets/clase-16-spring-boot/filosofia-cero-xml.png)
+![Filosofía Spring Boot - Cero XML](assets/clase-17-spring-boot/filosofia-cero-xml.png)
 
 ### Evolución y Versiones
 
@@ -152,7 +152,7 @@ curl https://start.spring.io/starter.zip \
 
 ### Estructura del Proyecto
 
-![Estructura de proyecto Spring Boot](assets/clase-16-spring-boot/estructura-proyecto-spring-boot.png)
+![Estructura de proyecto Spring Boot](assets/clase-17-spring-boot/estructura-proyecto-spring-boot.png)
 
 ### @SpringBootApplication
 
@@ -175,7 +175,7 @@ public class MiProyectoApplication {
 
 #### @SpringBootApplication: Composición
 
-![Composición de @SpringBootApplication](assets/clase-16-spring-boot/springbootapplication-composicion.png)
+![Composición de @SpringBootApplication](assets/clase-17-spring-boot/springbootapplication-composicion.png)
 
 > `@ComponentScan` solo escanea el paquete de la clase principal y sus sub-paquetes. Si colocas beans en un paquete diferente, Spring no los encontrará.
 
@@ -227,7 +227,7 @@ java -jar mi-proyecto.jar --spring.profiles.active=dev
 
 ### Qué pasa al ejecutar
 
-![Flujo de ejecución de Spring Boot](assets/clase-16-spring-boot/flujo-ejecucion-spring-boot.png)
+![Flujo de ejecución de Spring Boot](assets/clase-17-spring-boot/flujo-ejecucion-spring-boot.png)
 
 ---
 
@@ -237,7 +237,7 @@ java -jar mi-proyecto.jar --spring.profiles.active=dev
 
 Spring Boot examina las dependencias en el classpath y configura automáticamente los beans necesarios.
 
-![Auto-configuración por classpath](assets/clase-16-spring-boot/auto-configuracion-classpath.png)
+![Auto-configuración por classpath](assets/clase-17-spring-boot/auto-configuracion-classpath.png)
 
 #### Cómo funciona la Auto-Configuración
 
@@ -289,7 +289,7 @@ Spring Boot incluye un servidor HTTP embebido — no necesitas instalar Tomcat e
 
 **Tradicional:**
 
-![Despliegue tradicional con Tomcat externo](assets/clase-16-spring-boot/despliegue-tradicional-tomcat.png)
+![Despliegue tradicional con Tomcat externo](assets/clase-17-spring-boot/despliegue-tradicional-tomcat.png)
 
 - Instalar y configurar Tomcat
 - Desplegar WAR files
@@ -297,7 +297,7 @@ Spring Boot incluye un servidor HTTP embebido — no necesitas instalar Tomcat e
 
 **Spring Boot:**
 
-![Despliegue con servidor embebido de Spring Boot](assets/clase-16-spring-boot/despliegue-spring-boot-embebido.png)
+![Despliegue con servidor embebido de Spring Boot](assets/clase-17-spring-boot/despliegue-spring-boot-embebido.png)
 
 - `java -jar tu-app.jar`
 - Todo en un solo artefacto
@@ -390,13 +390,13 @@ El `ApplicationContext` es el contenedor IoC de Spring. Gestiona todos los beans
 
 #### ApplicationContext: Diagrama
 
-![Diagrama del ApplicationContext](assets/clase-16-spring-boot/application-context-diagrama.png)
+![Diagrama del ApplicationContext](assets/clase-17-spring-boot/application-context-diagrama.png)
 
 ### Estereotipos: @Component y Especializaciones
 
 Spring define estereotipos para clasificar beans según su rol arquitectónico:
 
-![Jerarquía de estereotipos @Component](assets/clase-16-spring-boot/estereotipos-component.png)
+![Jerarquía de estereotipos @Component](assets/clase-17-spring-boot/estereotipos-component.png)
 
 #### Tabla de Referencia de Estereotipos
 
@@ -494,7 +494,7 @@ public class JdbcOrderRepository implements OrderRepository {
 
 ###### Traducción de Excepciones de @Repository
 
-![Traducción de excepciones con @Repository](assets/clase-16-spring-boot/repository-traduccion-excepciones.png)
+![Traducción de excepciones con @Repository](assets/clase-17-spring-boot/repository-traduccion-excepciones.png)
 
 | Excepción Spring                  | Causa típica                           |
 | --------------------------------- | -------------------------------------- |
@@ -539,7 +539,7 @@ public class ApiController {
 
 `@RestController` = `@Controller` + `@ResponseBody`
 
-![Diferencia entre @Controller y @RestController](assets/clase-16-spring-boot/controller-vs-restcontroller.png)
+![Diferencia entre @Controller y @RestController](assets/clase-17-spring-boot/controller-vs-restcontroller.png)
 
 #### @Configuration & @Bean
 
@@ -680,7 +680,7 @@ Una única instancia compartida por todo el `ApplicationContext`. Es el scope po
 public class SingletonService { }
 ```
 
-![Scope Singleton](assets/clase-16-spring-boot/scope-singleton.png)
+![Scope Singleton](assets/clase-17-spring-boot/scope-singleton.png)
 
 > Todos los beans `@Service`, `@Repository`, `@Controller` son singleton por defecto. Spring reutiliza la misma instancia.
 
@@ -694,7 +694,7 @@ Spring crea una nueva instancia cada vez que se solicita el bean.
 public class PrototypeService { }
 ```
 
-![Scope Prototype](assets/clase-16-spring-boot/scope-prototype.png)
+![Scope Prototype](assets/clase-17-spring-boot/scope-prototype.png)
 
 > Spring no gestiona el ciclo de vida completo de beans prototype — no llama `@PreDestroy`. Úsalo para objetos con estado propio.
 
@@ -712,7 +712,7 @@ public class RequestScopedBean { }
 public class SessionScopedBean { }
 ```
 
-![Scopes Request y Session](assets/clase-16-spring-boot/scope-request-session.png)
+![Scopes Request y Session](assets/clase-17-spring-boot/scope-request-session.png)
 
 > `proxyMode` es necesario para inyectar beans request/session en beans singleton.
 
@@ -720,7 +720,7 @@ public class SessionScopedBean { }
 
 Spring gestiona el ciclo de vida completo de los beans. Puedes engancharte con callbacks.
 
-![Ciclo de vida de un Bean](assets/clase-16-spring-boot/ciclo-vida-bean.png)
+![Ciclo de vida de un Bean](assets/clase-17-spring-boot/ciclo-vida-bean.png)
 
 > Beans prototype no reciben `@PreDestroy`. Beans session se destruyen al expirar la sesión HTTP.
 
@@ -1261,7 +1261,7 @@ SPRING_PROFILES_ACTIVE=prod java -jar app.jar
 
 De menor a mayor prioridad:
 
-![Orden de prioridad de configuración](assets/clase-16-spring-boot/prioridad-configuracion.png)
+![Orden de prioridad de configuración](assets/clase-17-spring-boot/prioridad-configuracion.png)
 
 > Env vars y CLI siempre ganan sobre `.yml`. Spring mapea: `SPRING_DATASOURCE_URL` → `spring.datasource.url`
 
@@ -1468,7 +1468,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 #### Jerarquía de Repositories
 
-![Jerarquía de interfaces Repository](assets/clase-16-spring-boot/jerarquia-repositories.png)
+![Jerarquía de interfaces Repository](assets/clase-17-spring-boot/jerarquia-repositories.png)
 
 | Interfaz                     | Métodos que hereda                                         |
 | ---------------------------- | ---------------------------------------------------------- |
@@ -1650,7 +1650,7 @@ Autenticación y Autorización en Spring Boot.
 
 ### Conceptos Fundamentales
 
-![Autenticación vs Autorización](assets/clase-16-spring-boot/security-autenticacion-autorizacion.png)
+![Autenticación vs Autorización](assets/clase-17-spring-boot/security-autenticacion-autorizacion.png)
 
 | Concepto      | Pregunta           | Ejemplo                                          |
 | ------------- | ------------------ | ------------------------------------------------ |
@@ -1697,7 +1697,7 @@ public class SecurityConfig {
 
 ### JWT (JSON Web Tokens)
 
-![Flujo de autenticación JWT](assets/clase-16-spring-boot/jwt-flujo-autenticacion.png)
+![Flujo de autenticación JWT](assets/clase-17-spring-boot/jwt-flujo-autenticacion.png)
 
 #### Estructura de un JWT
 
@@ -1718,7 +1718,7 @@ Spring Boot facilita el testing con anotaciones especializadas para cada capa.
 
 ### Pirámide de Testing
 
-![Pirámide de testing](assets/clase-16-spring-boot/piramide-testing.png)
+![Pirámide de testing](assets/clase-17-spring-boot/piramide-testing.png)
 
 | Tipo             | Anotación                     | Qué carga        | Velocidad     |
 | ---------------- | ----------------------------- | ---------------- | ------------- |
@@ -2068,13 +2068,13 @@ La analogía con el ecosistema Python ayuda a entender los dos modelos de servid
 
 ### Bloqueo de Threads: El Cuello de Botella
 
-![Bloqueo de threads en I/O](assets/clase-16-spring-boot/bloqueo-threads-io.png)
+![Bloqueo de threads en I/O](assets/clase-17-spring-boot/bloqueo-threads-io.png)
 
 75-90% del tiempo, los threads pueden estar bloqueados esperando I/O.
 
 ### La Solución: Reactor & Event Loop
 
-![Reactor Event Loop](assets/clase-16-spring-boot/reactor-event-loop.png)
+![Reactor Event Loop](assets/clase-17-spring-boot/reactor-event-loop.png)
 
 En stacks reactivos se trabaja con pocos threads y scheduling no-bloqueante para I/O. Reactor evita el patrón bloqueante tradicional de thread-per-request.
 
@@ -2082,7 +2082,7 @@ En stacks reactivos se trabaja con pocos threads y scheduling no-bloqueante para
 
 Reactor implementa el patrón Publish/Subscribe de Reactive Streams:
 
-![Patrón Publish-Subscribe en Reactive Streams](assets/clase-16-spring-boot/reactive-streams-publish-subscribe.png)
+![Patrón Publish-Subscribe en Reactive Streams](assets/clase-17-spring-boot/reactive-streams-publish-subscribe.png)
 
 ### Señales de Reactive Streams
 
@@ -2126,11 +2126,11 @@ Flux<Long> interval = Flux.interval(Duration.ofSeconds(1)); // cada segundo
 
 **Mono\<T\>** — tubería cuya válvula puede liberar una sola gota (o ninguna):
 
-![Mono como tubería de una gota](assets/clase-16-spring-boot/reactor-mono-tuberia.png)
+![Mono como tubería de una gota](assets/clase-17-spring-boot/reactor-mono-tuberia.png)
 
 **Flux\<T\>** — tubería cuya válvula puede liberar muchas gotas en secuencia:
 
-![Flux como tubería de múltiples gotas](assets/clase-16-spring-boot/reactor-flux-tuberia.png)
+![Flux como tubería de múltiples gotas](assets/clase-17-spring-boot/reactor-flux-tuberia.png)
 
 `subscribe()` es abrir la llave: si nadie se suscribe, no fluye ninguna gota.
 
@@ -2170,7 +2170,7 @@ mono.timeout(Duration.ofSeconds(5))      // timeout
 
 La gota pasa por un adaptador que cambia su forma, pero sigue siendo una gota (1 a 1).
 
-![Operador map](assets/clase-16-spring-boot/reactor-operador-map.png)
+![Operador map](assets/clase-17-spring-boot/reactor-operador-map.png)
 
 ```java
 Flux<String> names = Flux.just("ana", "luis");
@@ -2182,7 +2182,7 @@ Flux<String> upper = names.map(String::toUpperCase);
 
 Un colador en la tubería deja pasar solo las gotas que cumplen condición.
 
-![Operador filter](assets/clase-16-spring-boot/reactor-operador-filter.png)
+![Operador filter](assets/clase-17-spring-boot/reactor-operador-filter.png)
 
 ```java
 Flux<Integer> numbers = Flux.just(1, 2, 3, 4, 5);
@@ -2194,7 +2194,7 @@ Flux<Integer> even = numbers.filter(n -> n % 2 == 0);
 
 Cada gota entra a una mini-tubería asíncrona y vuelve al flujo principal.
 
-![Operador flatMap](assets/clase-16-spring-boot/reactor-operador-flatmap.png)
+![Operador flatMap](assets/clase-17-spring-boot/reactor-operador-flatmap.png)
 
 ```java
 Flux<String> ids = Flux.just("p1", "p2");
@@ -2206,7 +2206,7 @@ Flux<Product> products = ids.flatMap(productClient::findById);
 
 Similar a `flatMap`, pero se abre una mini-tubería por vez, respetando el orden.
 
-![Operador concatMap](assets/clase-16-spring-boot/reactor-operador-concatmap.png)
+![Operador concatMap](assets/clase-17-spring-boot/reactor-operador-concatmap.png)
 
 ```java
 Flux<String> ids = Flux.just("p1", "p2");
@@ -2218,7 +2218,7 @@ Flux<Product> ordered = ids.concatMap(productClient::findById);
 
 Si la tubería principal se rompe, una válvula redirige el flujo por una ruta de respaldo.
 
-![Operador onErrorResume](assets/clase-16-spring-boot/reactor-operador-onerrorresume.png)
+![Operador onErrorResume](assets/clase-17-spring-boot/reactor-operador-onerrorresume.png)
 
 ```java
 Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
@@ -2229,7 +2229,7 @@ Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
 
 Dos tuberías sueltan gotas al mismo canal; se intercalan según van llegando.
 
-![Operador merge](assets/clase-16-spring-boot/reactor-operador-merge.png)
+![Operador merge](assets/clase-17-spring-boot/reactor-operador-merge.png)
 
 ```java
 Flux<String> a = Flux.just("A1", "A2");
@@ -2242,7 +2242,7 @@ Flux<String> merged = Flux.merge(a, b);
 
 Una gota de cada tubería se empareja para formar una sola gota compuesta.
 
-![Operador zip](assets/clase-16-spring-boot/reactor-operador-zip.png)
+![Operador zip](assets/clase-17-spring-boot/reactor-operador-zip.png)
 
 ```java
 Mono<String> name = Mono.just("Laptop");
@@ -2256,7 +2256,7 @@ Mono<String> card = Mono.zip(name, price)
 
 La válvula deja pasar solo las primeras N gotas y luego se cierra.
 
-![Operador take](assets/clase-16-spring-boot/reactor-operador-take.png)
+![Operador take](assets/clase-17-spring-boot/reactor-operador-take.png)
 
 ```java
 Flux<Integer> limited = Flux.range(1, 100).take(3);
@@ -2267,7 +2267,7 @@ Flux<Integer> limited = Flux.range(1, 100).take(3);
 
 Si falla por una obstrucción temporal, se vuelve a abrir la tubería un número limitado de veces.
 
-![Operador retry](assets/clase-16-spring-boot/reactor-operador-retry.png)
+![Operador retry](assets/clase-17-spring-boot/reactor-operador-retry.png)
 
 ```java
 Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
@@ -2279,7 +2279,7 @@ Mono<StockResponse> stock = inventoryClient.checkStock("SKU-1")
 
 Un publisher pasa por 3 fases:
 
-![Ciclo de vida del Publisher](assets/clase-16-spring-boot/reactor-ciclo-vida-publisher.png)
+![Ciclo de vida del Publisher](assets/clase-17-spring-boot/reactor-ciclo-vida-publisher.png)
 
 ```java
 // FASE 1: Assembly (solo define, NO ejecuta nada)
@@ -2566,7 +2566,7 @@ logging:
 
 ### Mapa Conceptual Spring Boot
 
-![Mapa conceptual de Spring Boot](assets/clase-16-spring-boot/spring-boot-mapa-conceptual.png)
+![Mapa conceptual de Spring Boot](assets/clase-17-spring-boot/spring-boot-mapa-conceptual.png)
 
 ### Resumen de Anotaciones
 

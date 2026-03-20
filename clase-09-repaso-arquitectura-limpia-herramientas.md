@@ -1,4 +1,4 @@
-# Clase 8 - Repaso de Arquitectura Limpia y Herramientas
+# Clase 9 - Repaso de Arquitectura Limpia y Herramientas
 
 ## Índice
 
@@ -18,7 +18,7 @@ Esta clase cubre los conceptos fundamentales del Scaffold de Arquitectura Limpia
 
 Un **Scaffold** es un template que proporciona la estructura base de un proyecto, en este caso, un microservicio Java implementando Arquitectura Limpia. A diferencia de las automatizaciones que ofrece el IDE, este Scaffold separa las capas en módulos independientes a nivel de compilación, garantizando el aislamiento y la correcta separación de responsabilidades.
 
-![Arquitectura Clean Architecture](assets/clase-08-repaso-arquitectura-limpia-herramientas/arquitectura-clean-architecture.png)
+![Arquitectura Clean Architecture](assets/clase-09-repaso-arquitectura-limpia-herramientas/arquitectura-clean-architecture.png)
 
 **Repositorio oficial:** <https://github.com/bancolombia/scaffold-clean-architecture?tab=readme-ov-file>
 
@@ -38,7 +38,7 @@ Un **Scaffold** es un template que proporciona la estructura base de un proyecto
 
 Solo se necesita tener instalado Gradle y crear un archivo `build.gradle` con el plugin de Scaffold para inicializar la estructura:
 
-![Configuración del Plugin de Gradle](assets/clase-08-repaso-arquitectura-limpia-herramientas/gradle-plugin-config.png)
+![Configuración del Plugin de Gradle](assets/clase-09-repaso-arquitectura-limpia-herramientas/gradle-plugin-config.png)
 
 ## Build.gradle
 
@@ -324,7 +324,7 @@ Flux<String> nombres = usuarioRepository.findAll()
 
 **Actuator** es un conjunto de endpoints que Spring Boot proporciona por defecto para monitoreo y gestión de aplicaciones. Se activan mediante configuración en `application.yml`:
 
-![Configuración de Actuator](assets/clase-08-repaso-arquitectura-limpia-herramientas/actuator-config.png)
+![Configuración de Actuator](assets/clase-09-repaso-arquitectura-limpia-herramientas/actuator-config.png)
 
 **Endpoints importantes:**
 
@@ -337,7 +337,7 @@ Flux<String> nombres = usuarioRepository.findAll()
 
 Al desplegar en Kubernetes, es fundamental distinguir entre dos tipos de health checks:
 
-![Health Checks de Kubernetes](assets/clase-08-repaso-arquitectura-limpia-herramientas/kubernetes-health-checks.png)
+![Health Checks de Kubernetes](assets/clase-09-repaso-arquitectura-limpia-herramientas/kubernetes-health-checks.png)
 
 - **Liveness Probe:** Verifica si el contenedor está vivo (prendió). Si falla, Kubernetes reinicia el pod.
 - **Readiness Probe:** Verifica si el contenedor está listo para recibir tráfico (está listo para responder solicitudes). Si falla, Kubernetes deja de enviar tráfico al pod sin reiniciarlo.

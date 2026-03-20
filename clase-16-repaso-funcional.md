@@ -1,4 +1,4 @@
-# Clase 15 - Repaso: Programación Funcional, Docker y BFF
+# Clase 16 - Repaso: Programación Funcional, Docker y BFF
 
 > Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_26_repaso_quiz_4/#/title-slide>
 
@@ -79,7 +79,7 @@ lista.sort(String::compareTo);
 
 Un **Stream** es una secuencia de elementos con operaciones de procesamiento declarativas encadenadas (pipeline).
 
-![Fuentes de un Stream: Collection, Array, etc.](assets/clase-15-repaso/stream-pipeline-fuentes.png)
+![Fuentes de un Stream: Collection, Array, etc.](assets/clase-16-repaso/stream-pipeline-fuentes.png)
 
 | Tipo            | Operaciones                                                      | Comportamiento                                   |
 | --------------- | ---------------------------------------------------------------- | ------------------------------------------------ |
@@ -154,7 +154,7 @@ return findById(id)
 
 Un **API Gateway** es el único punto de entrada para todos los clientes hacia los microservicios internos.
 
-![API Gateway centralizando el acceso a microservicios](assets/clase-15-repaso/api-gateway-diagrama.png)
+![API Gateway centralizando el acceso a microservicios](assets/clase-16-repaso/api-gateway-diagrama.png)
 
 **Responsabilidades:** routing, auth, rate limiting, load balancing, circuit breaking.
 
@@ -162,7 +162,7 @@ Un **API Gateway** es el único punto de entrada para todos los clientes hacia l
 
 **Backend for Frontend:** variante del API Gateway donde cada tipo de cliente tiene su propio backend optimizado.
 
-![BFF — un backend dedicado por tipo de cliente](assets/clase-15-repaso/bff-diagrama.png)
+![BFF — un backend dedicado por tipo de cliente](assets/clase-16-repaso/bff-diagrama.png)
 
 > Cada BFF adapta las respuestas a su cliente: la web puede recibir más datos; el móvil recibe payloads más ligeros.
 
@@ -219,7 +219,7 @@ Un **API Gateway** es el único punto de entrada para todos los clientes hacia l
 
 Separa la fase de compilación de la de ejecución, produciendo imágenes finales más pequeñas y seguras.
 
-![Multi-stage build: etapa builder (JDK + Gradle) → etapa final (JRE + JAR)](assets/clase-15-repaso/docker-multistage-build.png)
+![Multi-stage build: etapa builder (JDK + Gradle) → etapa final (JRE + JAR)](assets/clase-16-repaso/docker-multistage-build.png)
 
 > La imagen final no incluye JDK, Gradle ni código fuente — únicamente el JRE y el JAR compilado.
 
@@ -284,7 +284,7 @@ volumes:
 
 **Networking:**
 
-![Redes Docker — resolución DNS por nombre de servicio](assets/clase-15-repaso/docker-networking.png)
+![Redes Docker — resolución DNS por nombre de servicio](assets/clase-16-repaso/docker-networking.png)
 
 - Las redes custom permiten resolución DNS por nombre de servicio.
 - En Compose, cada servicio es accesible por su nombre dentro de la red del proyecto.
@@ -326,7 +326,7 @@ docker compose up -d --scale app=3        # Escalar un servicio a 3 réplicas
 
 **Pregunta 6 — explicación:**
 
-![Explicación pregunta 6 del quiz](assets/clase-15-repaso/lambda-variable-final-implicita.png)
+![Explicación pregunta 6 del quiz](assets/clase-16-repaso/lambda-variable-final-implicita.png)
 
 **Pregunta 11 — explicación:**
 Al usar una variable **no declarada como `final`** dentro de una lambda, esta queda _implícitamente_ final — el compilador no permite reasignarla.

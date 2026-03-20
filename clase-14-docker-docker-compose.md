@@ -1,4 +1,4 @@
-# Clase 13 - Docker & Docker Compose
+# Clase 14 - Docker & Docker Compose
 
 **Recursos:**
 
@@ -48,7 +48,7 @@ Docker es una plataforma de contenedorización que permite empaquetar aplicacion
 
 ### Arquitectura Docker
 
-![Arquitectura Docker](assets/clase-13-docker-docker-compose/arquitectura-docker.png)
+![Arquitectura Docker](assets/clase-14-docker-docker-compose/arquitectura-docker.png)
 
 **Componentes principales:**
 
@@ -100,7 +100,7 @@ docker rm mi-postgres
 
 ### Comandos Esenciales
 
-![Comandos Docker](assets/clase-13-docker-docker-compose/comandos-esenciales-docker.png)
+![Comandos Docker](assets/clase-14-docker-docker-compose/comandos-esenciales-docker.png)
 
 **Gestión de imágenes:**
 
@@ -171,7 +171,7 @@ CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 ### Problema: Imágenes Pesadas
 
-![Imagen JDK Completo](assets/clase-13-docker-docker-compose/imagen-jdk-completo.png)
+![Imagen JDK Completo](assets/clase-14-docker-docker-compose/imagen-jdk-completo.png)
 
 **Problema:** Incluimos herramientas de compilación (JDK, Gradle, Maven) que NO necesitamos en producción.
 
@@ -231,7 +231,7 @@ ENTRYPOINT [ "/bin/sh", "-c", "/opt/java/openjdk/bin/java $JAVA_OPTS -jar ./dock
 
 ### Comparación de Tamaños
 
-![Comparación de Tamaños](assets/clase-13-docker-docker-compose/comparacion-tamanos-imagenes.png)
+![Comparación de Tamaños](assets/clase-14-docker-docker-compose/comparacion-tamanos-imagenes.png)
 
 | Tipo de Imagen             | Tamaño Aproximado |
 | -------------------------- | ----------------- |
@@ -267,7 +267,7 @@ COPY src ./src
 RUN ./gradlew bootJar --no-daemon
 ```
 
-![Optimización de Capas](assets/clase-13-docker-docker-compose/optimizacion-capas-gradle.png)
+![Optimización de Capas](assets/clase-14-docker-docker-compose/optimizacion-capas-gradle.png)
 
 **Principio:** Las capas que no cambian se reutilizan del cache, acelerando builds subsecuentes.
 
@@ -301,7 +301,7 @@ Los volúmenes permiten **persistir datos** y **compartir archivos** entre el ho
 
 ### Por qué usar Volúmenes
 
-![Contenedor sin Volumen](assets/clase-13-docker-docker-compose/contenedor-sin-volumen.png)
+![Contenedor sin Volumen](assets/clase-14-docker-docker-compose/contenedor-sin-volumen.png)
 
 **Problema:** Los datos dentro del contenedor son efímeros. Al eliminar el contenedor, se pierden todos los datos.
 
@@ -356,7 +356,7 @@ docker run -d \
 # Hot-reload: cambios locales se reflejan inmediatamente
 ```
 
-![Bind Mount Desarrollo](assets/clase-13-docker-docker-compose/bind-mount-desarrollo.png)
+![Bind Mount Desarrollo](assets/clase-14-docker-docker-compose/bind-mount-desarrollo.png)
 
 **Ventajas:**
 
@@ -402,7 +402,7 @@ Docker proporciona diferentes drivers de red para la comunicación entre contene
 
 ### Red Bridge por Defecto
 
-![Red Bridge Defecto](assets/clase-13-docker-docker-compose/red-bridge-defecto.png)
+![Red Bridge Defecto](assets/clase-14-docker-docker-compose/red-bridge-defecto.png)
 
 > **Limitación:** Los contenedores en la red bridge por defecto se comunican por IP, **no por nombre**.
 
@@ -420,7 +420,7 @@ docker run -d --name app --network mi-red mi-app:1.0
 # Desde 'app': jdbc:postgresql://postgres:5432/db
 ```
 
-![Red Personalizada Bridge](assets/clase-13-docker-docker-compose/red-personalizada-bridge.png)
+![Red Personalizada Bridge](assets/clase-14-docker-docker-compose/red-personalizada-bridge.png)
 
 > **Ventaja:** Redes personalizadas proporcionan **resolución DNS automática** por nombre de contenedor.
 
@@ -575,7 +575,7 @@ CMD ["java", "-jar", "app.jar"]
 
 ### Estados de Salud
 
-![Estados Health Check](assets/clase-13-docker-docker-compose/estados-health-check.png)
+![Estados Health Check](assets/clase-14-docker-docker-compose/estados-health-check.png)
 
 **Estados posibles:**
 
@@ -761,7 +761,7 @@ services:
         condition: service_completed_successfully # Que termine OK
 ```
 
-![Depends On Avanzado](assets/clase-13-docker-docker-compose/depends-on-avanzado.png)
+![Depends On Avanzado](assets/clase-14-docker-docker-compose/depends-on-avanzado.png)
 
 **Condiciones disponibles:**
 

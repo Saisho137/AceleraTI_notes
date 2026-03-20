@@ -1,4 +1,4 @@
-# Clase 7 - Pruebas
+# Clase 8 - Pruebas
 
 ## Índice
 

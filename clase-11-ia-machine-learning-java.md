@@ -1,4 +1,4 @@
-# Clase 10 - IA & Machine Learning en Java
+# Clase 11 - IA & Machine Learning en Java
 
 > **Fuente:** [Diapositivas del curso](https://manulasker.github.io/enyoi_java_slides/clase_12_13_14_temas_faltantes_ia/#/qu%C3%A9-es-machine-learning)  
 > **Repo de práctica:** [simple-chat-ia-solid-enyoi](https://github.com/Saisho137/simple-chat-ia-solid-enyoi)
@@ -32,7 +32,7 @@ La IA está transformando el desarrollo de software. Java, con su robustez empre
 
 ### Machine Learning vs Programación Tradicional
 
-![ML vs Programación Tradicional](assets/clase-10-ia-machine-learning-java/ml-vs-programacion-tradicional.png)
+![ML vs Programación Tradicional](assets/clase-11-ia-machine-learning-java/ml-vs-programacion-tradicional.png)
 
 - **Programación tradicional:** Reglas definidas manualmente → salida determinista
 - **Machine Learning:** Algoritmo que aprende las reglas a partir de los datos
@@ -59,7 +59,7 @@ La IA está transformando el desarrollo de software. Java, con su robustez empre
 
 ### Ecosistema Java para IA
 
-![Ecosistema Java para IA](assets/clase-10-ia-machine-learning-java/ecosistema-java-ia.png)
+![Ecosistema Java para IA](assets/clase-11-ia-machine-learning-java/ecosistema-java-ia.png)
 
 ---
 
@@ -125,7 +125,7 @@ spring:
 
 Permiten usar IA sin entrenar desde cero.
 
-![Modelos Preentrenados](assets/clase-10-ia-machine-learning-java/modelos-preentrenados.png)
+![Modelos Preentrenados](assets/clase-11-ia-machine-learning-java/modelos-preentrenados.png)
 
 **Ventajas:** Sin costo de entrenamiento, resultados inmediatos, expertise incorporado.
 
@@ -144,7 +144,7 @@ Permiten usar IA sin entrenar desde cero.
 
 ## Ciclo de Vida de un Modelo ML
 
-![Ciclo de Vida ML](assets/clase-10-ia-machine-learning-java/ciclo-vida-modelo-ml.png)
+![Ciclo de Vida ML](assets/clase-11-ia-machine-learning-java/ciclo-vida-modelo-ml.png)
 
 | Fase                           | Descripción                                       |
 | ------------------------------ | ------------------------------------------------- |
@@ -161,7 +161,7 @@ Permiten usar IA sin entrenar desde cero.
 
 Los datos crudos raramente están listos para usar en modelos de ML.
 
-![Preprocesamiento de Datos](assets/clase-10-ia-machine-learning-java/preprocesamiento-datos.png)
+![Preprocesamiento de Datos](assets/clase-11-ia-machine-learning-java/preprocesamiento-datos.png)
 
 ### Ejemplo con DJL
 
@@ -253,7 +253,7 @@ public class ObjectDetector {
 
 ### Matriz de Confusión
 
-![Matriz de Confusión](assets/clase-10-ia-machine-learning-java/matriz-confusion.png)
+![Matriz de Confusión](assets/clase-11-ia-machine-learning-java/matriz-confusion.png)
 
 > **Ejemplo médico:** Un falso negativo (no detectar enfermedad) es más grave que un falso positivo.
 
@@ -263,7 +263,7 @@ public class ObjectDetector {
 
 ### Arquitectura General
 
-![Arquitectura LLM Gateway](assets/clase-10-ia-machine-learning-java/arquitectura-llm-gateway.png)
+![Arquitectura LLM Gateway](assets/clase-11-ia-machine-learning-java/arquitectura-llm-gateway.png)
 
 ---
 
@@ -446,7 +446,7 @@ public class GeminiMultimodalService {
 
 Proxy que unifica múltiples proveedores de LLM bajo una sola API.
 
-![LiteLLM Gateway](assets/clase-10-ia-machine-learning-java/litellm-gateway.png)
+![LiteLLM Gateway](assets/clase-11-ia-machine-learning-java/litellm-gateway.png)
 
 #### Configuración litellm
 
@@ -525,7 +525,7 @@ public class UnifiedChatService {
 
 ### Spring AI - Framework Oficial
 
-![Spring AI Arquitectura](assets/clase-10-ia-machine-learning-java/spring-ai-arquitectura.png)
+![Spring AI Arquitectura](assets/clase-11-ia-machine-learning-java/spring-ai-arquitectura.png)
 
 #### Chat Client Fluent API
 
@@ -692,7 +692,7 @@ assistant.chat("¿Cuánto cuesta el producto ABC-123?");
 
 ### ¿Por qué usar Patrones?
 
-![Problemas sin Patrones](assets/clase-10-ia-machine-learning-java/problemas-sin-patrones.png)
+![Problemas sin Patrones](assets/clase-11-ia-machine-learning-java/problemas-sin-patrones.png)
 
 Los patrones permiten:
 
@@ -707,7 +707,7 @@ Los patrones permiten:
 
 Son la herramienta que permite convertir texto a valores numéricos. Las empresas intentan implementar el mismo Tokenizer en su LLM y Embedding, para que estos se puedan comunicar eficientemente.
 
-![Tokenizer Playground](assets/clase-10-ia-machine-learning-java/tokenizer-playground.png)
+![Tokenizer Playground](assets/clase-11-ia-machine-learning-java/tokenizer-playground.png)
 
 ---
 
@@ -715,7 +715,7 @@ Son la herramienta que permite convertir texto a valores numéricos. Las empresa
 
 Los embeddings son representaciones numéricas (vectores) de texto que capturan su significado semántico.
 
-![Embeddings Concepto](assets/clase-10-ia-machine-learning-java/embeddings-concepto.png)
+![Embeddings Concepto](assets/clase-11-ia-machine-learning-java/embeddings-concepto.png)
 
 **Propiedad clave:** Textos con significado similar tienen vectores cercanos.
 
@@ -786,7 +786,7 @@ public class EmbeddingService {
 
 Las bases de datos vectoriales están optimizadas para almacenar y buscar embeddings.
 
-![Vector Databases Concepto](assets/clase-10-ia-machine-learning-java/vector-databases-concepto.png)
+![Vector Databases Concepto](assets/clase-11-ia-machine-learning-java/vector-databases-concepto.png)
 
 #### Opciones de Vector Databases
 
@@ -838,7 +838,7 @@ public class DocumentService {
 
 RAG combina búsqueda de información con generación de texto para respuestas precisas y actualizadas.
 
-![RAG Concepto](assets/clase-10-ia-machine-learning-java/rag-concepto.png)
+![RAG Concepto](assets/clase-11-ia-machine-learning-java/rag-concepto.png)
 
 #### Almacenamiento en IA
 
@@ -855,7 +855,7 @@ Los grandes modelos del mercado (GPT, Gemini, Claude) suelen utilizar distintos 
 
 Cada empresa implementa sus propias arquitecturas: su propio modelo LLM, tokenizer y modelo de Embedding; para que su ecosistema funcione de forma óptima.
 
-![LLM + Embeddings + Tools](assets/clase-10-ia-machine-learning-java/llm-embeddings-tools.png)
+![LLM + Embeddings + Tools](assets/clase-11-ia-machine-learning-java/llm-embeddings-tools.png)
 
 > Este modelo también se puede interpretar como un RAG.
 
@@ -863,7 +863,7 @@ Cada empresa implementa sus propias arquitecturas: su propio modelo LLM, tokeniz
 
 En RAG, se pueden construir pipelines en las que se indica explícitamente cuándo utilizar X Tools. Por ejemplo: especificar que se haga una búsqueda vectorial al Embedding cuando se recibe el input del usuario, cuando se hace el retrieval (query) se pasan estos documentos como input junto al mensaje del usuario al modelo LLM.
 
-![RAG Pipeline Detallado](assets/clase-10-ia-machine-learning-java/rag-pipeline-detallado.png)
+![RAG Pipeline Detallado](assets/clase-11-ia-machine-learning-java/rag-pipeline-detallado.png)
 
 #### RAG - Paso 1: Chunking
 
@@ -1007,7 +1007,7 @@ public class SimpleRAGService {
 
 #### RAG - Arquitectura Completa
 
-![RAG Arquitectura Completa](assets/clase-10-ia-machine-learning-java/rag-arquitectura-completa.png)
+![RAG Arquitectura Completa](assets/clase-11-ia-machine-learning-java/rag-arquitectura-completa.png)
 
 ---
 
@@ -1015,7 +1015,7 @@ public class SimpleRAGService {
 
 Los pipelines permiten componer operaciones de IA en flujos complejos.
 
-![Pipeline Pattern](assets/clase-10-ia-machine-learning-java/pipeline-pattern.png)
+![Pipeline Pattern](assets/clase-11-ia-machine-learning-java/pipeline-pattern.png)
 
 #### Chain Pattern - Implementación
 
@@ -1187,7 +1187,7 @@ public class ResilientAIService {
 
 ### Arquitectura Completa de IA en Java
 
-![Arquitectura Completa IA Java](assets/clase-10-ia-machine-learning-java/arquitectura-completa-ia-java.png)
+![Arquitectura Completa IA Java](assets/clase-11-ia-machine-learning-java/arquitectura-completa-ia-java.png)
 
 ---
 

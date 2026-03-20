@@ -1,4 +1,4 @@
-# Clase 14 - Patrones de Arquitectura de Microservicios & EDA
+# Clase 15 - Patrones de Arquitectura de Microservicios & EDA
 
 Diseñando Sistemas Distribuidos Resilientes - Arka
 
@@ -37,7 +37,7 @@ Entendiendo por qué y cuándo descomponer un sistema monolítico en servici
 
 Un sistema donde toda la lógica (UI, negocio, datos) vive en un solo desplegable.
 
-![Arquitectura monolítica](assets/clase-14-patrones-arquitectura-microservicios/monolito-modulos-acolar.png)
+![Arquitectura monolítica](assets/clase-15-patrones-arquitectura-microservicios/monolito-modulos-acolar.png)
 
 > Problema Arka: Ventas concurrentes causan race conditions → stock negativo (sobreventa).
 
@@ -45,7 +45,7 @@ Un sistema donde toda la lógica (UI, negocio, datos) vive en un solo desplega
 
 Arquitectura donde la aplicación se compone de servicios pequeños, autónomos que se comunican entre sí.
 
-![Arquitectura de microservicios](assets/clase-14-patrones-arquitectura-microservicios/microservicios-arquitectura.png)
+![Arquitectura de microservicios](assets/clase-15-patrones-arquitectura-microservicios/microservicios-arquitectura.png)
 
 ### Monolito vs Microservicios
 
@@ -88,7 +88,7 @@ Arquitectura donde la aplicación se compone de servicios pequeños, autónomos
 
 El servicio que llama espera la respuesta antes de continuar.
 
-![Comunicación síncrona](assets/clase-14-patrones-arquitectura-microservicios/comunicacion-sincrona.png)
+![Comunicación síncrona](assets/clase-15-patrones-arquitectura-microservicios/comunicacion-sincrona.png)
 
 **Protocolos comunes:** REST (HTTP/JSON), gRPC (HTTP/2 + Protobuf)
 
@@ -98,7 +98,7 @@ El servicio que llama espera la respuesta antes de continuar.
 
 El servicio emisor publica un evento y continúa sin esperar respuesta.
 
-![Comunicación asíncrona](assets/clase-14-patrones-arquitectura-microservicios/comunicacion-asincrona.png)
+![Comunicación asíncrona](assets/clase-15-patrones-arquitectura-microservicios/comunicacion-asincrona.png)
 
 > Ventaja: Desacoplamiento total. Los servicios no necesitan conocerse entre sí.
 
@@ -113,13 +113,13 @@ El servicio emisor publica un evento y continúa sin esperar respuesta.
 | Consistencia  | Inmediata                  | Eventual                 |
 | Caso de uso   | Consultas, validaciones    | Comandos, notificaciones |
 
-![Comparativa síncrona vs asíncrona](assets/clase-14-patrones-arquitectura-microservicios/comparativa-comunicacion.png)
+![Comparativa síncrona vs asíncrona](assets/clase-15-patrones-arquitectura-microservicios/comparativa-comunicacion.png)
 
 ## Api Gateway Pattern
 
 ### Qué es el ApiGateway
 
-![Arquitectura API Gateway](assets/clase-14-patrones-arquitectura-microservicios/api-gateway-arquitectura.png)
+![Arquitectura API Gateway](assets/clase-15-patrones-arquitectura-microservicios/api-gateway-arquitectura.png)
 
 > Normalmente, se usa el Algoritmo Round Robin para Load Balancing
 
@@ -142,7 +142,7 @@ El servicio emisor publica un evento y continúa sin esperar respuesta.
 
 Variante donde cada tipo de cliente tiene su propio gateway optimizado.
 
-![Backend for Frontend](assets/clase-14-patrones-arquitectura-microservicios/backend-for-frontend.png)
+![Backend for Frontend](assets/clase-15-patrones-arquitectura-microservicios/backend-for-frontend.png)
 
 > BFF permite optimizar la respuesta para cada cliente: el móvil recibe menos datos, la web más.
 
@@ -166,7 +166,7 @@ Variante donde cada tipo de cliente tiene su propio gateway optimizado.
 
 En un entorno dinámico (contenedores, auto-scaling), las IPs y puertos cambian constantemente.
 
-![Problema de Service Discovery](assets/clase-14-patrones-arquitectura-microservicios/service-discovery-problema.png)
+![Problema de Service Discovery](assets/clase-15-patrones-arquitectura-microservicios/service-discovery-problema.png)
 
 > Hardcodear URLs (<http://192.168.1.100:8080>) es frágil y no escala.
 
@@ -176,7 +176,7 @@ En un entorno dinámico (contenedores, auto-scaling), las IPs y puertos cambian
 
 #### Client Side Discovery
 
-![Client-Side Discovery](assets/clase-14-patrones-arquitectura-microservicios/client-side-discovery.png)
+![Client-Side Discovery](assets/clase-15-patrones-arquitectura-microservicios/client-side-discovery.png)
 
 El cliente consulta el registro y decide qué instancia llamar.
 
@@ -184,7 +184,7 @@ El cliente consulta el registro y decide qué instancia llamar.
 
 #### Server Side Discovery
 
-![Server-Side Discovery](assets/clase-14-patrones-arquitectura-microservicios/server-side-discovery.png)
+![Server-Side Discovery](assets/clase-15-patrones-arquitectura-microservicios/server-side-discovery.png)
 
 Un load balancer consulta el registro y rutea al cliente.
 
@@ -196,7 +196,7 @@ Protección contra fallos en cascada en sistemas distribuidos.
 
 ### El Problema: Cascading Failures
 
-![Fallos en cascada](assets/clase-14-patrones-arquitectura-microservicios/cascading-failures.png)
+![Fallos en cascada](assets/clase-15-patrones-arquitectura-microservicios/cascading-failures.png)
 
 > Un solo servicio lento/caído puede tumbar toda la cadena de llamadas.
 
@@ -208,7 +208,7 @@ Protección contra fallos en cascada en sistemas distribuidos.
 | Open      | Todas las peticiones son rechazadas (fail-fast) |
 | Half-Open | Se permiten pocas peticiones de prueba          |
 
-![Estados del Circuit Breaker](assets/clase-14-patrones-arquitectura-microservicios/circuit-breaker-estados.png)
+![Estados del Circuit Breaker](assets/clase-15-patrones-arquitectura-microservicios/circuit-breaker-estados.png)
 
 #### Ejemplo con Resilience4j
 
@@ -253,7 +253,7 @@ Cada microservicio posee y gestiona su propia base de datos.
 
 #### Base de Datos Compartida
 
-![Base de datos compartida](assets/clase-14-patrones-arquitectura-microservicios/shared-database.png)
+![Base de datos compartida](assets/clase-15-patrones-arquitectura-microservicios/shared-database.png)
 
 - Acoplamiento a nivel de datos
 - Un cambio de schema afecta todos
@@ -261,7 +261,7 @@ Cada microservicio posee y gestiona su propia base de datos.
 
 #### Patrón Database per Service
 
-![Database per Service](assets/clase-14-patrones-arquitectura-microservicios/database-per-service.png)
+![Database per Service](assets/clase-15-patrones-arquitectura-microservicios/database-per-service.png)
 
 - Autonomía total por servicio
 - Cada equipo elige su tecnología
@@ -269,7 +269,7 @@ Cada microservicio posee y gestiona su propia base de datos.
 
 ### El Gran Desafío: Consultas Cruzadas
 
-![Consultas cruzadas entre servicios](assets/clase-14-patrones-arquitectura-microservicios/consultas-cruzadas.png)
+![Consultas cruzadas entre servicios](assets/clase-15-patrones-arquitectura-microservicios/consultas-cruzadas.png)
 
 ¿Cómo hacer JOINs entre servicios? No puedes hacer SELECT ... JOIN entre bases de datos separadas. Necesitas otras estrategias:
 
@@ -283,7 +283,7 @@ Cada microservicio posee y gestiona su propia base de datos.
 
 Un servicio agregador consulta múltiples servicios y combina las respuestas.
 
-![API Composition](assets/clase-14-patrones-arquitectura-microservicios/api-composition.png)
+![API Composition](assets/clase-15-patrones-arquitectura-microservicios/api-composition.png)
 
 | Ventaja                           | Desventaja                            |
 | --------------------------------- | ------------------------------------- |
@@ -299,7 +299,7 @@ Arquitectura donde los componentes se comunican a través de eventos de forma 
 
 ### Qué es EDA
 
-![Arquitectura dirigida por eventos](assets/clase-14-patrones-arquitectura-microservicios/eda-arquitectura.png)
+![Arquitectura dirigida por eventos](assets/clase-15-patrones-arquitectura-microservicios/eda-arquitectura.png)
 
 > EDA = Los servicios reaccionan a hechos que ocurrieron (eventos), no a comandos directos.
 
@@ -353,7 +353,7 @@ record ProductCreatedEvent(
 
 ### Eventos en el Caso de Arka
 
-![Flujo de eventos en Arka](assets/clase-14-patrones-arquitectura-microservicios/eventos-arka.png)
+![Flujo de eventos en Arka](assets/clase-15-patrones-arquitectura-microservicios/eventos-arka.png)
 
 ```json
 {
@@ -373,7 +373,7 @@ record ProductCreatedEvent(
 
 Con CRUD, un UPDATE destruye el estado anterior. Event Sourcing cambia el enfoque: guardamos todos los eventos que produjeron el estado actual.
 
-![Event Sourcing](assets/clase-14-patrones-arquitectura-microservicios/event-sourcing.png)
+![Event Sourcing](assets/clase-15-patrones-arquitectura-microservicios/event-sourcing.png)
 
 #### Ventajas de Event Sourcing
 
@@ -390,7 +390,7 @@ Con CRUD, un UPDATE destruye el estado anterior. Event Sourcing cambia el en
 
 Separar el modelo de escritura (Commands) del modelo de lectura (Queries).
 
-![Arquitectura CQRS](assets/clase-14-patrones-arquitectura-microservicios/cqrs-arquitectura.png)
+![Arquitectura CQRS](assets/clase-15-patrones-arquitectura-microservicios/cqrs-arquitectura.png)
 
 #### Por qué CQRS
 
@@ -440,7 +440,7 @@ public void processOrder(Order order) {
 
 En microservicios, cada servicio tiene su propia BD:
 
-![Transacciones distribuidas](assets/clase-14-patrones-arquitectura-microservicios/transacciones-distribuidas.png)
+![Transacciones distribuidas](assets/clase-15-patrones-arquitectura-microservicios/transacciones-distribuidas.png)
 
 > No existe @Transactional entre bases de datos distintas. Si el pago falla después de descontar stock, ¿cómo se revierte?
 
@@ -448,7 +448,7 @@ En microservicios, cada servicio tiene su propia BD:
 
 Una Saga es una secuencia de transacciones locales, donde cada paso tiene una acción compensatoria en caso de fallo.
 
-![Patrón Saga](assets/clase-14-patrones-arquitectura-microservicios/saga-patron.png)
+![Patrón Saga](assets/clase-15-patrones-arquitectura-microservicios/saga-patron.png)
 
 | Concepto              | Descripción                               |
 | --------------------- | ----------------------------------------- |
@@ -460,13 +460,13 @@ Una Saga es una secuencia de transacciones locales, donde cada paso tiene una
 
 Cada servicio emite un evento y los demás reaccionan. No hay un coordinador central.
 
-![Saga coreografiada](assets/clase-14-patrones-arquitectura-microservicios/saga-coreografia.png)
+![Saga coreografiada](assets/clase-15-patrones-arquitectura-microservicios/saga-coreografia.png)
 
 #### Coreografia: Caso de Fallo
 
 ¿Qué pasa si el pago falla?
 
-![Saga coreografía - caso de fallo](assets/clase-14-patrones-arquitectura-microservicios/saga-coreografia-fallo.png)
+![Saga coreografía - caso de fallo](assets/clase-15-patrones-arquitectura-microservicios/saga-coreografia-fallo.png)
 
 ### Saga Orquestada
 
@@ -481,11 +481,11 @@ Un microservicio dedicado (o componente dentro del Order Service) que actúa com
 
 #### Saga Orquestada: Flujos
 
-![Saga orquestada - flujo](assets/clase-14-patrones-arquitectura-microservicios/saga-orquestacion-flujo.png)
+![Saga orquestada - flujo](assets/clase-15-patrones-arquitectura-microservicios/saga-orquestacion-flujo.png)
 
 #### Orquestación: Caso de Fallo
 
-![Saga orquestación - caso de fallo](assets/clase-14-patrones-arquitectura-microservicios/saga-orquestacion-fallo.png)
+![Saga orquestación - caso de fallo](assets/clase-15-patrones-arquitectura-microservicios/saga-orquestacion-fallo.png)
 
 > El orquestador mantiene el estado de la saga y sabe exactamente qué pasos compensar.
 
@@ -503,7 +503,7 @@ Un microservicio dedicado (o componente dentro del Order Service) que actúa com
 
 ### Saga Arka
 
-![Implementación de Saga en Arka](assets/clase-14-patrones-arquitectura-microservicios/saga-arka.png)
+![Implementación de Saga en Arka](assets/clase-15-patrones-arquitectura-microservicios/saga-arka.png)
 
 #### Estados de la Orden en la Saga
 
@@ -517,7 +517,7 @@ public enum OrderStatus {
 }
 ```
 
-![Estados de la orden en la Saga](assets/clase-14-patrones-arquitectura-microservicios/saga-orden-estados.png)
+![Estados de la orden en la Saga](assets/clase-15-patrones-arquitectura-microservicios/saga-orden-estados.png)
 
 #### Implementación Reactiva de la Saga
 
@@ -548,7 +548,7 @@ Garantizar consistencia entre escritura en BD y publicación de eventos.
 
 ### El Problema: Dual Write
 
-![Problema de Dual Write](assets/clase-14-patrones-arquitectura-microservicios/outbox-dual-write-problema.png)
+![Problema de Dual Write](assets/clase-15-patrones-arquitectura-microservicios/outbox-dual-write-problema.png)
 
 > Dual Write: Escribir en BD y en Kafka no es atómico. Si uno falla sin el otro, quedamos inconsistentes.
 
@@ -556,7 +556,7 @@ Garantizar consistencia entre escritura en BD y publicación de eventos.
 
 El patrón Transactional Outbox garantiza consistencia usando una tabla intermedia (`outbox_events`) dentro de la misma transacción de negocio. Ambas escrituras (datos + evento) ocurren de forma atómica.
 
-![Solución Transactional Outbox](assets/clase-14-patrones-arquitectura-microservicios/outbox-transactional-solucion.png)
+![Solución Transactional Outbox](assets/clase-15-patrones-arquitectura-microservicios/outbox-transactional-solucion.png)
 
 **Flujo:**
 
@@ -644,7 +644,7 @@ public Mono<Product> createProduct(Product product) {
 
 ### Mapa de Patrones
 
-![Mapa de patrones de microservicios](assets/clase-14-patrones-arquitectura-microservicios/outbox-mapa-patrones.png)
+![Mapa de patrones de microservicios](assets/clase-15-patrones-arquitectura-microservicios/outbox-mapa-patrones.png)
 
 ### Resumen de Patrones
 
@@ -749,7 +749,7 @@ En el laboratorio implementaremos:
 
 ### Arquitectura del Lab
 
-![Arquitectura del Laboratorio](assets/clase-14-patrones-arquitectura-microservicios/lab-arquitectura.png)
+![Arquitectura del Laboratorio](assets/clase-15-patrones-arquitectura-microservicios/lab-arquitectura.png)
 
 Topics de Kafka: `order-created` · `stock-reserved` · `stock-released` · `payment-processed` · `payment-failed`
 
@@ -772,7 +772,7 @@ Topics de Kafka: `order-created` · `stock-reserved` · `stock-released` · `pay
 
 ### Flujo SAGA del Lab
 
-![Flujo SAGA del Laboratorio](assets/clase-14-patrones-arquitectura-microservicios/lab-saga-flujo.png)
+![Flujo SAGA del Laboratorio](assets/clase-15-patrones-arquitectura-microservicios/lab-saga-flujo.png)
 
 ### Módulos del Lab
 

@@ -1,4 +1,4 @@
-# Clase 11 - Arquitectura Hexagonal
+# Clase 12 - Arquitectura Hexagonal
 
 Diapositivas: <https://manulasker.github.io/enyoi_java_slides/clase_15_16_17_arquitectura_hexagonal/#/title-slide>
 
@@ -52,9 +52,9 @@ Imagina una tienda física:
 
 ### Diagrama General
 
-![Arquitectura Hexagonal - Mundo Exterior](assets/clase-11-arquitectura-hexagonal/hexagonal-mundo-exterior.png)
+![Arquitectura Hexagonal - Mundo Exterior](assets/clase-12-arquitectura-hexagonal/hexagonal-mundo-exterior.png)
 
-![Diagrama General Hexagonal](assets/clase-11-arquitectura-hexagonal/hexagonal-diagrama-general.png)
+![Diagrama General Hexagonal](assets/clase-12-arquitectura-hexagonal/hexagonal-diagrama-general.png)
 
 ### Los Tres Componentes Principales
 
@@ -264,7 +264,7 @@ Los adaptadores son **implementaciones concretas** de los puertos.
 
 ### Diagrama de Flujo
 
-![Flujo de Adaptadores](assets/clase-11-arquitectura-hexagonal/flujo-adaptadores.png)
+![Flujo de Adaptadores](assets/clase-12-arquitectura-hexagonal/flujo-adaptadores.png)
 
 ### Adaptador Primario: REST Controller
 
@@ -422,13 +422,13 @@ public class Aplicacion {
 
 ### Estructura de Carpetas
 
-![Estructura de Carpetas del Proyecto](assets/clase-11-arquitectura-hexagonal/estructura-carpetas-proyecto.png)
+![Estructura de Carpetas del Proyecto](assets/clase-12-arquitectura-hexagonal/estructura-carpetas-proyecto.png)
 
 ---
 
 ## Regla de Dependencia
 
-![Regla de Dependencia](assets/clase-11-arquitectura-hexagonal/regla-dependencia.png)
+![Regla de Dependencia](assets/clase-12-arquitectura-hexagonal/regla-dependencia.png)
 
 > **Las dependencias siempre apuntan hacia adentro.** El dominio no conoce nada del exterior.
 
@@ -469,7 +469,7 @@ public class TestGestionCuentas {
 
 ## Ejemplo: Sistema de Pedidos
 
-![Sistema de Pedidos](assets/clase-11-arquitectura-hexagonal/sistema-pedidos-ejemplo.png)
+![Sistema de Pedidos](assets/clase-12-arquitectura-hexagonal/sistema-pedidos-ejemplo.png)
 
 ### Puerto de Inventario
 
@@ -576,4 +576,4 @@ La Arquitectura Hexagonal organiza el código para que:
 
 ### Diseño Alto Nivel Arka - Profesor
 
-![Diseño Alto Nivel Arka](assets/clase-11-arquitectura-hexagonal/diseno-alto-nivel-arka.svg)
+![Diseño Alto Nivel Arka](assets/clase-12-arquitectura-hexagonal/diseno-alto-nivel-arka.svg)
