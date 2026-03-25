@@ -515,6 +515,7 @@ Invalidación de caché:
   - `StockReserveFailed` → `ms-order` transiciona orden a `CANCELADO`
   - `StockReleased` → Cuando se libera reserva por timeout o cancelación
   - `StockUpdated` → Cuando admin actualiza stock manualmente
+  - `StockDepleted` → Alerta de stock bajo al alcanzar umbrales críticos (consumido por `ms-notifications` y `ms-reporter`)
 - 🆔 **Idempotencia:** Implementa validación estricta para ignorar eventos duplicados de Kafka, evitando doble descuento.
 
 **Base de Datos:** PostgreSQL (inventory_db)
@@ -878,14 +879,14 @@ notifications_db (MongoDB)
 
 **Tópicos del ecosistema:**
 
-| Tópico             | Productor(es)  | Consumidor(es)                                  | Eventos Principales                                                      |
-| ------------------ | -------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
-| `product-events`   | `ms-catalog`   | `ms-inventory`                                  | `ProductCreated`, `ProductUpdated`                                       |
-| `order-events`     | `ms-order`     | `ms-notifications`, `ms-payment`, `ms-reporter` | `OrderCreated`, `OrderConfirmed`, `OrderStatusChanged`, `OrderCancelled` |
-| `inventory-events` | `ms-inventory` | `ms-order`, `ms-notifications`, `ms-reporter`   | `StockReserved`, `StockReleased`, `StockDepleted`, `StockUpdated`        |
-| `cart-events`      | `ms-cart`      | `ms-notifications`, `ms-reporter`               | `CartAbandoned` (Fase 2)                                                 |
-| `payment-events`   | `ms-payment`   | `ms-order`, `ms-notifications`, `ms-reporter`   | `PaymentProcessed`, `PaymentFailed` (Fase 2)                             |
-| `shipping-events`  | `ms-shipping`  | `ms-order`, `ms-notifications`, `ms-reporter`   | `ShippingDispatched` (Fase 3)                                            |
+| Tópico             | Productor(es)  | Consumidor(es)                                                  | Eventos Principales                                                      |
+| ------------------ | -------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `product-events`   | `ms-catalog`   | `ms-inventory`                                                  | `ProductCreated`, `ProductUpdated`                                       |
+| `order-events`     | `ms-order`     | `ms-inventory`, `ms-notifications`, `ms-payment`, `ms-reporter` | `OrderCreated`, `OrderConfirmed`, `OrderStatusChanged`, `OrderCancelled` |
+| `inventory-events` | `ms-inventory` | `ms-order`, `ms-notifications`, `ms-reporter`                   | `StockReserved`, `StockReleased`, `StockDepleted`, `StockUpdated`        |
+| `cart-events`      | `ms-cart`      | `ms-notifications`, `ms-reporter`                               | `CartAbandoned` (Fase 2)                                                 |
+| `payment-events`   | `ms-payment`   | `ms-order`, `ms-notifications`, `ms-reporter`                   | `PaymentProcessed`, `PaymentFailed` (Fase 2)                             |
+| `shipping-events`  | `ms-shipping`  | `ms-order`, `ms-notifications`, `ms-reporter`                   | `ShippingDispatched` (Fase 3)                                            |
 
 **Tópicos activos en Fase 1 (MVP):** `product-events`, `order-events`, `inventory-events`
 

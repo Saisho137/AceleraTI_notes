@@ -59,9 +59,9 @@ System_Ext(shippingAPI, "API Logística Externa", "Sistemas legacy y proveedores
 System_Ext(ses, "AWS SES", "Servicio gestionado de correos transaccionales.")
 
 System_Boundary(arka, "Plataforma E-commerce Arka (VPC Privada - Zero Trust)") {
-    
+
     Container(apiGw, "API Gateway", "AWS API Gateway", "Punto único de entrada. Valida tokens JWT, bloquea dominios públicos y enruta a subredes privadas.")
-    
+
     ContainerQueue(kafka, "Apache Kafka", "Message Broker", "Eje central de la Arquitectura Dirigida por Eventos. Soporta Sagas, Event Sourcing y Outbox Pattern.")
 
     Container(ms_catalog, "ms-catalog", "Java 21, WebFlux", "Dueño del producto. Almacena características dinámicas y reseñas anidadas.")
@@ -114,7 +114,7 @@ Rel(ms_catalog, kafka, "Publica (ProductCreated, ProductUpdated)", "TCP")
 Rel(ms_inventory, kafka, "Publica (StockReserved, StockReleased, StockDepleted)", "TCP")
 Rel(ms_order, kafka, "Publica comandos/eventos (OrderCreated, OrderConfirmed)", "TCP")
 Rel(ms_cart, kafka, "Publica (CartAbandoned)", "TCP")
-Rel(ms_payment, kafka, "Consume Saga y Publica (PaymentSuccess, PaymentFailed)", "TCP")
+Rel(ms_payment, kafka, "Consume Saga y Publica (PaymentProcessed, PaymentFailed)", "TCP")
 Rel(ms_shipping, kafka, "Consume confirmación y Publica (ShippingDispatched)", "TCP")
 Rel(ms_provider, kafka, "Publica reposición (StockReceived)", "TCP")
 Rel(ms_notifications, kafka, "Consume eventos para notificar (Catch-All)", "TCP")
