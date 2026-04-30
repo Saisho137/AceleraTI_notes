@@ -1,1 +1,9 @@
+# macOS
+.DS_Store
 .DS_store
+
+# Docusaurus
+node_modules/
+build/
+.docusaurus/
+.cache-loader/
