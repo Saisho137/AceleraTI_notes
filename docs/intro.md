@@ -68,11 +68,11 @@ El proyecto **Arka** es el eje central de la formación. Se trata de una platafo
 
 ### Recursos del Proyecto
 
-- [Backlog del proyecto Java Backend Arka](assets/PDFs/Backlog%20del%20proyecto%20Java%20Backend%20Arka.pdf)
-- [Proyecto Arka — Versión 1](assets/PDFs/Proyecto%20Arka%201.pdf)
-- [Proyecto Java Backend Reto — Versión 2](assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf)
-- [Guía del Backend Java - Conceptos](assets/PDFs/Guía%20del%20Backend%20Java%20-%20Conceptos.pdf)
-- [Guía para preparar tu Panel De Expertos](assets/PDFs/Guía%20para%20preparar%20tu%20Panel%20De%20Expertos.pdf)
+- [Backlog del proyecto Java Backend Arka](pathname:///assets/PDFs/Backlog%20del%20proyecto%20Java%20Backend%20Arka.pdf)
+- [Proyecto Arka — Versión 1](pathname:///assets/PDFs/Proyecto%20Arka%201.pdf)
+- [Proyecto Java Backend Reto — Versión 2](pathname:///assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf)
+- [Guía del Backend Java - Conceptos](pathname:///assets/PDFs/Guía%20del%20Backend%20Java%20-%20Conceptos.pdf)
+- [Guía para preparar tu Panel De Expertos](pathname:///assets/PDFs/Guía%20para%20preparar%20tu%20Panel%20De%20Expertos.pdf)
 
 ---
 

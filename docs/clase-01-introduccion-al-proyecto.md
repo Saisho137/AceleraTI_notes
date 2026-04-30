@@ -27,9 +27,9 @@ Clase introductoria al proyecto **Arka**, una empresa de tecnología que busca m
 
 ### Documentación del Proyecto
 
-- [Backlog del proyecto Java Backend Arka](assets/PDFs/Backlog%20del%20proyecto%20Java%20Backend%20Arka.pdf)
-- [Proyecto Arka - Versión 1](assets/PDFs/Proyecto%20Arka%201.pdf)
-- [Proyecto Java Backend Reto - Versión 2](assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf)
+- [Backlog del proyecto Java Backend Arka](pathname:///assets/PDFs/Backlog%20del%20proyecto%20Java%20Backend%20Arka.pdf)
+- [Proyecto Arka - Versión 1](pathname:///assets/PDFs/Proyecto%20Arka%201.pdf)
+- [Proyecto Java Backend Reto - Versión 2](pathname:///assets/PDFs/Proyecto%20Java%20Backend%20Reto%20V2.pdf)
 
 ---
 

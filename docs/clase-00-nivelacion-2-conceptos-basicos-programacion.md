@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Clase 0 (Nivelación 2) - Conceptos Básicos de Programación
 
 ## Índice

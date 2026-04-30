@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Clase 0 (Nivelación) - Metodologías Ágiles
 
 ## Índice
