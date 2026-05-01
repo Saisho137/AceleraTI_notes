@@ -171,6 +171,8 @@ public class AutoboxingDemo {
 
 ## POO Esencial y Excepciones
 
+> Para una cobertura completa de POO en Java (abstracción, encapsulamiento, herencia, polimorfismo, interfaces, Pattern Matching, etc.), ver la **Clase 2 - Java**.
+
 ### Pilares de la Programación Orientada a Objetos (POO)
 
 | Concepto          | Explicación                                                                                                                                                                       |

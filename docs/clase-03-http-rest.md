@@ -212,34 +212,7 @@ Un origen está compuesto por: `protocolo + dominio + puerto`
 
 **Same-Origin Policy**: Los navegadores, por seguridad, solo permiten que una página web haga peticiones AJAX al mismo origen desde el que se cargó la página.
 
-**¿Qué es AJAX?**
-
-**AJAX (Asynchronous JavaScript and XML)** es una técnica que permite a las páginas web realizar peticiones HTTP de forma asíncrona sin recargar toda la página.
-
-- **Asíncrono**: No bloquea la interfaz mientras espera la respuesta
-- **JavaScript**: Se ejecuta mediante código JavaScript
-- **XML**: Originalmente para intercambiar datos XML, ahora se usa principalmente JSON
-
-**Ejemplo de AJAX:**
-
-```javascript
-// AJAX tradicional (XMLHttpRequest)
-const xhr = new XMLHttpRequest();
-xhr.open("GET", "https://api.ejemplo.com/datos");
-xhr.onload = function () {
-  if (xhr.status === 200) {
-    console.log(xhr.responseText);
-  }
-};
-xhr.send();
-
-// AJAX moderno (fetch API)
-fetch("https://api.ejemplo.com/datos")
-  .then((response) => response.json())
-  .then((data) => console.log(data));
-```
-
-Sin CORS, una página maliciosa en `evil.com` no podría leer datos de tu cuenta bancaria en `banco.com`.
+> **AJAX** (Asynchronous JavaScript and XML) permite realizar peticiones HTTP asíncronas desde el navegador sin recargar la página. Sin CORS, una página maliciosa en `evil.com` podría leer datos de tu cuenta bancaria en `banco.com`.
 
 ##### **¿Cómo funciona CORS?**
 
@@ -636,23 +609,9 @@ gzip_types text/plain application/json application/javascript text/css;
 
 **Ejemplos Reales:**
 
-**1. CDN (Content Delivery Network):**
-
-- **CloudFlare**: Proxy global que cachea contenido
-- **AWS CloudFront**: Distribución de contenido
-- **Fastly**: Edge computing y caching
-
-**2. API Gateways:**
-
-- **Kong**: API Gateway con plugins
-- **Zuul** (Netflix): Gateway para microservicios
-- **AWS API Gateway**: Gestión de APIs en la nube
-
-**3. Proxies corporativos:**
-
-- **Squid**: Cache proxy para empresas
-- **Blue Coat**: Seguridad y control de acceso
-- **Zscaler**: Cloud proxy security
+- **CDN (Content Delivery Network):** CloudFlare, AWS CloudFront — proxies globales que cachean contenido
+- **API Gateways:** Kong, Zuul (Netflix), AWS API Gateway
+- **Proxies corporativos:** Squid, Zscaler
 
 **Ventajas del uso de Proxy:**
 
@@ -685,73 +644,7 @@ gzip_types text/plain application/json application/javascript text/css;
 
 **WSDL (Web Services Description Language):**
 
-WSDL es un documento XML que describe completamente un servicio SOAP:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
-             targetNamespace="http://miservicio.com/usuarios">
-
-  <!-- Tipos de datos -->
-  <types>
-    <xsd:schema targetNamespace="http://miservicio.com/usuarios">
-      <xsd:element name="GetUsuarioRequest">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="usuarioId" type="xsd:int"/>
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>
-
-      <xsd:element name="GetUsuarioResponse">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="usuario" type="tns:Usuario"/>
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>
-    </xsd:schema>
-  </types>
-
-  <!-- Mensajes -->
-  <message name="GetUsuarioRequestMessage">
-    <part name="parameters" element="tns:GetUsuarioRequest"/>
-  </message>
-
-  <message name="GetUsuarioResponseMessage">
-    <part name="parameters" element="tns:GetUsuarioResponse"/>
-  </message>
-
-  <!-- PortType (interfaz) -->
-  <portType name="UsuarioPortType">
-    <operation name="GetUsuario">
-      <input message="tns:GetUsuarioRequestMessage"/>
-      <output message="tns:GetUsuarioResponseMessage"/>
-    </operation>
-  </portType>
-
-  <!-- Binding (cómo se envían los mensajes) -->
-  <binding name="UsuarioSoapBinding" type="tns:UsuarioPortType">
-    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
-    <operation name="GetUsuario">
-      <soap:operation soapAction="getUsuario"/>
-      <input>
-        <soap:body use="literal"/>
-      </input>
-      <output>
-        <soap:body use="literal"/>
-      </output>
-    </operation>
-  </binding>
-
-  <!-- Service (endpoint) -->
-  <service name="UsuarioService">
-    <port name="UsuarioPort" binding="tns:UsuarioSoapBinding">
-      <soap:address location="http://localhost:8080/ws/usuarios"/>
-    </port>
-  </service>
-</definitions>
-```
+WSDL es un documento XML que describe completamente un servicio SOAP: sus tipos de datos, mensajes, operaciones (portType), bindings y endpoints. Es obligatorio en SOAP; el equivalente en REST es OpenAPI/Swagger (pero opcional).
 
 **Embedding SOAP en REST:**
 

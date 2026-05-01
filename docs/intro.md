@@ -17,13 +17,13 @@ Este curso, dictado por **Enyoi**, ha sido desarrollado con un pensum co-creado 
 
 ## Horario y Duración
 
-| Detalle | Valor |
-|---|---|
-| **Fecha de inicio** | Miércoles 5 de noviembre de 2025 |
-| **Días de clase** | Lunes · Miércoles · Jueves |
-| **Horario** | 19:00 a 22:00 hrs (Col / Per / Ecu) |
-| **Duración total** | 160 horas sincrónicas |
-| **Frecuencia** | 9 horas semanales · 17 semanas |
+| Detalle             | Valor                               |
+| ------------------- | ----------------------------------- |
+| **Fecha de inicio** | Miércoles 5 de noviembre de 2025    |
+| **Días de clase**   | Lunes · Miércoles · Jueves          |
+| **Horario**         | 19:00 a 22:00 hrs (Col / Per / Ecu) |
+| **Duración total**  | 160 horas sincrónicas               |
+| **Frecuencia**      | 9 horas semanales · 17 semanas      |
 
 ---
 
@@ -31,34 +31,34 @@ Este curso, dictado por **Enyoi**, ha sido desarrollado con un pensum co-creado 
 
 ### Parte I — Fundamentos
 
-| # | Tema |
-|---|------|
-| 00 | Nivelación: Metodologías Ágiles |
-| 00 | Nivelación: Conceptos Básicos de Programación |
-| 01 | Introducción al Proyecto Arka |
-| 02 | Java |
-| 03 | HTTP & REST |
-| 04 | Bases de Datos Relacionales |
-| 05 | Bases de Datos No Relacionales |
-| 06 | Clean Architecture |
-| 07 | Spring Data JPA |
-| 08 | Pruebas Unitarias |
+| #   | Tema                                          |
+| --- | --------------------------------------------- |
+| 00  | Nivelación: Metodologías Ágiles               |
+| 00  | Nivelación: Conceptos Básicos de Programación |
+| 01  | Introducción al Proyecto Arka                 |
+| 02  | Java                                          |
+| 03  | HTTP & REST                                   |
+| 04  | Bases de Datos Relacionales                   |
+| 05  | Bases de Datos No Relacionales                |
+| 06  | Clean Architecture                            |
+| 07  | Spring Data JPA                               |
+| 08  | Pruebas Unitarias                             |
 
 ### Parte II — Arquitectura y Ecosistema
 
-| # | Tema |
-|---|------|
-| 09 | Repaso: Clean Architecture + Herramientas |
-| 10 | SOLID & Patrones de Diseño |
-| 11 | IA & Machine Learning con Java |
-| 12 | Arquitectura Hexagonal |
-| 13 | Domain Driven Design (DDD) |
-| 14 | Docker & Docker Compose |
-| 15 | Patrones de Arquitectura de Microservicios |
-| 16 | Repaso Funcional |
-| 17 | Spring Boot |
-| 18 | Spring Cloud & Extras |
-| 19 | AWS |
+| #   | Tema                                       |
+| --- | ------------------------------------------ |
+| 09  | Repaso: Clean Architecture + Herramientas  |
+| 10  | SOLID & Patrones de Diseño                 |
+| 11  | IA & Machine Learning con Java             |
+| 12  | Arquitectura Hexagonal                     |
+| 13  | Domain Driven Design (DDD)                 |
+| 14  | Docker & Docker Compose                    |
+| 15  | Patrones de Arquitectura de Microservicios |
+| 16  | Repaso Funcional                           |
+| 17  | Spring Boot                                |
+| 18  | Spring Cloud & Extras                      |
+| 19  | AWS                                        |
 
 ---
 

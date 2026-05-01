@@ -264,44 +264,13 @@ Los **tipos de datos** definen qué clase de información puede almacenarse en c
 
 > 💰 **Nota crítica:** En el sector financiero, todas las transacciones se deben registrar con **TIMESTAMP** para incluir milisegundos y garantizar trazabilidad precisa de operaciones. Esto es esencial para auditorías y cumplimiento regulatorio.
 
-#### Código ASCII (American Standard Code for Information Interchange)
+#### Código ASCII y Codificación
 
-**Definición:** ASCII es un estándar de codificación de caracteres que asigna un número único (0-127) a cada letra, dígito, símbolo y comando de control del idioma inglés.
+**ASCII** (American Standard Code for Information Interchange) asigna un número (0-127) a caracteres del idioma inglés. El **ASCII extendido** (128-255) agrega caracteres como ñ, á, €, pero **no es estándar** — cada sistema usa una página de códigos diferente (Windows-1252, ISO-8859-1), causando incompatibilidades.
 
-**Propósito:** Permite que diferentes sistemas informáticos representen y compartan texto de manera consistente.
+**Impacto en bases de datos:** `CHAR` y `VARCHAR` con ASCII extendido pueden corromper caracteres especiales.
 
-**Estructura:**
-
-- **ASCII básico (0-127):** 128 caracteres que incluyen:
-  - Caracteres de control (0-31): saltos de línea, tabulaciones, etc.
-  - Caracteres imprimibles (32-126): letras (A-Z, a-z), dígitos (0-9), símbolos básicos (!, @, #, etc.)
-  - DEL (127): carácter de borrado
-
-- **ASCII extendido (128-255):** 128 caracteres adicionales que varían según la página de códigos, incluyendo:
-  - Caracteres acentuados (á, é, í, ñ, ü)
-  - Símbolos especiales (€, °, ±, ~)
-  - Caracteres de dibujo de cuadros
-
-**Problema:** El ASCII extendido **no es estándar** - diferentes sistemas operativos usan diferentes páginas de códigos (Windows-1252, ISO-8859-1), causando incompatibilidades.
-
-**Uso en bases de datos:**
-
-- `CHAR` y `VARCHAR` tradicionalmente usaban ASCII/Latin-1
-- Caracteres fuera del ASCII básico (ñ, á, ~) pueden causar problemas de visualización o comparación
-- **Solución moderna:** Usar codificación **UTF-8** (Unicode) que soporta todos los idiomas
-
-**Ejemplo de problema:**
-
-```sql
--- Con ASCII extendido (puede fallar)
-INSERT INTO Usuarios (nombre) VALUES ('José');  -- "é" puede corromperse
-
--- Con UTF-8 (correcto)
-SET NAMES utf8mb4;
-INSERT INTO Usuarios (nombre) VALUES ('José');  -- Funciona correctamente
-```
-
-**Recomendación:** Siempre configurar bases de datos con `utf8mb4` (MySQL) o `UTF8` (PostgreSQL) para soporte completo de caracteres internacionales.
+> **Recomendación:** Siempre configurar bases de datos con `utf8mb4` (MySQL) o `UTF8` (PostgreSQL) para soporte completo de caracteres internacionales.
 
 ### Estrategias para Analítica
 

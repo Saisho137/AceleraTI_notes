@@ -4,14 +4,14 @@
 
 ## Índice
 
-1. [1. Bases de Datos Relacionales vs No Relacionales](#1-bases-de-datos-relacionales-vs-no-relacionales)
-2. [2. Tipos de Bases de Datos NoSQL](#2-tipos-de-bases-de-datos-nosql)
-3. [3. Escalamiento Vertical vs Horizontal](#3-escalamiento-vertical-vs-horizontal)
-4. [4. Propiedad BASE](#4-propiedad-base)
-5. [5. ¿Cuándo usar SQL o NoSQL?](#5-cuándo-usar-sql-o-nosql)
-6. [6. MongoDB](#6-mongodb)
-7. [7. Ejercicio Práctico: Biblioteca](#7-ejercicio-práctico-biblioteca)
-8. [8. Puntos Clave y Recursos](#8-puntos-clave-y-recursos)
+1. [Bases de Datos Relacionales vs No Relacionales](#bases-de-datos-relacionales-vs-no-relacionales)
+2. [Tipos de Bases de Datos NoSQL](#tipos-de-bases-de-datos-nosql)
+3. [Escalamiento Vertical vs Horizontal](#escalamiento-vertical-vs-horizontal)
+4. [Propiedad BASE](#propiedad-base)
+5. [¿Cuándo usar SQL o NoSQL?](#cuándo-usar-sql-o-nosql)
+6. [MongoDB](#mongodb)
+7. [Ejercicio Práctico: Biblioteca](#ejercicio-práctico-biblioteca)
+8. [Puntos Clave y Recursos](#puntos-clave-y-recursos)
 
 ## Resumen
 
@@ -19,7 +19,7 @@ Introducción a las **bases de datos NoSQL**: comparativa con SQL, tipos (llave-
 
 ---
 
-## 1. Bases de Datos Relacionales vs No Relacionales
+## Bases de Datos Relacionales vs No Relacionales
 
 ### Características de Bases de Datos Relacionales (SQL)
 
@@ -42,7 +42,7 @@ Introducción a las **bases de datos NoSQL**: comparativa con SQL, tipos (llave-
 
 ---
 
-## 2. Tipos de Bases de Datos NoSQL
+## Tipos de Bases de Datos NoSQL
 
 ### Estructuras y Ejemplos
 
@@ -78,7 +78,7 @@ Introducción a las **bases de datos NoSQL**: comparativa con SQL, tipos (llave-
 
 ---
 
-## 3. Escalamiento Vertical vs Horizontal
+## Escalamiento Vertical vs Horizontal
 
 | Aspecto             | Escalamiento Vertical ⬆️                               | Escalamiento Horizontal ↔️                  |
 | ------------------- | ------------------------------------------------------ | ------------------------------------------- |
@@ -99,7 +99,7 @@ Introducción a las **bases de datos NoSQL**: comparativa con SQL, tipos (llave-
 
 ---
 
-## 4. Propiedad BASE
+## Propiedad BASE
 
 Mientras que las bases de datos SQL siguen el modelo **ACID**, las NoSQL siguen el modelo **BASE**:
 
@@ -123,7 +123,7 @@ Mientras que las bases de datos SQL siguen el modelo **ACID**, las NoSQL siguen 
 
 ---
 
-## 5. ¿Cuándo usar SQL o NoSQL?
+## ¿Cuándo usar SQL o NoSQL?
 
 ### ✅ Usar **SQL** cuando
 
@@ -150,7 +150,7 @@ Mientras que las bases de datos SQL siguen el modelo **ACID**, las NoSQL siguen 
 
 ---
 
-## 6. MongoDB
+## MongoDB
 
 ### Conceptos Fundamentales
 
@@ -244,7 +244,7 @@ public class Usuario {
 
 ---
 
-## 7. Ejercicio Práctico: Biblioteca
+## Ejercicio Práctico: Biblioteca
 
 ### Enunciado
 
@@ -402,7 +402,7 @@ public class BibliotecaService {
 
 ---
 
-## 8. Puntos Clave y Recursos
+## Puntos Clave y Recursos
 
 ### Conceptos Principales
 

@@ -4,12 +4,12 @@
 
 ## Índice
 
-1. [1. Arquitecturas Clásicas](#1-arquitecturas-clásicas)
-2. [2. Arquitectura Limpia](#2-arquitectura-limpia)
-3. [3. Capas de la Arquitectura Limpia](#3-capas-de-la-arquitectura-limpia)
-4. [4. Regla de Dependencia](#4-regla-de-dependencia)
-5. [5. Implementación Práctica](#5-implementación-práctica)
-6. [6. Puntos Clave](#6-puntos-clave)
+1. [Arquitecturas Clásicas](#arquitecturas-clásicas)
+2. [Arquitectura Limpia](#arquitectura-limpia)
+3. [Capas de la Arquitectura Limpia](#capas-de-la-arquitectura-limpia)
+4. [Regla de Dependencia](#regla-de-dependencia)
+5. [Implementación Práctica](#implementación-práctica)
+6. [Puntos Clave](#puntos-clave)
 
 ## Resumen
 
@@ -17,7 +17,7 @@ La **Arquitectura Limpia** (Clean Architecture) de Robert C. Martin propone orga
 
 ---
 
-## 1. Arquitecturas Clásicas
+## Arquitecturas Clásicas
 
 ### Arquitectura en Capas (Layered Architecture)
 
@@ -71,7 +71,7 @@ Usuario → Controlador → Servicio → Repositorio → Base de Datos
 
 ---
 
-## 2. Arquitectura Limpia
+## Arquitectura Limpia
 
 ### ¿Qué es la Arquitectura Limpia?
 
@@ -99,7 +99,7 @@ El diagrama se lee de **afuera hacia adentro**
 
 ---
 
-## 3. Capas de la Arquitectura Limpia
+## Capas de la Arquitectura Limpia
 
 ### Capa de Dominio (Enterprise Business Rules)
 
@@ -238,7 +238,7 @@ La capa más **externa**. Contiene detalles técnicos y configuraciones.
 
 ---
 
-## 4. Regla de Dependencia
+## Regla de Dependencia
 
 ### La Regla de Oro
 
@@ -275,7 +275,7 @@ public class CuentaRepositoryJPA implements CuentaRepository {
 
 ---
 
-## 5. Implementación Práctica
+## Implementación Práctica
 
 ### Estructura de Carpetas Recomendada
 
@@ -357,7 +357,7 @@ public class CuentaRepositoryJPA implements CuentaRepository {
 
 ---
 
-## 6. Puntos Clave
+## Puntos Clave
 
 ### Conceptos Principales
 
