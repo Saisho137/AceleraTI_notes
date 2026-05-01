@@ -1,4 +1,34 @@
-# AceleraTI
+# AceleraTI — Notas
+
+## Documentación Web
+
+### [https://saisho137.github.io/AceleraTI_notes/](https://saisho137.github.io/AceleraTI_notes/)
+
+Este repositorio contiene las notas del programa **AceleraTI** publicadas como sitio estático con [Docusaurus 3](https://docusaurus.io/). Las notas en formato Markdown viven en `docs/` y el sitio se despliega automáticamente en GitHub Pages.
+
+## Estructura del proyecto
+
+```text
+docs/          # Notas en Markdown (una por clase)
+docs/assets/   # Imágenes y recursos por clase
+src/           # Personalización del tema Docusaurus
+static/        # Archivos estáticos (img, PDFs, etc.)
+build/         # Sitio generado (no editar manualmente)
+docusaurus.config.js
+sidebars.js
+package.json
+```
+
+## Comandos útiles
+
+```bash
+npm install        # Instalar dependencias
+npm start          # Servidor local en http://localhost:3000
+npm run build      # Generar sitio en build/
+npm run deploy     # Publicar en GitHub Pages
+```
+
+---
 
 ## Presentación del Programa
 
